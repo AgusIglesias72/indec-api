@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     query = query.range(offset, offset + limit - 1);
     
     // Ejecutar consulta
-    const { data, error, count } = await query;
+    const { data, error } = await query;
     
     if (error) {
       console.error('Error al consultar datos EMAE:', error);

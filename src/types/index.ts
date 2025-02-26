@@ -5,9 +5,9 @@ export type EmaeRow = Database['public']['Tables']['emae']['Row'];
 export type EmaeInsert = Database['public']['Tables']['emae']['Insert'];
 export type EmaeUpdate = Database['public']['Tables']['emae']['Update'];
 
-export type EmaeByActivityRow = Database['public']['Tables']['emae_by_activty']['Row'];
-export type EmaeByActivityInsert = Database['public']['Tables']['emae_by_activty']['Insert'];
-export type EmaeByActivityUpdate = Database['public']['Tables']['emae_by_activty']['Update'];
+export type EmaeByActivityRow = Database['public']['Tables']['emae_by_activity']['Row'];
+export type EmaeByActivityInsert = Database['public']['Tables']['emae_by_activity']['Insert'];
+export type EmaeByActivityUpdate = Database['public']['Tables']['emae_by_activity']['Update'];
 
 // Extensiones y tipos adicionales para la API
 
