@@ -12,7 +12,7 @@ if (!supabaseUrl || !supabaseKey) {
     throw new Error(
       `Unable to initialize Supabase client. Missing environment variables: ${
         !supabaseUrl ? 'NEXT_PUBLIC_SUPABASE_URL ' : ''
-      }${!supabaseKey ? 'SUPABASE_SERVICE_ROLE_KEY' : ''}`
+      }${!supabaseKey ? 'NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY' : ''}`
     );
   }
 
