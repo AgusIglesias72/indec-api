@@ -1,6 +1,6 @@
 import axios from "axios";
 import * as XLSX from "xlsx";
-import { IpcRow, IpcInsert } from "../../../types";
+import { IpcRow } from "../../../types";
 
 /**
  * Genera un código a partir del nombre de un componente
@@ -117,7 +117,6 @@ function extractDateFromValue(value: any): string | null {
     const ddmmyyyyRegex = /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/;
     const ddmmyyyyMatch = dateStr.match(ddmmyyyyRegex);
     if (ddmmyyyyMatch) {
-      const day = ddmmyyyyMatch[1].padStart(2, "0");
       const month = ddmmyyyyMatch[2].padStart(2, "0");
       const year = ddmmyyyyMatch[3];
       return `${year}-${month}-01`; // Usamos siempre día 1 para consistencia
@@ -200,6 +199,7 @@ function extractDateFromValue(value: any): string | null {
       }
     } catch (e) {
       // Ignorar errores de parseo
+      console.warn(`Error al parsear la fecha ${dateStr}:`, e);
     }
   }
 
@@ -230,7 +230,7 @@ export async function fetchIPCData(): Promise<Omit<IpcRow, "id">[]> {
       });
     } catch (error) {
       console.warn(
-        `Error descargando el archivo del mes actual. Intentando con el mes anterior...`
+        `Error descargando el archivo del mes actual. Intentando con el mes anterior...`, error
       );
       // Si falla, intentar con el mes anterior (común al inicio de un nuevo mes)
       const prevMonth = String(((now.getMonth() + 11) % 12) + 1).padStart(
