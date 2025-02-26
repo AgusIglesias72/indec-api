@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { importHistoricalDataFromCSV } from '@/app/services/indec/fetcher';
-import { desestacionalizar } from '@/app/services/analysis/seasonal';
 import { ApiError } from '../../../types';
 import { Database } from '../../../types/supabase';
 

@@ -137,7 +137,8 @@ async function updateEmaeData() {
   // Generar UUIDs válidos para cada registro
   newData = newData.map(item => {
     // Eliminar el id generado y dejar que Supabase genere uno automáticamente
-    const { id, ...rest } = item;
+      // const { id, ...rest } = item;
+      const {...rest } = item;
     return rest;
   });
   
@@ -182,7 +183,8 @@ async function updateEmaeByActivityData() {
   
   // Eliminar los IDs para que Supabase los genere automáticamente
   newData = newData.map(item => {
-    const { id, ...rest } = item;
+    // const { id, ...rest } = item;
+    const {...rest } = item;
     return rest;
   });
   

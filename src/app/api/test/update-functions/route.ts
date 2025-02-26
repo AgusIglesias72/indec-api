@@ -82,7 +82,7 @@ async function updateEmaeData() {
   // Generar UUIDs válidos para cada registro
   newData = newData.map(item => {
     // Eliminar el id generado y dejar que Supabase genere uno automáticamente
-    const { id, ...rest } = item;
+    const {...rest } = item;
     return rest;
   });
   
@@ -92,60 +92,7 @@ async function updateEmaeData() {
   
   console.log(`Obtenidos ${newData.length} registros nuevos de EMAE`);
   
-  // 2. Desestacionalizar datos (si es necesario)
-  // En este caso, los datos ya vienen con valores desestacionalizados,
-  // pero en un caso real podríamos aplicar nuestros propios métodos
-  
-  // 3. Calcular tendencia-ciclo (si no está incluida)
-  /*
-  for (const item of newData) {
-    if (item.cycle_trend_value === undefined || item.cycle_trend_value === null) {
-      // Obtener serie histórica para contexto
-      const { data: historicalData } = await supabase
-        .from('emae')
-        .select('date, original_value')
-        .order('date', { ascending: true });
-      
-      console.log(`Obtenidos ${historicalData?.length || 0} registros históricos para cálculo de tendencia`);
-      
-      if (historicalData && historicalData.length > 0) {
-        // Combinar datos históricos y nuevos
-        const combinedSeries = [
-          ...historicalData.map(d => ({ date: d.date, value: d.original_value })),
-          ...newData.map(d => ({ date: d.date, value: d.original_value }))
-        ];
-        
-        // Ordenar por fecha
-        combinedSeries.sort((a, b) => 
-          new Date(a.date).getTime() - new Date(b.date).getTime()
-        );
-        
-        // Eliminar duplicados
-        const uniqueSeries = combinedSeries.filter((item, index, self) =>
-          index === self.findIndex(t => t.date === item.date)
-        );
-        
-        console.log(`Serie combinada para cálculo de tendencia: ${uniqueSeries.length} elementos`);
-        
-        // Calcular tendencia-ciclo
-        const values = uniqueSeries.map(item => item.value);
-        const trendCycleValues = calculateTrendCycle(values);
-        
-        // Asignar valores a los nuevos datos
-        for (let i = 0; i < newData.length; i++) {
-          const dataIndex = uniqueSeries.findIndex(item => item.date === newData[i].date);
-          if (dataIndex >= 0) {
-            newData[i].cycle_trend_value = trendCycleValues[dataIndex];
-          }
-        }
-        
-        console.log('Cálculo de tendencia-ciclo completado');
-      }
-    }
-  }
-  */
-  
-  // 4. Guardar en Supabase
+  // 2. Guardar en Supabase
   const { data, error } = await supabase
     .from('emae')
     .upsert(newData, { onConflict: 'date' })
@@ -176,7 +123,7 @@ async function updateEmaeByActivityData() {
   
   // Eliminar los IDs para que Supabase los genere automáticamente
   newData = newData.map(item => {
-    const { id, ...rest } = item;
+    const {...rest } = item;
     return rest;
   });
   
