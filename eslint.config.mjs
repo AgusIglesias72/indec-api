@@ -31,15 +31,6 @@ const eslintConfig = [
       "prefer-const": "warn", // Usar const cuando no se reasigna
     },
     
-    // Ignorar archivos/directorios específicos
-    ignorePatterns: [
-      "node_modules/",
-      ".next/",
-      "public/",
-      "*.config.js",
-      "*.config.mjs",
-      "*.config.ts"
-    ]
   }
 ];
 
