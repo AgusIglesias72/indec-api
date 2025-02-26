@@ -7,6 +7,16 @@ import { EmaeRow } from '@/types';
 // Inicializar cliente Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
+
+if (!supabaseUrl || !supabaseKey) {
+    throw new Error(
+      `Unable to initialize Supabase client. Missing environment variables: ${
+        !supabaseUrl ? 'NEXT_PUBLIC_SUPABASE_URL ' : ''
+      }${!supabaseKey ? 'SUPABASE_SERVICE_ROLE_KEY' : ''}`
+    );
+  }
+
+  
 const supabase = createClient<Database>(supabaseUrl, supabaseKey);
 
 
