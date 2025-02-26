@@ -11,7 +11,7 @@ export const maxDuration = 300; // 5 minutos como máximo para completar la tare
 
 // Configurar cliente de Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY as string;
 const supabase = createClient<Database>(supabaseUrl, supabaseKey);
 
 /**
