@@ -3,7 +3,7 @@ import axios from 'axios';
 import * as XLSX from 'xlsx';
 import { parse } from 'csv-parse/sync';
 import { EmaeRow, EmaeByActivityInsert, IpcRow } from '../../../types';
-import { fetchIPCData, calculateIPCVariations } from './ipc-fetcher';
+import { fetchIPCData } from './ipc-fetcher';
 
 /**
  * Servicio para obtener datos del INDEC

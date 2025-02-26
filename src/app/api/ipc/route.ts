@@ -101,11 +101,10 @@ export async function GET(request: NextRequest) {
       const additionalDataPromises = allKeys.map(async (key) => {
         const items = dataByKey[key];
         const earliestDate = items[0].date; // Ya están ordenados cronológicamente
-        const latestDate = items[items.length - 1].date;
         
         // Obtener datos para este componente y región desde el año anterior
         // para poder calcular variaciones
-        const [regionPart, componentPart] = key.split('_', 1);
+        const [regionPart] = key.split('_', 1);
         const componentCode = key.substring(regionPart.length + 1);
         const earliestDateObj = new Date(earliestDate);
         const oneYearBefore = new Date(earliestDateObj);
