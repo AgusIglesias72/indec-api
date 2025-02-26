@@ -22,9 +22,11 @@ export async function GET(request: NextRequest) {
     // Verificar autenticación para el cron job
     const authHeader = request.headers.get('authorization');
     const isVercelCron = request.headers.get('x-vercel-cron') === 'true';
+    const isVercelDeployment = process.env.VERCEL_ENV !== undefined;
     
-    // Permitir llamadas desde Vercel cron sin token
-    if (!isVercelCron && (!authHeader || authHeader.split(' ')[1] !== process.env.CRON_SECRET_KEY)) {
+    // Permitir llamadas desde Vercel cron o entorno de Vercel sin token
+    if ((!isVercelCron && !isVercelDeployment) && 
+        (!authHeader || authHeader.split(' ')[1] !== process.env.CRON_SECRET_KEY)) {
       console.error('Intento de acceso no autorizado al cron job');
       return NextResponse.json(
         { error: 'No autorizado' },
