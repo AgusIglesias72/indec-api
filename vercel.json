@@ -2,10 +2,8 @@
   "crons": [
     {
       "path": "/api/cron/update-indec-data",
-      "schedule": "0 8 * * *",
-      "headers": [
-        { "key": "x-vercel-cron", "value": "true" }
-      ]
+      "schedule": "0 8 * * *"
+     
     }
   ],
   "headers": [
