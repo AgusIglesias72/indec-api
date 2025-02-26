@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const format = searchParams.get('format') || 'json';
     const componentType = searchParams.get('component_type');
-    const componentCode = searchParams.get('component_code');
+    const componentCode = searchParams.get('component_code') || 'GENERAL';
     const region = searchParams.get('region') || 'Nacional';
     const includeVariations = searchParams.get('include_variations') !== 'false'; // Por defecto, incluir variaciones
     
