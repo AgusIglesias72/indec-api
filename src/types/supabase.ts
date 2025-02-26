@@ -90,9 +90,161 @@ export type Database = {
         }
         Relationships: []
       }
+      ipc: {
+        Row: {
+          component: string
+          component_code: string
+          component_type: string
+          created_at: string | null
+          date: string
+          id: string
+          index_value: number
+          region: string
+        }
+        Insert: {
+          component: string
+          component_code: string
+          component_type: string
+          created_at?: string | null
+          date: string
+          id?: string
+          index_value: number
+          region?: string
+        }
+        Update: {
+          component?: string
+          component_code?: string
+          component_type?: string
+          created_at?: string | null
+          date?: string
+          id?: string
+          index_value?: number
+          region?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      ipc_bienes_servicios: {
+        Row: {
+          component: string | null
+          component_code: string | null
+          created_at: string | null
+          date: string | null
+          id: string | null
+          index_value: number | null
+          region: string | null
+        }
+        Insert: {
+          component?: string | null
+          component_code?: string | null
+          created_at?: string | null
+          date?: string | null
+          id?: string | null
+          index_value?: number | null
+          region?: string | null
+        }
+        Update: {
+          component?: string | null
+          component_code?: string | null
+          created_at?: string | null
+          date?: string | null
+          id?: string | null
+          index_value?: number | null
+          region?: string | null
+        }
+        Relationships: []
+      }
+      ipc_categorias: {
+        Row: {
+          component: string | null
+          component_code: string | null
+          created_at: string | null
+          date: string | null
+          id: string | null
+          index_value: number | null
+          region: string | null
+        }
+        Insert: {
+          component?: string | null
+          component_code?: string | null
+          created_at?: string | null
+          date?: string | null
+          id?: string | null
+          index_value?: number | null
+          region?: string | null
+        }
+        Update: {
+          component?: string | null
+          component_code?: string | null
+          created_at?: string | null
+          date?: string | null
+          id?: string | null
+          index_value?: number | null
+          region?: string | null
+        }
+        Relationships: []
+      }
+      ipc_general: {
+        Row: {
+          component: string | null
+          component_code: string | null
+          created_at: string | null
+          date: string | null
+          id: string | null
+          index_value: number | null
+          region: string | null
+        }
+        Insert: {
+          component?: string | null
+          component_code?: string | null
+          created_at?: string | null
+          date?: string | null
+          id?: string | null
+          index_value?: number | null
+          region?: string | null
+        }
+        Update: {
+          component?: string | null
+          component_code?: string | null
+          created_at?: string | null
+          date?: string | null
+          id?: string | null
+          index_value?: number | null
+          region?: string | null
+        }
+        Relationships: []
+      }
+      ipc_rubros: {
+        Row: {
+          component: string | null
+          component_code: string | null
+          created_at: string | null
+          date: string | null
+          id: string | null
+          index_value: number | null
+          region: string | null
+        }
+        Insert: {
+          component?: string | null
+          component_code?: string | null
+          created_at?: string | null
+          date?: string | null
+          id?: string | null
+          index_value?: number | null
+          region?: string | null
+        }
+        Update: {
+          component?: string | null
+          component_code?: string | null
+          created_at?: string | null
+          date?: string | null
+          id?: string | null
+          index_value?: number | null
+          region?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never

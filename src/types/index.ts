@@ -156,3 +156,33 @@ export interface EconomicReport {
     change: number;
   }[];
 }
+
+// Tipos para el IPC (sin campos de variación almacenados)
+export type IpcRow = {
+  id: string;
+  date: string;
+  component: string;
+  component_code: string;
+  component_type: string; // 'GENERAL', 'RUBRO', 'CATEGORIA', 'BYS'
+  index_value: number;
+  region: string; // Región (Nacional, GBA, etc.)
+  created_at: string;
+};
+
+// Tipo para las respuestas de API que incluye variaciones calculadas dinámicamente
+export type IpcResponse = {
+  id: string;
+  date: string;
+  component: string;
+  component_code: string;
+  component_type: string;
+  index_value: number;
+  region: string;
+  // Variaciones calculadas dinámicamente
+  monthly_pct_change?: number;
+  yearly_pct_change?: number;
+  accumulated_pct_change?: number;
+};
+
+export type IpcInsert = Omit<IpcRow, 'id'>;
+export type IpcUpdate = Partial<IpcInsert>;

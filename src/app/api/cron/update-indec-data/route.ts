@@ -90,7 +90,34 @@ export async function GET(request: NextRequest) {
       });
     }
     
-    // Registrar la ejecución del cron job en Supabase (opcional)
+    // 3. Actualizar IPC general
+    try {
+      console.log('Iniciando actualización de IPC');
+      const ipcResult = await updateIPCData();
+      results.push({
+        taskId: 'update-ipc',
+        dataSource: 'INDEC - IPC',
+        startTime,
+        endTime: new Date().toISOString(),
+        recordsProcessed: ipcResult.count,
+        status: 'success',
+        details: `Se actualizaron ${ipcResult.count} registros de IPC`
+      });
+      console.log(`Actualización de IPC completada: ${ipcResult.count} registros`);
+    } catch (error) {
+      console.error('Error en actualización de IPC:', error);
+      results.push({
+        taskId: 'update-ipc',
+        dataSource: 'INDEC - IPC',
+        startTime,
+        endTime: new Date().toISOString(),
+        recordsProcessed: 0,
+        status: 'error',
+        details: `Error: ${(error as Error).message}`
+      });
+    }
+    
+    // Registrar la ejecución del cron job en Supabase
     try {
       const { error } = await supabase
         .from('cron_executions')
@@ -213,6 +240,51 @@ async function updateEmaeByActivityData() {
     count: data?.length || 0, 
     message: 'Datos actualizados correctamente',
     sectorCount: new Set(data?.map(item => item.economy_sector) || []).size,
+    firstRecord: data && data.length > 0 ? data[0] : null,
+    lastRecord: data && data.length > 0 ? data[data.length - 1] : null
+  };
+}
+
+
+
+/**
+ * Actualiza los datos del IPC
+ */
+/**
+ * Actualiza los datos del IPC
+ */
+async function updateIPCData() {
+  console.log('Iniciando actualización de datos IPC...');
+  
+  // 1. Obtener datos nuevos del INDEC
+  let newData = await fetchINDECData('ipc');
+  
+  if (!newData || newData.length === 0) {
+    return { count: 0, message: 'No hay datos nuevos para procesar' };
+  }
+  
+  console.log(`Obtenidos ${newData.length} registros nuevos de IPC`);
+  
+  // 2. Guardar en Supabase
+  const { data, error } = await supabase
+    .from('ipc')
+    .upsert(newData, { 
+      onConflict: 'date,component_code,region',
+      ignoreDuplicates: false // Actualizar registros existentes
+    })
+    .select();
+  
+  if (error) {
+    throw new Error(`Error al actualizar IPC: ${error.message}`);
+  }
+  
+  console.log(`Datos IPC actualizados: ${data?.length || 0} registros`);
+  
+  // Ya no es necesario calcular variaciones, ya que se harán dinámicamente en la API
+  
+  return { 
+    count: data?.length || 0, 
+    message: 'Datos IPC actualizados correctamente',
     firstRecord: data && data.length > 0 ? data[0] : null,
     lastRecord: data && data.length > 0 ? data[data.length - 1] : null
   };

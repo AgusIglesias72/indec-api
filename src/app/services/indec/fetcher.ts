@@ -2,7 +2,8 @@
 import axios from 'axios';
 import * as XLSX from 'xlsx';
 import { parse } from 'csv-parse/sync';
-import { EmaeRow, EmaeByActivityInsert } from '../../../types';
+import { EmaeRow, EmaeByActivityInsert, IpcRow } from '../../../types';
+import { fetchIPCData, calculateIPCVariations } from './ipc-fetcher';
 
 /**
  * Servicio para obtener datos del INDEC
@@ -13,6 +14,8 @@ export async function fetchINDECData(indicator: string): Promise<any[]> {
       return await fetchEmaeData();
     case 'emae_by_activity':
       return await fetchEmaeByActivityData();
+    case 'ipc':
+      return await fetchIPCData();
     default:
       throw new Error(`Indicador no soportado: ${indicator}`);
   }
@@ -380,6 +383,8 @@ export async function importHistoricalDataFromCSV(csvContent: string, indicator:
         return parseEmaeCSV(records);
       case 'emae_by_activity':
         return parseEmaeByActivityCSV(records);
+      case 'ipc':
+        return parseIpcCSV(records);
       default:
         throw new Error(`Indicador no soportado para importación: ${indicator}`);
     }
@@ -412,6 +417,25 @@ function parseEmaeByActivityCSV(records: any[]): Omit<EmaeByActivityInsert, 'id'
     economy_sector: record.economy_sector,
     economy_sector_code: record.economy_sector_code,
     original_value: parseFloat(record.original_value),
+    created_at: new Date().toISOString()
+  }));
+}
+
+
+/**
+ * Procesa registros CSV del IPC
+ */
+function parseIpcCSV(records: any[]): Omit<IpcRow, 'id'>[] {
+  return records.map(record => ({
+    date: record.date,
+    component: record.component,
+    component_code: record.component_code,
+    component_type: record.component_type || 'RUBRO',
+    index_value: parseFloat(record.index_value),
+    monthly_pct_change: record.monthly_pct_change ? parseFloat(record.monthly_pct_change) : null,
+    yearly_pct_change: record.yearly_pct_change ? parseFloat(record.yearly_pct_change) : null,
+    accumulated_pct_change: record.accumulated_pct_change ? parseFloat(record.accumulated_pct_change) : null,
+    region: record.region || 'Nacional',
     created_at: new Date().toISOString()
   }));
 }

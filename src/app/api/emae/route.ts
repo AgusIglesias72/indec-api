@@ -90,6 +90,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       data: transformedData,
       metadata: {
+        indicator: 'emae',
+        description: 'El Estimador mensual de actividad económica (EMAE) refleja la evolución mensual de la actividad económica del conjunto de los sectores productivos a nivel nacional. Este indicador permite anticipar las tasas de variación del producto interno bruto (PIB) trimestral.',
         count: transformedData.length,
         page,
         limit,

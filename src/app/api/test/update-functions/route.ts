@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { fetchINDECData } from '@/app/services/indec/fetcher';
 import { Database } from '../../../../types/supabase';
+import { calculateIPCVariations } from '@/app/services/indec/ipc-fetcher';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
     
     if (!funcType) {
       return NextResponse.json(
-        { error: 'Debe especificar el parámetro "func" (emae o emae_activity)' },
+        { error: 'Debe especificar el parámetro "func" (emae, emae_activity, ipc, ipc_component)' },
         { status: 400 }
       );
     }
@@ -51,9 +52,23 @@ export async function GET(request: NextRequest) {
         function: 'updateEmaeByActivityData',
         result
       });
+    } else if (funcType === 'ipc') {
+      const result = await updateIPCData();
+      return NextResponse.json({
+        success: true,
+        function: 'updateIPCData',
+        result
+      });
+    } else if (funcType === 'ipc_component') {
+      const result = await updateIPCByComponentData();
+      return NextResponse.json({
+        success: true,
+        function: 'updateIPCByComponentData',
+        result
+      });
     } else {
       return NextResponse.json(
-        { error: 'Valor de func no válido. Use "emae" o "emae_activity"' },
+        { error: 'Valor de func no válido. Use "emae", "emae_activity", "ipc" o "ipc_component"' },
         { status: 400 }
       );
     }
@@ -149,6 +164,126 @@ async function updateEmaeByActivityData() {
     count: data?.length || 0, 
     message: 'Datos actualizados correctamente',
     sectorCount: new Set(data?.map(item => item.economy_sector) || []).size,
+    firstRecord: data && data.length > 0 ? data[0] : null,
+    lastRecord: data && data.length > 0 ? data[data.length - 1] : null
+  };
+}
+
+
+
+/**
+ * Actualiza los datos del IPC
+ */
+async function updateIPCData() {
+  console.log('Iniciando actualización de datos IPC...');
+  
+  // 1. Obtener datos nuevos del INDEC
+  let newData = await fetchINDECData('ipc');
+  
+  if (!newData || newData.length === 0) {
+    return { count: 0, message: 'No hay datos nuevos para procesar' };
+  }
+  
+  console.log(`Obtenidos ${newData.length} registros nuevos de IPC`);
+  
+  // 2. Guardar en Supabase
+  const { data, error } = await supabase
+    .from('ipc')
+    .upsert(newData, { 
+      onConflict: 'date,component_code',
+      ignoreDuplicates: false // Actualizar registros existentes
+    })
+    .select();
+  
+  if (error) {
+    throw new Error(`Error al actualizar IPC: ${error.message}`);
+  }
+  
+  console.log(`Datos IPC actualizados: ${data?.length || 0} registros`);
+  
+  // 3. Calcular variaciones para el nivel general
+  if (data && data.length > 0) {
+    try {
+      // Obtener todos los registros del nivel general
+      const { data: generalData, error: generalError } = await supabase
+        .from('ipc')
+        .select('*')
+        .eq('is_general_index', true)
+        .order('date', { ascending: true });
+      
+      if (generalError) throw generalError;
+      
+      if (generalData && generalData.length > 0) {
+        // Calcular variaciones
+        const dataWithVariations = calculateIPCVariations(generalData);
+        
+        // Actualizar registros con variaciones
+        for (const item of dataWithVariations) {
+          if (item.monthly_pct_change !== undefined || 
+              item.yearly_pct_change !== undefined || 
+              item.accumulated_pct_change !== undefined) {
+            
+            const updateData: any = {};
+            if (item.monthly_pct_change !== undefined) updateData.monthly_pct_change = item.monthly_pct_change;
+            if (item.yearly_pct_change !== undefined) updateData.yearly_pct_change = item.yearly_pct_change;
+            if (item.accumulated_pct_change !== undefined) updateData.accumulated_pct_change = item.accumulated_pct_change;
+            
+            await supabase
+              .from('ipc')
+              .update(updateData)
+              .eq('id', item.id);
+          }
+        }
+        
+        console.log('Variaciones de IPC calculadas y actualizadas');
+      }
+    } catch (varError) {
+      console.error('Error al calcular variaciones del IPC:', varError);
+    }
+  }
+  
+  return { 
+    count: data?.length || 0, 
+    message: 'Datos IPC actualizados correctamente',
+    firstRecord: data && data.length > 0 ? data[0] : null,
+    lastRecord: data && data.length > 0 ? data[data.length - 1] : null
+  };
+}
+
+/**
+ * Actualiza los datos del IPC por componente
+ */
+async function updateIPCByComponentData() {
+  console.log('Iniciando actualización de datos IPC por componente...');
+  
+  // 1. Obtener datos nuevos
+  let newData = await fetchINDECData('ipc_by_component');
+  
+  if (!newData || newData.length === 0) {
+    return { count: 0, message: 'No hay datos nuevos para procesar' };
+  }
+  
+  console.log(`Obtenidos ${newData.length} registros nuevos de IPC por componente`);
+  
+  // 2. Guardar en Supabase
+  const { data, error } = await supabase
+    .from('ipc_by_component')
+    .upsert(newData, { 
+      onConflict: 'date,component_code',
+      ignoreDuplicates: false // Actualizar registros existentes
+    })
+    .select();
+  
+  if (error) {
+    throw new Error(`Error al actualizar IPC por componente: ${error.message}`);
+  }
+  
+  console.log(`Datos IPC por componente actualizados: ${data?.length || 0} registros`);
+  
+  return { 
+    count: data?.length || 0, 
+    message: 'Datos IPC por componente actualizados correctamente',
+    componentCount: new Set(data?.map(item => item.component) || []).size,
     firstRecord: data && data.length > 0 ? data[0] : null,
     lastRecord: data && data.length > 0 ? data[data.length - 1] : null
   };
