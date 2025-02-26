@@ -9,7 +9,6 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
 const supabase = createClient<Database>(supabaseUrl, supabaseKey);
 
-console.log('supabase', supabaseKey);
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,6 +21,8 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const format = searchParams.get('format') || 'json';
     
+    console.log('supabase', supabaseKey);
+
     // Construir consulta base
     let query = supabase
       .from('emae')
