@@ -2,146 +2,104 @@
 @tailwind components;
 @tailwind utilities;
 
-
-
 @layer base {
   :root {
-
-    --background: 0 0% 100%;
-
-    --foreground: 240 10% 3.9%;
+    /* Colores base inspirados en INDEC */
+    --background: 210 33% 99%;
+    --foreground: 220 10% 20%;
 
     --card: 0 0% 100%;
-
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 220 10% 20%;
 
     --popover: 0 0% 100%;
+    --popover-foreground: 220 10% 20%;
 
-    --popover-foreground: 240 10% 3.9%;
-
-    --primary: 240 5.9% 10%;
-
+    --primary: 208 100% 27%; /* Azul INDEC */
     --primary-foreground: 0 0% 98%;
 
-    --secondary: 240 4.8% 95.9%;
+    --secondary: 210 20% 94%; /* Gris claro INDEC */
+    --secondary-foreground: 208 100% 27%;
 
-    --secondary-foreground: 240 5.9% 10%;
+    --muted: 210 20% 94%;
+    --muted-foreground: 215 16% 47%;
 
-    --muted: 240 4.8% 95.9%;
+    --accent: 210 20% 94%;
+    --accent-foreground: 208 100% 27%;
 
-    --muted-foreground: 240 3.8% 46.1%;
-
-    --accent: 240 4.8% 95.9%;
-
-    --accent-foreground: 240 5.9% 10%;
-
-    --destructive: 0 84.2% 60.2%;
-
+    --destructive: 0 85% 44%; /* Rojo INDEC */
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 5.9% 90%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 208 100% 27%;
 
-    --input: 240 5.9% 90%;
+    /* Colores para gráficos - alineados con la paleta INDEC */
+    --chart-1: 208 100% 27%; /* Azul principal */
+    --chart-2: 209 49% 54%;  /* Azul claro */
+    --chart-3: 215 16% 60%;  /* Gris */
+    --chart-4: 35 100% 55%;  /* Naranja */
+    --chart-5: 145 80% 30%;  /* Verde */
 
-    --ring: 240 10% 3.9%;
+    --radius: 0.5rem;
 
-    --chart-1: 12 76% 61%;
-
-    --chart-2: 173 58% 39%;
-
-    --chart-3: 197 37% 24%;
-
-    --chart-4: 43 74% 66%;
-
-    --chart-5: 27 87% 67%;
-
-    --radius: 0.5rem
-  ;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%}
-  .dark {
-
-    --background: 240 10% 3.9%;
-
-    --foreground: 0 0% 98%;
-
-    --card: 240 10% 3.9%;
-
-    --card-foreground: 0 0% 98%;
-
-    --popover: 240 10% 3.9%;
-
-    --popover-foreground: 0 0% 98%;
-
-    --primary: 0 0% 98%;
-
-    --primary-foreground: 240 5.9% 10%;
-
-    --secondary: 240 3.7% 15.9%;
-
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 240 3.7% 15.9%;
-
-    --muted-foreground: 240 5% 64.9%;
-
-    --accent: 240 3.7% 15.9%;
-
-    --accent-foreground: 0 0% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 240 3.7% 15.9%;
-
-    --input: 240 3.7% 15.9%;
-
-    --ring: 240 4.9% 83.9%;
-
-    --chart-1: 220 70% 50%;
-
-    --chart-2: 160 60% 45%;
-
-    --chart-3: 30 80% 55%;
-
-    --chart-4: 280 65% 60%;
-
-    --chart-5: 340 75% 55%
-  ;
-
-    --sidebar-background: 240 5.9% 10%;
-
-    --sidebar-foreground: 240 4.8% 95.9%;
-
-    --sidebar-primary: 224.3 76.3% 48%;
-
+    /* Colores para la barra lateral */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 10% 20%;
+    --sidebar-primary: 208 100% 27%;
     --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 20% 94%;
+    --sidebar-accent-foreground: 208 100% 27%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 208 100% 27%;
+  }
 
-    --sidebar-accent: 240 3.7% 15.9%;
+  .dark {
+    --background: 220 10% 10%;
+    --foreground: 0 0% 95%;
 
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --card: 220 10% 15%;
+    --card-foreground: 0 0% 95%;
 
-    --sidebar-border: 240 3.7% 15.9%;
+    --popover: 220 10% 15%;
+    --popover-foreground: 0 0% 95%;
 
-    --sidebar-ring: 217.2 91.2% 59.8%}
+    --primary: 208 80% 52%; /* Azul INDEC más claro para modo oscuro */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 217 19% 27%;
+    --secondary-foreground: 0 0% 95%;
+
+    --muted: 217 19% 27%;
+    --muted-foreground: 210 20% 80%;
+
+    --accent: 217 19% 27%;
+    --accent-foreground: 0 0% 95%;
+
+    --destructive: 0 75% 50%;
+    --destructive-foreground: 0 0% 95%;
+
+    --border: 217 19% 27%;
+    --input: 217 19% 27%;
+    --ring: 208 80% 60%;
+
+    /* Colores para gráficos en modo oscuro */
+    --chart-1: 208 80% 60%; /* Azul principal */
+    --chart-2: 209 70% 70%; /* Azul claro */
+    --chart-3: 215 30% 70%; /* Gris claro */
+    --chart-4: 35 90% 60%;  /* Naranja */
+    --chart-5: 145 70% 50%; /* Verde */
+
+    /* Colores para la barra lateral en modo oscuro */
+    --sidebar-background: 220 10% 15%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 208 80% 52%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217 19% 27%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 217 19% 27%;
+    --sidebar-ring: 208 80% 60%;
+  }
 }
-
-
 
 @layer base {
   * {
@@ -149,5 +107,40 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* Estilos para componentes recurrentes */
+  .page-container {
+    @apply container mx-auto px-4 py-8 max-w-7xl;
+  }
+  
+  .page-title {
+    @apply text-3xl font-bold text-indec-blue-dark mb-6;
+  }
+  
+  .page-subtitle {
+    @apply text-xl font-semibold text-indec-gray-dark mb-4;
+  }
+  
+  .card-stats {
+    @apply bg-white rounded-lg shadow-sm border border-indec-gray-medium p-5 transition-all hover:shadow-md;
+  }
+  
+  .card-chart {
+    @apply bg-white rounded-lg shadow-sm border border-indec-gray-medium p-5 transition-all hover:shadow-md;
+  }
+  
+  .indicator-up {
+    @apply text-indec-green font-medium flex items-center;
+  }
+  
+  .indicator-down {
+    @apply text-indec-red font-medium flex items-center;
+  }
+  
+  .indicator-neutral {
+    @apply text-indec-gray-dark font-medium flex items-center;
   }
 }
