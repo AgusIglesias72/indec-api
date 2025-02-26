@@ -1,6 +1,6 @@
 // app/lib/supabase.ts
 import { createClient } from '@supabase/supabase-js';
-import { Database } from '@/types/supabase';
+import { Database } from '../types/supabase';
 
 // Para Client Components
 export function createClientComponentClient() {

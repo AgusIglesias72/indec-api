@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
-import { CronTaskResult } from '@/types';
+import { CronTaskResult } from '../../../types';
 
 export default function DataManagementPage() {
   const [isLoading, setIsLoading] = useState(false);

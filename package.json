@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "supabase:types": "supabase gen types typescript --project-id rdyrzmzlabxeazpazhqw --schema public > types/supabase.ts",
+    "supabase:types": "supabase gen types typescript --project-id rdyrzmzlabxeazpazhqw --schema public > src/types/supabase.ts",
     "supabase:login": "npx supabase login"
   },
   "dependencies": {
@@ -28,6 +28,7 @@
     "next": "15.1.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "supabase": "^2.15.8",
     "tailwind-merge": "^3.0.2",
     "tailwindcss-animate": "^1.0.7",
     "xlsx": "^0.18.5"

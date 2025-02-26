@@ -1,4 +1,4 @@
-import { EconomicTimeSeriesPoint, SeasonalAdjustmentOptions } from '@/types';
+import { EconomicTimeSeriesPoint, SeasonalAdjustmentOptions } from '../../../types';
 
 /**
  * Servicio para desestacionalizar series temporales

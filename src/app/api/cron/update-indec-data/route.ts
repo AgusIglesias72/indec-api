@@ -1,12 +1,13 @@
+// src/app/api/cron/update-indec-data/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { fetchINDECData } from '@/app/services/indec/fetcher';
-import { desestacionalizar, calculateTrendCycle } from '@/app/services/analysis/seasonal';
 import { CronTaskResult } from '@/types';
 import { Database } from '@/types/supabase';
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
+export const maxDuration = 300; // 5 minutos como máximo para completar la tarea
 
 // Configurar cliente de Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
@@ -20,18 +21,24 @@ export async function GET(request: NextRequest) {
   try {
     // Verificar autenticación para el cron job
     const authHeader = request.headers.get('authorization');
-    if (!authHeader || authHeader !== `Bearer ${process.env.CRON_SECRET_KEY}`) {
+    const isVercelCron = request.headers.get('x-vercel-cron') === 'true';
+    
+    // Permitir llamadas desde Vercel cron sin token
+    if (!isVercelCron && (!authHeader || authHeader.split(' ')[1] !== process.env.CRON_SECRET_KEY)) {
+      console.error('Intento de acceso no autorizado al cron job');
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
       );
     }
     
+    console.log('Iniciando cron job de actualización de datos INDEC');
     const results: CronTaskResult[] = [];
     const startTime = new Date().toISOString();
     
     // 1. Actualizar EMAE general
     try {
+      console.log('Iniciando actualización de EMAE general');
       const emaeResult = await updateEmaeData();
       results.push({
         taskId: 'update-emae',
@@ -42,7 +49,9 @@ export async function GET(request: NextRequest) {
         status: 'success',
         details: `Se actualizaron ${emaeResult.count} registros de EMAE`
       });
+      console.log(`Actualización de EMAE completada: ${emaeResult.count} registros`);
     } catch (error) {
+      console.error('Error en actualización de EMAE:', error);
       results.push({
         taskId: 'update-emae',
         dataSource: 'INDEC - EMAE',
@@ -56,6 +65,7 @@ export async function GET(request: NextRequest) {
     
     // 2. Actualizar EMAE por actividad
     try {
+      console.log('Iniciando actualización de EMAE por actividad');
       const emaeByActivityResult = await updateEmaeByActivityData();
       results.push({
         taskId: 'update-emae-by-activity',
@@ -66,7 +76,9 @@ export async function GET(request: NextRequest) {
         status: 'success',
         details: `Se actualizaron ${emaeByActivityResult.count} registros de EMAE por actividad`
       });
+      console.log(`Actualización de EMAE por actividad completada: ${emaeByActivityResult.count} registros`);
     } catch (error) {
+      console.error('Error en actualización de EMAE por actividad:', error);
       results.push({
         taskId: 'update-emae-by-activity',
         dataSource: 'INDEC - EMAE por actividad',
@@ -78,8 +90,25 @@ export async function GET(request: NextRequest) {
       });
     }
     
-    // Registrar la ejecución del cron job (en un proyecto real, se guardaría en la base de datos)
-    console.log('Resultados del cron job:', JSON.stringify(results, null, 2));
+    // Registrar la ejecución del cron job en Supabase (opcional)
+    try {
+      const { error } = await supabase
+        .from('cron_executions')
+        .insert({
+          execution_time: new Date().toISOString(),
+          results: JSON.parse(JSON.stringify(results)),
+          status: results.every(r => r.status === 'success') ? 'success' : 'partial'
+        });
+      
+      if (error) {
+        console.warn('Error al registrar ejecución del cron:', error.message);
+      }
+    } catch (err) {
+      console.warn('Error al registrar ejecución del cron:', err);
+      // No fallamos el cron por errores de registro
+    }
+    
+    console.log('Cron job completado:', JSON.stringify(results, null, 2));
     
     return NextResponse.json({
       success: true,
@@ -97,93 +126,92 @@ export async function GET(request: NextRequest) {
 
 /**
  * Actualiza los datos del EMAE general
+ * Utilizando la implementación probada en el endpoint de test
  */
 async function updateEmaeData() {
+  console.log('Iniciando actualización de datos EMAE...');
+  
   // 1. Obtener datos nuevos del INDEC
-  const newData = await fetchINDECData('emae');
+  let newData = await fetchINDECData('emae');
+  
+  // Generar UUIDs válidos para cada registro
+  newData = newData.map(item => {
+    // Eliminar el id generado y dejar que Supabase genere uno automáticamente
+    const { id, ...rest } = item;
+    return rest;
+  });
   
   if (!newData || newData.length === 0) {
     return { count: 0, message: 'No hay datos nuevos para procesar' };
   }
   
-  // 2. Desestacionalizar datos (si es necesario)
-  // En este caso, los datos ya vienen con valores desestacionalizados,
-  // pero en un caso real podríamos aplicar nuestros propios métodos
+  console.log(`Obtenidos ${newData.length} registros nuevos de EMAE`);
   
-  // 3. Calcular tendencia-ciclo (si no está incluida)
-  for (const item of newData) {
-    if (item.cycle_trend_value === undefined || item.cycle_trend_value === null) {
-      // Obtener serie histórica para contexto
-      const { data: historicalData } = await supabase
-        .from('emae')
-        .select('date, original_value')
-        .order('date', { ascending: true });
-      
-      if (historicalData && historicalData.length > 0) {
-        // Combinar datos históricos y nuevos
-        const combinedSeries = [
-          ...historicalData.map(d => ({ date: d.date, value: d.original_value })),
-          ...newData.map(d => ({ date: d.date, value: d.original_value }))
-        ];
-        
-        // Ordenar por fecha
-        combinedSeries.sort((a, b) => 
-          new Date(a.date).getTime() - new Date(b.date).getTime()
-        );
-        
-        // Eliminar duplicados
-        const uniqueSeries = combinedSeries.filter((item, index, self) =>
-          index === self.findIndex(t => t.date === item.date)
-        );
-        
-        // Calcular tendencia-ciclo
-        const values = uniqueSeries.map(item => item.value);
-        const trendCycleValues = calculateTrendCycle(values);
-        
-        // Asignar valores a los nuevos datos
-        for (let i = 0; i < newData.length; i++) {
-          const dataIndex = uniqueSeries.findIndex(item => item.date === newData[i].date);
-          if (dataIndex >= 0) {
-            newData[i].cycle_trend_value = trendCycleValues[dataIndex];
-          }
-        }
-      }
-    }
-  }
-  
-  // 4. Guardar en Supabase
+  // 2. Guardar en Supabase
   const { data, error } = await supabase
     .from('emae')
-    .upsert(newData, { onConflict: 'date' })
+    .upsert(newData, { 
+      onConflict: 'date',
+      ignoreDuplicates: false // Actualizar registros existentes
+    })
     .select();
   
   if (error) {
     throw new Error(`Error al actualizar EMAE: ${error.message}`);
   }
   
-  return { count: data?.length || 0, message: 'Datos actualizados correctamente' };
+  console.log(`Datos EMAE actualizados: ${data?.length || 0} registros`);
+  
+  return { 
+    count: data?.length || 0, 
+    message: 'Datos actualizados correctamente',
+    firstRecord: data && data.length > 0 ? data[0] : null,
+    lastRecord: data && data.length > 0 ? data[data.length - 1] : null
+  };
 }
 
 /**
  * Actualiza los datos del EMAE por actividad
+ * Utilizando la implementación probada en el endpoint de test
  */
 async function updateEmaeByActivityData() {
+  console.log('Iniciando actualización de datos EMAE por actividad...');
+  
   // 1. Obtener datos nuevos
-  const newData = await fetchINDECData('emae_by_activity');
+  let newData = await fetchINDECData('emae_by_activity');
+  
+  // Eliminar los IDs para que Supabase los genere automáticamente
+  newData = newData.map(item => {
+    const { id, ...rest } = item;
+    return rest;
+  });
   
   if (!newData || newData.length === 0) {
     return { count: 0, message: 'No hay datos nuevos para procesar' };
   }
   
+  console.log(`Obtenidos ${newData.length} registros nuevos de EMAE por actividad`);
+  
   // 2. Guardar en Supabase
   const { data, error } = await supabase
-    .from('emae_by_activty')
-    .upsert(newData, { onConflict: 'id' })
+    .from('emae_by_activity')
+    .upsert(newData, { 
+      onConflict: 'date, economy_sector_code',
+      ignoreDuplicates: false // Actualizar registros existentes
+    })
     .select();
   
   if (error) {
     throw new Error(`Error al actualizar EMAE por actividad: ${error.message}`);
   }
   
-  return { count: data?.length || 0, message: 'Datos actualizados correctamente' };
+  console.log(`Datos EMAE por actividad actualizados: ${data?.length || 0} registros`);
+  
+  return { 
+    count: data?.length || 0, 
+    message: 'Datos actualizados correctamente',
+    sectorCount: new Set(data?.map(item => item.economy_sector) || []).size,
+    firstRecord: data && data.length > 0 ? data[0] : null,
+    lastRecord: data && data.length > 0 ? data[data.length - 1] : null
+  };
 }

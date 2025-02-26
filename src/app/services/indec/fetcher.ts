@@ -2,7 +2,7 @@
 import axios from 'axios';
 import * as XLSX from 'xlsx';
 import { parse } from 'csv-parse/sync';
-import { EmaeRow, EmaeByActivityInsert } from '@/types';
+import { EmaeRow, EmaeByActivityInsert } from '../../../types';
 
 /**
  * Servicio para obtener datos del INDEC
@@ -175,66 +175,195 @@ async function fetchEmaeData(): Promise<Omit<EmaeRow, 'id'>[]> {
 }
 
 /**
- * Obtiene los datos del EMAE por actividad económica
- * (Mantenemos la simulación para este método por ahora)
+ * Obtiene los datos del EMAE por actividad económica desde el archivo Excel del INDEC
  */
 async function fetchEmaeByActivityData(): Promise<Omit<EmaeByActivityInsert, 'id'>[]> {
-  try {
-    // Nota: En un entorno real, aquí también implementaríamos la lectura desde un Excel
-    // Para este ejemplo, mantenemos la simulación
-    
-    // Actividades económicas principales del EMAE
-    const sectors = [
-      { code: 'A', name: 'Agricultura, ganadería, caza y silvicultura' },
-      { code: 'B', name: 'Pesca' },
-      { code: 'C', name: 'Explotación de minas y canteras' },
-      { code: 'D', name: 'Industria manufacturera' },
-      { code: 'E', name: 'Electricidad, gas y agua' },
-      { code: 'F', name: 'Construcción' },
-      { code: 'G', name: 'Comercio' },
-      { code: 'H', name: 'Hoteles y restaurantes' },
-      { code: 'I', name: 'Transporte y comunicaciones' },
-      { code: 'J', name: 'Intermediación financiera' },
-      { code: 'K', name: 'Actividades inmobiliarias, empresariales y de alquiler' },
-      { code: 'L', name: 'Administración pública y defensa' },
-      { code: 'M', name: 'Enseñanza' },
-      { code: 'N', name: 'Servicios sociales y de salud' },
-      { code: 'O', name: 'Otras actividades de servicios' },
-      { code: 'P', name: 'Hogares privados con servicio doméstico' }
-    ];
-    
-    const currentDate = new Date();
-    const data: Omit<EmaeByActivityInsert, 'id'>[] = [];
-    
-    // Generar datos para cada sector durante 24 meses
-    for (let i = 0; i < 24; i++) {
-      const date = new Date(currentDate);
-      date.setMonth(date.getMonth() - i);
-      const formattedDate = date.toISOString().split('T')[0];
+    try {
+      // URL del archivo Excel con datos por actividad
+      const url = 'https://www.indec.gob.ar/ftp/cuadros/economia/sh_emae_actividad_base2004.xls';
       
-      // Generar datos para cada sector
-      sectors.forEach(sector => {
-        // Simulación de valores con variación por sector
-        const sectorVariation = (parseInt(sector.code.charCodeAt(0).toString()) % 5) * 0.5;
-        const originalValue = 100 + Math.sin(i * 0.5) * (5 + sectorVariation) + i * (0.1 + sectorVariation * 0.05);
-        
-        data.push({
-          date: formattedDate,
-          economy_sector: sector.name,
-          economy_sector_code: sector.code,
-          original_value: parseFloat(originalValue.toFixed(1)),
-          created_at: new Date().toISOString()
-        });
+      console.log(`Descargando Excel de EMAE por actividad desde: ${url}`);
+      
+      // Descargar archivo
+      const response = await axios.get(url, {
+        responseType: 'arraybuffer'
       });
+      
+      // Procesar el archivo Excel
+      console.log('Archivo de actividades descargado, procesando Excel...');
+      const workbook = XLSX.read(response.data, { 
+        type: 'buffer',
+        cellDates: true
+      });
+      
+      console.log('Hojas disponibles en el Excel de actividades:', workbook.SheetNames);
+      
+      // En el EMAE por actividad, la hoja principal suele ser la primera
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      
+      // Convertir a matriz para procesamiento
+      const data = XLSX.utils.sheet_to_json(worksheet, {
+        header: 1,
+        defval: null,
+        blankrows: false
+      }) as any[][];
+      
+      console.log(`Filas totales en el Excel de actividades: ${data.length}`);
+      
+      // Identificar las actividades económicas (nombres de las columnas)
+      // Generalmente están en las primeras filas del Excel, buscamos el encabezado
+      let headerRow: any[] = [];
+      let headerRowIndex = -1;
+      
+      // Buscar la fila de encabezado que contiene los nombres de las actividades
+      for (let i = 0; i < Math.min(20, data.length); i++) {
+        const row = data[i];
+        // Si la fila tiene varios valores y no contiene año/mes, probablemente es el encabezado
+        if (row && row.length > 5 && row.slice(2).some(cell => cell !== null)) {
+          headerRow = row;
+          headerRowIndex = i;
+          break;
+        }
+      }
+      
+      if (headerRowIndex === -1) {
+        throw new Error('No se pudo encontrar la fila de encabezado con los nombres de las actividades');
+      }
+      
+      console.log(`Fila de encabezado encontrada en el índice ${headerRowIndex}`);
+      
+      // Mapeo de sectores económicos (columnas C a R, índices 2 a 17)
+      // Determinamos los índices de cada sector y su nombre correspondiente
+      const sectors: Array<{index: number, code: string, name: string}> = [];
+      
+      // Códigos de sector según clasificación estándar
+      const sectorCodes = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P'];
+      
+      for (let i = 2; i < headerRow.length; i++) {
+        if (headerRow[i] !== null && headerRow[i] !== undefined) {
+          const sectorName = String(headerRow[i]).trim();
+          // Asignar un código de sector según su posición o usar un valor por defecto
+          const sectorCodeIndex = i - 2;
+          const sectorCode = sectorCodeIndex < sectorCodes.length ? 
+            sectorCodes[sectorCodeIndex] : `S${sectorCodeIndex + 1}`;
+            
+          sectors.push({
+            index: i,
+            code: sectorCode,
+            name: sectorName
+          });
+          
+          console.log(`Sector encontrado: ${sectorCode} - ${sectorName} (columna ${i})`);
+        }
+      }
+      
+      if (sectors.length === 0) {
+        throw new Error('No se pudieron identificar sectores económicos en el Excel');
+      }
+      
+      // Procesar los datos - empezamos después de la fila de encabezado
+      const processedData: Omit<EmaeByActivityInsert, 'id'>[] = [];
+      let currentYear: number | null = null;
+      
+      // Mapeo de nombres de meses a números
+      const monthMap: Record<string, string> = {
+        'enero': '01', 
+        'febrero': '02', 
+        'marzo': '03', 
+        'abril': '04', 
+        'mayo': '05', 
+        'junio': '06', 
+        'julio': '07', 
+        'agosto': '08', 
+        'septiembre': '09', 
+        'octubre': '10', 
+        'noviembre': '11', 
+        'diciembre': '12'
+      };
+      
+      // Recorrer todas las filas de datos (después del encabezado)
+      for (let i = headerRowIndex + 1; i < data.length; i++) {
+        const row = data[i];
+        if (!row || row.length < 3) continue; // Necesitamos al menos algunas columnas
+        
+        // Verificar si hay un año en la columna A
+        if (row[0] !== null && row[0] !== undefined && typeof row[0] === 'number') {
+          // Verificar si es un año válido (entre 1990 y 2030)
+          if (row[0] >= 1990 && row[0] <= 2030) {
+            currentYear = row[0];
+            console.log(`Año encontrado: ${currentYear}`);
+          }
+        }
+        
+        // Verificar si tenemos un mes en la columna B
+        if (!row[1] || typeof row[1] !== 'string') continue;
+        
+        const monthStr = row[1].toLowerCase().trim();
+        if (!monthMap[monthStr]) continue; // No es un mes válido
+        
+        // Si no tenemos un año válido, no podemos procesar esta fila
+        if (currentYear === null) continue;
+        
+        // Crear fecha ISO
+        const date = `${currentYear}-${monthMap[monthStr]}-01`;
+        
+        // Procesar cada sector para esta fecha
+        for (const sector of sectors) {
+          let value = null;
+          
+          // Obtener el valor para este sector desde la columna correspondiente
+          if (row[sector.index] !== null && row[sector.index] !== undefined) {
+            if (typeof row[sector.index] === 'number') {
+              value = row[sector.index];
+            } else if (typeof row[sector.index] === 'string' && !isNaN(parseFloat(row[sector.index]))) {
+              value = parseFloat(row[sector.index]);
+            }
+          }
+          
+          // Solo agregar registros si tenemos un valor
+          if (value !== null) {
+            processedData.push({
+              date,
+              economy_sector: sector.name,
+              economy_sector_code: sector.code,
+              original_value: value,
+              created_at: new Date().toISOString()
+            });
+          }
+        }
+      }
+      
+      console.log(`Datos procesados: ${processedData.length} registros para ${sectors.length} sectores`);
+      
+      if (processedData.length === 0) {
+        console.warn('No se encontraron datos válidos');
+      } else {
+        // Mostrar ejemplos de datos
+        const groupedByDate: Record<string, EmaeByActivityInsert[]> = {};
+        processedData.forEach(item => {
+          if (!groupedByDate[item.date]) {
+            groupedByDate[item.date] = [];
+          }
+          groupedByDate[item.date].push(item);
+        });
+        
+        console.log(`Total de fechas encontradas: ${Object.keys(groupedByDate).length}`);
+        
+        // Mostrar la primera fecha como ejemplo
+        const firstDate = Object.keys(groupedByDate).sort()[0];
+        console.log(`Ejemplo para la fecha ${firstDate}:`);
+        groupedByDate[firstDate].slice(0, 3).forEach(item => {
+          console.log(`  Sector ${item.economy_sector_code} (${item.economy_sector}): ${item.original_value}`);
+        });
+      }
+      
+      return processedData;
+    } catch (error) {
+      console.error('Error al obtener datos de EMAE por actividad:', error);
+      throw new Error(`Error al obtener datos de EMAE por actividad: ${(error as Error).message}`);
     }
-    
-    return data;
-  } catch (error) {
-    console.error('Error al obtener datos de EMAE por actividad:', error);
-    throw new Error(`Error al obtener datos de EMAE por actividad: ${(error as Error).message}`);
   }
-}
-
 /**
  * Función para obtener datos históricos desde un archivo CSV
  */

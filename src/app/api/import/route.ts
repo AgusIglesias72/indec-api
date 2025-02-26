@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { importHistoricalDataFromCSV } from '@/app/services/indec/fetcher';
 import { desestacionalizar } from '@/app/services/analysis/seasonal';
-import { ApiError } from '@/types';
-import { Database } from '@/types/supabase';
+import { ApiError } from '../../../types';
+import { Database } from '../../../types/supabase';
 
 // Configurar cliente de Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;

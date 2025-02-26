@@ -9,6 +9,30 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      cron_executions: {
+        Row: {
+          created_at: string
+          execution_time: string
+          id: string
+          results: Json
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          execution_time?: string
+          id?: string
+          results?: Json
+          status: string
+        }
+        Update: {
+          created_at?: string
+          execution_time?: string
+          id?: string
+          results?: Json
+          status?: string
+        }
+        Relationships: []
+      }
       emae: {
         Row: {
           activities_data: Json[] | null
@@ -39,7 +63,7 @@ export type Database = {
         }
         Relationships: []
       }
-      emae_by_activty: {
+      emae_by_activity: {
         Row: {
           created_at: string
           date: string

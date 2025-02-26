@@ -2,8 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { fetchINDECData } from '@/app/services/indec/fetcher';
-import { desestacionalizar, calculateTrendCycle } from '@/app/services/analysis/seasonal';
-import { Database } from '@/types/supabase';
+import { Database } from '../../../../types/supabase';
 
 export const dynamic = 'force-dynamic';
 
@@ -98,6 +97,7 @@ async function updateEmaeData() {
   // pero en un caso real podríamos aplicar nuestros propios métodos
   
   // 3. Calcular tendencia-ciclo (si no está incluida)
+  /*
   for (const item of newData) {
     if (item.cycle_trend_value === undefined || item.cycle_trend_value === null) {
       // Obtener serie histórica para contexto
@@ -143,6 +143,7 @@ async function updateEmaeData() {
       }
     }
   }
+  */
   
   // 4. Guardar en Supabase
   const { data, error } = await supabase
@@ -187,7 +188,7 @@ async function updateEmaeByActivityData() {
   
   // 2. Guardar en Supabase
   const { data, error } = await supabase
-    .from('emae_by_activty')
+    .from('emae_by_activity')
     .upsert(newData, { onConflict: 'id' })
     .select();
   

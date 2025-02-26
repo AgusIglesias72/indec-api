@@ -9,8 +9,8 @@ import {
   TimeSeries,
   Frequency,
   EmaeByActivityInsert
-} from '@/types';
-import { Database } from '@/types/supabase';
+} from '../../../types';
+import { Database } from '../../../types/supabase';
 
 // Inicializar el cliente de Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
