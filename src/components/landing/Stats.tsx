@@ -1,6 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
+import Counter from "../ui/counter";
 
 const fadeInUpItem = {
   hidden: { opacity: 0, y: 20 },
@@ -34,12 +35,17 @@ export default function Stats() {
           }}
         >
           <motion.div className="flex flex-col" variants={fadeInUpItem}>
-            <span className="text-4xl md:text-5xl font-mono font-semibold text-indec-blue mb-2">+10M</span>
+            <span className="text-4xl md:text-5xl font-mono font-semibold text-indec-blue mb-2">
+              <Counter end={10} decimals={0} suffix="M" prefix="+" duration={.5} 
+            /></span>
             <span className="text-sm text-indec-gray-dark">Datapoints procesados</span>
           </motion.div>
           
           <motion.div className="flex flex-col" variants={fadeInUpItem}>
-            <span className="text-4xl md:text-5xl font-mono font-semibold text-indec-blue mb-2">99.9%</span>
+
+            <span className="text-4xl md:text-5xl font-mono font-semibold text-indec-blue mb-2">
+              <Counter end={99.5} decimals={1} suffix="%" duration={.5} 
+            /></span>
             <span className="text-sm text-indec-gray-dark">Uptime de la API</span>
           </motion.div>
           

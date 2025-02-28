@@ -6,7 +6,7 @@ import { Menu } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { MainNavigation } from "./NavigationMenu"
+import { MainNavigation } from "@/components/navigation/NavigationMenu"
 import { cn } from "@/lib/utils"
 
 export default function NavBar() {
@@ -36,20 +36,19 @@ export default function NavBar() {
             <div className="flex h-8 w-8 items-center justify-center rounded bg-indec-blue text-white font-bold">
               E
             </div>
-            <span className={cn(
-              "font-semibold tracking-tight text-indec-blue transition-colors duration-300",
-              !isScrolled && "text-indec-blue"
-            )}>
+            <span className="font-semibold tracking-tight text-indec-blue transition-colors duration-300">
               EconoVista
             </span>
           </Link>
+          
+         
         </div>
 
           {/* Desktop Navigation */}
-        <div className="hidden md:block ">
-            <MainNavigation />
-        </div>
-        
+            <div className="hidden md:block">
+                <MainNavigation />
+            </div>
+          
         {/* Auth buttons and mobile menu */}
         <div className="flex items-center gap-2">
           {/* Auth buttons - desktop */}
@@ -57,16 +56,13 @@ export default function NavBar() {
             <Button 
               variant="outline" 
               size="sm"
-              className={cn(
-                "font-medium", 
-                !isScrolled && "text-dark border-gray-200 hover:bg-white/10"
-              )}
+              className="font-medium border-indec-blue text-indec-blue"
             >
               Iniciar sesión
             </Button>
             <Button 
               size="sm"
-              className="font-medium"
+              className="font-medium bg-indec-blue text-white hover:bg-indec-blue-dark"
             >
               Registrarse
             </Button>
@@ -79,9 +75,7 @@ export default function NavBar() {
                 <Button 
                   variant="ghost" 
                   size="icon"
-                  className={cn(
-                    !isScrolled && "text-white hover:bg-white/10"
-                  )}
+                  className="text-indec-blue"
                 >
                   <Menu className="h-5 w-5" />
                   <span className="sr-only">Menú</span>
@@ -181,7 +175,7 @@ export default function NavBar() {
                     <Button className="w-full" variant="outline">
                       Iniciar sesión
                     </Button>
-                    <Button className="w-full">
+                    <Button className="w-full bg-indec-blue text-white hover:bg-indec-blue-dark">
                       Registrarse
                     </Button>
                   </div>

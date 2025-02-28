@@ -1,8 +1,9 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { ArrowRight, Code, Github } from "lucide-react"
+import { ArrowRight, Code, Github, Sparkles } from "lucide-react"
 import Link from "next/link"
+
 import { Button } from "@/components/ui/button"
 import NavBar from "@/components/navigation/NavBar"
 
@@ -11,79 +12,97 @@ export default function HeaderHero() {
     <>
       <NavBar />
       
-      {/* Hero section */}
-      <section className="relative bg-gradient-to-r from-indec-blue to-indec-blue-dark text-white pt-20 pb-16 md:pt-24 md:pb-20">
+      {/* Hero section con solo texto */}
+      <section className="relative bg-white text-indec-blue-dark pt-20 pb-20 md:pt-24 md:pb-28 overflow-hidden">
+        {/* Círculos azules decorativos */}
+        <div className="hidden md:block absolute top-0 right-0 w-[800px] h-[800px] rounded-full bg-indec-blue/20 -mr-96 -mt-96"></div>
+        <div className="hidden md:block absolute bottom-0 left-0 w-[800px] h-[800px] rounded-full bg-indec-blue/20 -ml-96 -mb-96"></div>
+        
+        {/* Patrón de puntos sutiles */}
+        <div 
+          className="absolute inset-0 opacity-[0.85] pointer-events-none"
+          style={{
+            backgroundImage: 'radial-gradient(circle, #d0d0d0 1px, transparent 1px)',
+            backgroundSize: '24px 24px',
+          }}
+        ></div>
+        
+        {/* Lanzamiento oficial banner */}
+        <div className="flex justify-center mb-8">
+          <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 bg-indec-blue/10 text-indec-blue text-sm font-medium">
+            <Sparkles className="h-4 w-4" />
+            <span>¡Lanzamiento Oficial!</span>
+          </div>
+        </div>
+        
         <div className="container mx-auto px-4 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <motion.div 
-              className="flex flex-col gap-6"
+          {/* Título principal con estilo de dos líneas */}
+          <div className="text-center mb-14">
+            <motion.h1 
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1]"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
+              transition={{ duration: 0.5 }}
             >
-              <motion.h1 
-                className="text-4xl md:text-5xl font-bold tracking-tight leading-[1.1] md:leading-[1.1]"
-              >
-                Datos económicos de <span className="text-white">Argentina</span> <span className="text-indec-gray-light font-normal">en tus manos</span>
-              </motion.h1>
+              Datos económicos,
+              <span className="block text-indec-blue">en tiempo real.</span>
+            </motion.h1>
+          </div>
+          
+          <div className="max-w-3xl mx-auto text-center">
+            <motion.p 
+              className="text-lg md:text-xl text-indec-gray-dark mb-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              Potencia la visualización de indicadores económicos con datos actualizados. 
+              Mejora tu toma de decisiones con información relevante del INDEC a través 
+              de una interfaz moderna y una API potente.
+            </motion.p>
+            
+            <motion.div 
+              className="flex flex-wrap gap-4 justify-center mt-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              <Button size="lg" className="bg-indec-blue text-white hover:bg-indec-blue-dark rounded-full px-6">
+                <Link href="/indicadores" className="flex items-center">
+                  Ver indicadores <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
               
-              <motion.p 
-                className="text-xl text-indec-gray-light font-light leading-relaxed max-w-lg"
-              >
-                Visualiza y accede a los principales indicadores económicos del INDEC a través de una interfaz moderna y una API potente.
-              </motion.p>
-              
-              <motion.div 
-                className="flex flex-wrap gap-4 mt-2"
-              >
-                <Button size="lg" className="bg-white text-indec-blue hover:bg-indec-gray-light font-medium">
-                  <Link href="/indicadores">
-                    Ver indicadores <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-                
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-                  <Link href="/api-docs">
-                    Documentación API <Code className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-              </motion.div>
-              
-              <motion.div 
-                className="flex items-center gap-2 mt-2 text-sm text-indec-gray-light font-light"
-              >
-                <Github className="h-4 w-4" />
-                <span>Proyecto open source · Datos actualizados automáticamente</span>
-              </motion.div>
+              <Button size="lg" variant="outline" className="border-indec-blue text-indec-blue hover:bg-indec-blue/5 rounded-full px-6">
+                <Link href="/api-docs" className="flex items-center">
+                  Documentación API <Code className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
             </motion.div>
             
-            {/* Panel de visualización */}
             <motion.div 
-              className="relative h-64 md:h-80 lg:h-96 rounded-lg overflow-hidden shadow-xl"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
+              className="flex items-center justify-center gap-2 mt-6 text-sm text-indec-gray-dark"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
             >
-              <div className="absolute inset-0 bg-gradient-to-tr from-indec-blue/80 to-transparent z-10 rounded-lg"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                {/* Simulación de dashboard */}
-                <div className="w-full h-full bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                  <div className="h-8 w-1/2 bg-white/20 rounded mb-4"></div>
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="h-20 bg-white/20 rounded"></div>
-                    <div className="h-20 bg-white/20 rounded"></div>
-                  </div>
-                  <div className="h-40 bg-white/20 rounded"></div>
-                </div>
-              </div>
+              <Github className="h-4 w-4" />
+              <span>Proyecto open source · Datos actualizados automáticamente</span>
             </motion.div>
           </div>
         </div>
         
-        {/* Decoración de fondo */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-10 -right-10 w-60 h-60 bg-white/5 rounded-full blur-3xl"></div>
-          <div className="absolute top-1/2 -left-20 w-80 h-80 bg-white/5 rounded-full blur-3xl"></div>
+        {/* Estrella decorativa */}
+        <div className="absolute top-[15%] right-[18%]">
+          <motion.div 
+            initial={{ rotate: 0, scale: 0 }}
+            animate={{ rotate: 15, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+          >
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L14.4 9.6H22L16.8 14.4L19.2 22L12 17.2L4.8 22L7.2 14.4L2 9.6H9.6L12 2Z" fill="#4F46E5" fillOpacity="0.3" stroke="#4F46E5" strokeWidth="1.5"/>
+            </svg>
+          </motion.div>
         </div>
       </section>
     </>
