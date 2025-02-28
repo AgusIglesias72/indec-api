@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { motion } from "framer-motion"
-import { LineChart, BarChart, Code, ArrowRight, Activity, Database, Search, Lock } from "lucide-react"
+import {  BarChart, Code, ArrowRight, Activity, Database, Search, Lock } from "lucide-react"
 import Link from "next/link"
 
 interface FeatureCardProps {

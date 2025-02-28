@@ -13,7 +13,6 @@ export default function DashboardPreview() {
     if (emaeData) {
       // Crear puntos para la línea del gráfico
       // Simulamos datos de 6 meses basados en el valor real y tendencias aleatorias
-      const baseValue = emaeData.original_value;
       const monthlyChange = emaeData.monthly_change / 100; // convertir a decimal
       
       // Generar puntos para 6 meses usando el cambio mensual como tendencia base
