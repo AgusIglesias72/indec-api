@@ -245,7 +245,8 @@ async function fetchEmaeByActivityData(): Promise<Omit<EmaeByActivityInsert, 'id
       
       for (let i = 2; i < headerRow.length; i++) {
         if (headerRow[i] !== null && headerRow[i] !== undefined) {
-          const sectorName = String(headerRow[i]).trim();
+          const sectorName = String(headerRow[i]).trim(); 
+          
           // Asignar un código de sector según su posición o usar un valor por defecto
           const sectorCodeIndex = i - 2;
           const sectorCode = sectorCodeIndex < sectorCodes.length ? 
@@ -326,9 +327,10 @@ async function fetchEmaeByActivityData(): Promise<Omit<EmaeByActivityInsert, 'id
           
           // Solo agregar registros si tenemos un valor
           if (value !== null) {
+            const economySectorParts = sector.name.includes('-') ? String(sector.name.split('-')[1].trim()) : sector.name;
             processedData.push({
               date,
-              economy_sector: sector.name,
+              economy_sector: economySectorParts,
               economy_sector_code: sector.code,
               original_value: value,
               created_at: new Date().toISOString()

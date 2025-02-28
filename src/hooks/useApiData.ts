@@ -6,10 +6,14 @@ import {
   getLatestEmaeData, 
   getLatestIPCData, 
   getSectorPerformance,
+  getHistoricalEmaeData,
+  getHistoricalIPCData,
   ApiStats,
   EmaeLatestData,
   IPCLatestData,
-  SectorPerformance
+  SectorPerformance,
+  EmaeHistoricalData,
+  IPCHistoricalData
 } from '@/app/services/api';
 
 /**
@@ -117,6 +121,64 @@ export function useSectorPerformance() {
       } catch (err) {
         setError(err instanceof Error ? err : new Error('Error desconocido'));
         console.error('Error al obtener datos de sectores:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  return { data, loading, error };
+}
+
+/**
+ * Hook para obtener los datos históricos del EMAE
+ */
+export function useHistoricalEmaeData() {
+  const [data, setData] = useState<EmaeHistoricalData[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const emaeData = await getHistoricalEmaeData();
+        setData(emaeData);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Error desconocido'));
+        console.error('Error al obtener datos históricos del EMAE:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  return { data, loading, error };
+}
+
+/**
+ * Hook para obtener los datos históricos del IPC
+ */
+export function useHistoricalIPCData() {
+  const [data, setData] = useState<IPCHistoricalData[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const ipcData = await getHistoricalIPCData();
+        setData(ipcData);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Error desconocido'));
+        console.error('Error al obtener datos históricos del IPC:', err);
       } finally {
         setLoading(false);
       }

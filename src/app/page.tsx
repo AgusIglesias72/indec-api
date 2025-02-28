@@ -23,8 +23,9 @@ export default function HomePage() {
       <Stats />
 
       <APISection />
-      <Features />
       <Indicators />
+
+      <Features />
       <CtaFooter />
     </div>
   )

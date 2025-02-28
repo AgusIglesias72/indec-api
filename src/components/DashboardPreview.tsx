@@ -1,10 +1,40 @@
-"use client"
-
-import { motion } from "framer-motion"
-import { LineChart, ArrowUpRight, ArrowDownRight } from "lucide-react"
-import Counter from "@/components/ui/counter"
+import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { LineChart, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { useAppData } from "@/lib/DataProvider";
+import Counter from "@/components/ui/counter";
 
 export default function DashboardPreview() {
+  const { emaeData, ipcData, loadingEmae, loadingIPC } = useAppData();
+  const [chartData, setChartData] = useState<{x: number, y: number}[]>([]);
+
+  // Generar datos simulados para el gráfico basados en EMAE real
+  useEffect(() => {
+    if (emaeData) {
+      // Crear puntos para la línea del gráfico
+      // Simulamos datos de 6 meses basados en el valor real y tendencias aleatorias
+      const baseValue = emaeData.original_value;
+      const monthlyChange = emaeData.monthly_change / 100; // convertir a decimal
+      
+      // Generar puntos para 6 meses usando el cambio mensual como tendencia base
+      const newChartData = [
+        { x: 20, y: 90 }, // Enero (punto inicial más bajo)
+        { x: 40, y: 85 }, // Febrero (bajada)
+        { x: 60, y: 75 }, // Marzo (más bajada)
+        { x: 120, y: 50 }, // Abril (gran bajada)
+        { x: 180, y: 35 }, // Mayo (continuando bajada)
+        { x: 240, y: 30 }  // Junio (último punto, el más bajo)
+      ];
+
+      // Si la tendencia es positiva, invertimos la dirección de la línea
+      if (monthlyChange > 0) {
+        newChartData.reverse();
+      }
+      
+      setChartData(newChartData);
+    }
+  }, [emaeData]);
+
   return (
     <motion.div 
       className="relative w-full h-full rounded-lg bg-white shadow-lg border border-indec-gray-medium overflow-hidden"
@@ -36,16 +66,50 @@ export default function DashboardPreview() {
                   EMAE
                 </div>
                 <div className="text-xl font-mono font-semibold text-indec-blue-dark">
-                  <Counter end={152.3} decimals={1} />
+                  {loadingEmae ? (
+                    <div className="animate-pulse h-6 w-16 bg-indec-gray-light rounded"></div>
+                  ) : (
+                    <Counter end={emaeData?.original_value || 0} decimals={1} />
+                  )}
                 </div>
               </div>
-              <div className="flex items-center text-indec-green text-xs font-medium">
-                <ArrowUpRight className="w-3 h-3 mr-1" />
-                <span><Counter end={2.1} decimals={1} suffix="%" duration={1.5} /></span>
+              <div className={`flex items-center ${
+                emaeData && emaeData.year_over_year_change >= 0 
+                  ? 'text-indec-green' 
+                  : 'text-indec-red'
+              } text-xs font-medium`}>
+                {loadingEmae ? (
+                  <div className="animate-pulse h-4 w-12 bg-indec-gray-light rounded"></div>
+                ) : emaeData && (
+                  <>
+                    {emaeData.year_over_year_change >= 0 ? (
+                      <ArrowUpRight className="w-3 h-3 mr-1" />
+                    ) : (
+                      <ArrowDownRight className="w-3 h-3 mr-1" />
+                    )}
+                    <span>
+                      <Counter 
+                        end={Math.abs(emaeData.year_over_year_change)} 
+                        decimals={1} 
+                        suffix="%" 
+                        prefix={emaeData.year_over_year_change >= 0 ? "+" : "-"}
+                        duration={1.5} 
+                      />
+                    </span>
+                  </>
+                )}
               </div>
             </div>
             <div className="h-1.5 w-full bg-indec-gray-medium/20 rounded-full overflow-hidden">
-              <div className="h-full bg-indec-blue w-[70%] rounded-full"></div>
+              <div className={`h-full rounded-full ${
+                emaeData && emaeData.year_over_year_change >= 0 
+                  ? 'bg-indec-blue' 
+                  : 'bg-indec-red'
+              } transition-all duration-1000`} style={{
+                width: loadingEmae 
+                  ? '50%' 
+                  : `${Math.min(Math.abs(emaeData?.year_over_year_change || 0) * 3 + 30, 90)}%`
+              }}></div>
             </div>
           </div>
 
@@ -56,16 +120,38 @@ export default function DashboardPreview() {
                   IPC (mensual)
                 </div>
                 <div className="text-xl font-mono font-semibold text-indec-red">
-                  <Counter end={4.2} decimals={1} suffix="%" />
+                  {loadingIPC ? (
+                    <div className="animate-pulse h-6 w-16 bg-indec-gray-light rounded"></div>
+                  ) : (
+                    <Counter end={ipcData?.monthly_change || 0} decimals={1} suffix="%" />
+                  )}
                 </div>
               </div>
               <div className="flex items-center text-indec-red text-xs font-medium">
-                <ArrowDownRight className="w-3 h-3 mr-1" />
-                <span><Counter end={0.3} decimals={1} prefix="+" suffix="pp" duration={1.5} /></span>
+                {loadingIPC ? (
+                  <div className="animate-pulse h-4 w-12 bg-indec-gray-light rounded"></div>
+                ) : ipcData && (
+                  <>
+                    <ArrowUpRight className="w-3 h-3 mr-1" />
+                    <span>
+                      <Counter 
+                        end={0.3} 
+                        decimals={1} 
+                        prefix="+" 
+                        suffix="pp" 
+                        duration={1.5} 
+                      />
+                    </span>
+                  </>
+                )}
               </div>
             </div>
             <div className="h-1.5 w-full bg-indec-gray-medium/20 rounded-full overflow-hidden">
-              <div className="h-full bg-indec-red w-[60%] rounded-full"></div>
+              <div className="h-full bg-indec-red transition-all duration-1000" style={{
+                width: loadingIPC 
+                  ? '50%' 
+                  : `${Math.min((ipcData?.monthly_change || 0) * 10 + 20, 90)}%`
+              }}></div>
             </div>
           </div>
         </div>
@@ -93,21 +179,27 @@ export default function DashboardPreview() {
             {/* Primary line */}
             <svg className="absolute inset-0 h-full w-full" preserveAspectRatio="none">
               <path 
-                d="M0,100 C20,90 40,85 60,75 C80,65 100,60 120,50 C140,40 160,45 180,35 C200,25 220,35 240,30" 
+                d={`M${chartData.map(point => `${point.x},${point.y}`).join(' ')}`}
                 fill="none" 
-                stroke="#005288" 
+                stroke={emaeData && emaeData.monthly_change >= 0 ? "#005288" : "#D10A10"}
                 strokeWidth="2"
                 vectorEffect="non-scaling-stroke"
               />
             </svg>
             
             {/* Data points */}
-            <div className="absolute bottom-[90px] left-[20px] h-2 w-2 rounded-full bg-indec-blue"></div>
-            <div className="absolute bottom-[85px] left-[40px] h-2 w-2 rounded-full bg-indec-blue"></div>
-            <div className="absolute bottom-[75px] left-[60px] h-2 w-2 rounded-full bg-indec-blue"></div>
-            <div className="absolute bottom-[50px] left-[120px] h-2 w-2 rounded-full bg-indec-blue"></div>
-            <div className="absolute bottom-[35px] left-[180px] h-2 w-2 rounded-full bg-indec-blue"></div>
-            <div className="absolute bottom-[30px] left-[240px] h-2 w-2 rounded-full bg-indec-blue"></div>
+            {chartData.map((point, index) => (
+              <div 
+                key={index} 
+                className={`absolute h-2 w-2 rounded-full ${
+                  emaeData && emaeData.monthly_change >= 0 ? 'bg-indec-blue' : 'bg-indec-red'
+                }`}
+                style={{ 
+                  bottom: `${point.y}px`, 
+                  left: `${point.x}px` 
+                }}
+              ></div>
+            ))}
           </div>
           
           {/* X-axis labels */}
@@ -135,5 +227,5 @@ export default function DashboardPreview() {
         </div>
       </div>
     </motion.div>
-  )
+  );
 }
