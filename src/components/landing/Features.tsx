@@ -16,6 +16,7 @@ const fadeIn = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
 }
 
+
 export default function Features() {
   return (
     <section className="py-20 bg-indec-gray-light">

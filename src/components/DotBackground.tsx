@@ -1,3 +1,5 @@
+"use client"
+
 import React from 'react'
 
 interface DotBackgroundProps {
@@ -12,7 +14,7 @@ export default function DotBackground({
   className = '',
   dotColor = '#d0d0d0',
   dotSize = 1,
-  spacing = 20,
+  spacing = 24,
   opacity = 0.4
 }: DotBackgroundProps) {
   return (
@@ -22,7 +24,8 @@ export default function DotBackground({
         backgroundImage: `radial-gradient(circle, ${dotColor} ${dotSize}px, transparent ${dotSize}px)`,
         backgroundSize: `${spacing}px ${spacing}px`,
         opacity: opacity,
-        pointerEvents: 'none'
+        pointerEvents: 'none',
+        zIndex: 0
       }}
     />
   )

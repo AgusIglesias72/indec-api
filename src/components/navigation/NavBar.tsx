@@ -27,7 +27,7 @@ export default function NavBar() {
       "sticky top-0 z-40 w-full transition-all duration-300",
       isScrolled 
         ? "bg-white/95 backdrop-blur-sm border-b border-indec-gray-medium shadow-sm" 
-        : "bg-transparent"
+        : "bg-white border-b border-white"
     )}>
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}

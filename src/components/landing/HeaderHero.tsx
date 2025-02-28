@@ -3,7 +3,6 @@
 import { motion } from "framer-motion"
 import { ArrowRight, Code, Github, Sparkles } from "lucide-react"
 import Link from "next/link"
-
 import { Button } from "@/components/ui/button"
 import NavBar from "@/components/navigation/NavBar"
 
@@ -11,12 +10,12 @@ export default function HeaderHero() {
   return (
     <>
       <NavBar />
-      
+
       {/* Hero section con solo texto */}
-      <section className="relative bg-white text-indec-blue-dark pt-20 pb-20 md:pt-24 md:pb-28 overflow-hidden">
+      <section className="relative bg-white text-indec-blue-dark pt-20 pb-20 md:pt-24 md:pb-28 overflow-y-visible overflow-x-clip">
         {/* Círculos azules decorativos */}
-        <div className="hidden md:block absolute top-0 right-0 w-[800px] h-[800px] rounded-full bg-indec-blue/20 -mr-96 -mt-96"></div>
-        <div className="hidden md:block absolute bottom-0 left-0 w-[800px] h-[800px] rounded-full bg-indec-blue/20 -ml-96 -mb-96"></div>
+        <div className="hidden lg:block absolute top-0 right-0 w-[800px] h-[800px] rounded-full bg-indec-blue/20 -mr-96 -mt-96"></div>
+        <div className="hidden lg:block absolute bottom-0 left-0 w-[800px] h-[800px] rounded-full bg-indec-blue/20 -ml-96 -mb-96"></div>
         
         {/* Patrón de puntos sutiles */}
         <div 
