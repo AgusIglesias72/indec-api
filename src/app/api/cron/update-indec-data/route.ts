@@ -34,13 +34,13 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    console.log('Iniciando cron job de actualización de datos INDEC');
+    console.info('Iniciando cron job de actualización de datos INDEC');
     const results: CronTaskResult[] = [];
     const startTime = new Date().toISOString();
     
     // 1. Actualizar EMAE general
     try {
-      console.log('Iniciando actualización de EMAE general');
+      console.info('Iniciando actualización de EMAE general');
       const emaeResult = await updateEmaeData();
       results.push({
         taskId: 'update-emae',
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
         status: 'success',
         details: `Se actualizaron ${emaeResult.count} registros de EMAE`
       });
-      console.log(`Actualización de EMAE completada: ${emaeResult.count} registros`);
+      console.info(`Actualización de EMAE completada: ${emaeResult.count} registros`);
     } catch (error) {
       console.error('Error en actualización de EMAE:', error);
       results.push({
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
     
     // 2. Actualizar EMAE por actividad
     try {
-      console.log('Iniciando actualización de EMAE por actividad');
+      console.info('Iniciando actualización de EMAE por actividad');
       const emaeByActivityResult = await updateEmaeByActivityData();
       results.push({
         taskId: 'update-emae-by-activity',
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
         status: 'success',
         details: `Se actualizaron ${emaeByActivityResult.count} registros de EMAE por actividad`
       });
-      console.log(`Actualización de EMAE por actividad completada: ${emaeByActivityResult.count} registros`);
+      console.info(`Actualización de EMAE por actividad completada: ${emaeByActivityResult.count} registros`);
     } catch (error) {
       console.error('Error en actualización de EMAE por actividad:', error);
       results.push({
@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
     
     // 3. Actualizar IPC general
     try {
-      console.log('Iniciando actualización de IPC');
+      console.info('Iniciando actualización de IPC');
       const ipcResult = await updateIPCData();
       results.push({
         taskId: 'update-ipc',
@@ -105,7 +105,7 @@ export async function GET(request: NextRequest) {
         status: 'success',
         details: `Se actualizaron ${ipcResult.count} registros de IPC`
       });
-      console.log(`Actualización de IPC completada: ${ipcResult.count} registros`);
+      console.info(`Actualización de IPC completada: ${ipcResult.count} registros`);
     } catch (error) {
       console.error('Error en actualización de IPC:', error);
       results.push({
@@ -137,7 +137,7 @@ export async function GET(request: NextRequest) {
       // No fallamos el cron por errores de registro
     }
     
-    console.log('Cron job completado:', JSON.stringify(results, null, 2));
+    console.info('Cron job completado:', JSON.stringify(results, null, 2));
     
     return NextResponse.json({
       success: true,
@@ -158,24 +158,20 @@ export async function GET(request: NextRequest) {
  * Utilizando la implementación probada en el endpoint de test
  */
 async function updateEmaeData() {
-  console.log('Iniciando actualización de datos EMAE...');
+  console.info('Iniciando actualización de datos EMAE...');
   
   // 1. Obtener datos nuevos del INDEC
-  let newData = await fetchINDECData('emae');
-  
-  // Generar UUIDs válidos para cada registro
-  newData = newData.map(item => {
-    // Eliminar el id generado y dejar que Supabase genere uno automáticamente
-      // const { id, ...rest } = item;
-      const {...rest } = item;
+  const newData = (await fetchINDECData('emae')).map(item => {
+    const { id, ...rest } = item;
     return rest;
   });
+   
   
   if (!newData || newData.length === 0) {
     return { count: 0, message: 'No hay datos nuevos para procesar' };
   }
   
-  console.log(`Obtenidos ${newData.length} registros nuevos de EMAE`);
+  console.info(`Obtenidos ${newData.length} registros nuevos de EMAE`);
   
   // 2. Guardar en Supabase
   const { data, error } = await supabase
@@ -190,7 +186,7 @@ async function updateEmaeData() {
     throw new Error(`Error al actualizar EMAE: ${error.message}`);
   }
   
-  console.log(`Datos EMAE actualizados: ${data?.length || 0} registros`);
+  console.info(`Datos EMAE actualizados: ${data?.length || 0} registros`);
   
   return { 
     count: data?.length || 0, 
@@ -205,7 +201,7 @@ async function updateEmaeData() {
  * Utilizando la implementación probada en el endpoint de test
  */
 async function updateEmaeByActivityData() {
-  console.log('Iniciando actualización de datos EMAE por actividad...');
+  console.info('Iniciando actualización de datos EMAE por actividad...');
   
   // 1. Obtener datos nuevos
   let newData = await fetchINDECData('emae_by_activity');
@@ -221,7 +217,7 @@ async function updateEmaeByActivityData() {
     return { count: 0, message: 'No hay datos nuevos para procesar' };
   }
   
-  console.log(`Obtenidos ${newData.length} registros nuevos de EMAE por actividad`);
+  console.info(`Obtenidos ${newData.length} registros nuevos de EMAE por actividad`);
   
   // 2. Guardar en Supabase
   const { data, error } = await supabase
@@ -236,7 +232,7 @@ async function updateEmaeByActivityData() {
     throw new Error(`Error al actualizar EMAE por actividad: ${error.message}`);
   }
   
-  console.log(`Datos EMAE por actividad actualizados: ${data?.length || 0} registros`);
+  console.info(`Datos EMAE por actividad actualizados: ${data?.length || 0} registros`);
   
   return { 
     count: data?.length || 0, 
@@ -256,7 +252,7 @@ async function updateEmaeByActivityData() {
  * Actualiza los datos del IPC
  */
 async function updateIPCData() {
-  console.log('Iniciando actualización de datos IPC...');
+  console.info('Iniciando actualización de datos IPC...');
   
   // 1. Obtener datos nuevos del INDEC
   let newData = await fetchINDECData('ipc');
@@ -265,7 +261,7 @@ async function updateIPCData() {
     return { count: 0, message: 'No hay datos nuevos para procesar' };
   }
   
-  console.log(`Obtenidos ${newData.length} registros nuevos de IPC`);
+  console.info(`Obtenidos ${newData.length} registros nuevos de IPC`);
   
   // 2. Guardar en Supabase
   const { data, error } = await supabase
@@ -280,7 +276,7 @@ async function updateIPCData() {
     throw new Error(`Error al actualizar IPC: ${error.message}`);
   }
   
-  console.log(`Datos IPC actualizados: ${data?.length || 0} registros`);
+  console.info(`Datos IPC actualizados: ${data?.length || 0} registros`);
   
   // Ya no es necesario calcular variaciones, ya que se harán dinámicamente en la API
   

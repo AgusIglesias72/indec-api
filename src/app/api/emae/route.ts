@@ -31,7 +31,6 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const format = searchParams.get('format') || 'json';
     
-    console.log('supabase', supabaseKey);
 
     // Construir consulta base
     let query = supabase
