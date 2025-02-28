@@ -1,46 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowRight, ExternalLink } from "lucide-react"
-
-import { Button } from "@/components/ui/button"
 
 export default function CtaFooter() {
   return (
-    <>
-      {/* Sección de registro/CTA */}
-      <section className="py-20 bg-indec-gray-light">
-        <div className="container mx-auto px-4 max-w-4xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-indec-blue-dark mb-4">
-            Comienza a explorar los datos económicos hoy mismo
-          </h2>
-          <p className="text-indec-gray-dark text-lg font-light leading-relaxed mb-8 max-w-2xl mx-auto">
-            Regístrate gratis para acceder a todas las visualizaciones y obtener tu clave API para integrar los datos en tus proyectos.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-            <Button asChild size="lg" className="gap-2 font-medium">
-              <Link href="/registro">
-                Crear cuenta gratuita <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
-            
-            <Button asChild size="lg" variant="outline" className="gap-2">
-              <Link href="/docs">
-                Ver documentación <ExternalLink className="h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-          
-          <p className="text-sm text-indec-gray-dark font-light">
-            No se requiere tarjeta de crédito. Plan gratuito con <span className="font-mono">1000</span> peticiones diarias a la API.
-          </p>
-        </div>
-      </section>
-      
+      <footer className="bg-white border-t border-indec-gray-medium py-12 relative z-10">
       {/* Footer */}
-      <footer className="bg-white border-t border-indec-gray-medium py-12">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 md:px-8 lg:px-12 max-w-7xl">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
@@ -125,6 +91,5 @@ export default function CtaFooter() {
           </div>
         </div>
       </footer>
-    </>
   )
 }

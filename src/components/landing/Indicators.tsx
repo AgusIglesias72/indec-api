@@ -4,13 +4,40 @@ import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Skeleton } from "@/components/ui/skeleton"
 import DataMetric from "@/components/DataMetric"
+import { useLatestEmaeData, useLatestIPCData, useSectorPerformance } from "@/hooks/useApiData"
 
 export default function Indicators() {
+  const { data: emaeData, loading: emaeLoading, error: emaeError } = useLatestEmaeData();
+  const { data: ipcData, loading: ipcLoading, error: ipcError } = useLatestIPCData();
+  const { data: sectorData, loading: sectorLoading, error: sectorError } = useSectorPerformance();
+
+
+  // Función para formatear fecha
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return "";
+    const date = new Date(dateString + 'T00:00:00-04:00')
+    
+    // Nombres de meses en español
+    const monthNames = [
+      "enero", "febrero", "marzo", "abril", "mayo", "junio",
+      "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+    ];
+    
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear();
+    
+    return `${month} ${year}`;
+  }
+
   return (
-    <section className="py-20 bg-white">
-      <div className="container mx-auto px-4">
+    <section className="py-20 bg-white relative z-10">
+      {/* Fondo sólido para bloquear los puntitos del fondo */}
+      <div className="absolute inset-0 bg-white"></div>
+      
+      <div className="container mx-auto px-4 md:px-8 lg:px-12 max-w-7xl relative z-10">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-3xl font-bold text-indec-blue-dark mb-4">
             Indicadores económicos destacados
@@ -42,19 +69,44 @@ export default function Indicators() {
                   <h3 className="text-2xl font-bold text-indec-blue-dark mb-4">
                     Estimador Mensual de Actividad Económica
                   </h3>
+                  
+                  {emaeLoading ? (
+                    <Skeleton className="h-5 w-48 mb-6" />
+                  ) : (
+                    <p className="text-indec-gray-dark mb-6">
+                      <span className="font-medium">Último dato disponible:</span> {formatDate(emaeData?.date)}
+                    </p>
+                  )}
+                  
                   <p className="text-indec-gray-dark mb-6">
                     El EMAE refleja la evolución mensual de la actividad económica de los sectores productivos a nivel nacional, permitiendo anticipar las tasas de variación del PIB.
                   </p>
-                  <div className="flex flex-col md:flex-row items-start md:items-center gap-6 mb-6">
-                    <DataMetric 
-                      label="Último valor" 
-                      value="159.3" 
-                    />
-                    <DataMetric 
-                      label="Variación interanual" 
-                      value="3.2%" 
-                      trend="up" 
-                    />
+                  
+                  <div className="flex flex-col md:flex-row md:flex-wrap items-start gap-6 mb-6">
+                    {emaeLoading ? (
+                      <>
+                        <Skeleton className="h-16 w-40 mb-1" />
+                        <Skeleton className="h-16 w-40 mb-1" />
+                        <Skeleton className="h-16 w-40 mb-1" />
+                      </>
+                    ) : (
+                      <>
+                        <DataMetric 
+                          label="Último valor" 
+                          value={emaeError ? "N/A" : emaeData?.original_value.toFixed(1) || "N/A"} 
+                        />
+                        <DataMetric 
+                          label="Var. intermensual (desest.)" 
+                          value={`${emaeError ? "N/A" : (emaeData?.monthly_change.toFixed(1) || "N/A")}%`} 
+                          trend={emaeData && emaeData.monthly_change > 0 ? "up" : "down"} 
+                        />
+                        <DataMetric 
+                          label="Var. interanual" 
+                          value={`${emaeError ? "N/A" : (emaeData?.year_over_year_change.toFixed(1) || "N/A")}%`} 
+                          trend={emaeData && emaeData.year_over_year_change > 0 ? "up" : "down"} 
+                        />
+                      </>
+                    )}
                   </div>
                   <Button asChild className="gap-2">
                     <Link href="/indicadores/emae">
@@ -77,20 +129,45 @@ export default function Indicators() {
                   <h3 className="text-2xl font-bold text-indec-blue-dark mb-4">
                     Índice de Precios al Consumidor
                   </h3>
+                  
+                  {ipcLoading ? (
+                    <Skeleton className="h-5 w-48 mb-6" />
+                  ) : (
+                    <p className="text-indec-gray-dark mb-6">
+                      <span className="font-medium">Último dato disponible:</span> {formatDate(ipcData?.date)}
+                    </p>
+                  )}
+                  
                   <p className="text-indec-gray-dark mb-6">
                     El IPC mide la evolución de los precios de bienes y servicios representativos del gasto de consumo de los hogares residentes en la región especificada.
                   </p>
-                  <div className="flex flex-col md:flex-row items-start md:items-center gap-6 mb-6">
-                    <DataMetric 
-                      label="Mensual" 
-                      value="3.5%" 
-                      trend="up" 
-                    />
-                    <DataMetric 
-                      label="Interanual" 
-                      value="142.7%" 
-                      trend="up" 
-                    />
+                  
+                  <div className="flex flex-col md:flex-row md:flex-wrap items-start gap-6 mb-6">
+                    {ipcLoading ? (
+                      <>
+                        <Skeleton className="h-16 w-40 mb-1" />
+                        <Skeleton className="h-16 w-40 mb-1" />
+                        <Skeleton className="h-16 w-40 mb-1" />
+                      </>
+                    ) : (
+                      <>
+                        <DataMetric 
+                          label="Mensual" 
+                          value={`${ipcError ? "N/A" : (ipcData?.monthly_change.toFixed(1) || "N/A")}%`}
+                          trend="up" 
+                        />
+                        <DataMetric 
+                          label="Interanual" 
+                          value={`${ipcError ? "N/A" : (ipcData?.year_over_year_change.toFixed(1) || "N/A")}%`}
+                          trend="up" 
+                        />
+                        <DataMetric 
+                          label={`Acum. ${ipcData?.date.split('-')[0]}`} 
+                          value={`${ipcError ? "N/A" : (ipcData?.accumulated_change.toFixed(1) || "N/A")}%`}
+                          trend="up" 
+                        />
+                      </>
+                    )}
                   </div>
                   <Button asChild className="gap-2">
                     <Link href="/indicadores/ipc">
@@ -113,22 +190,44 @@ export default function Indicators() {
                   <h3 className="text-2xl font-bold text-indec-blue-dark mb-4">
                     Actividad Económica por Sectores
                   </h3>
+                  
+                  {sectorLoading || !sectorData ? (
+                    <Skeleton className="h-5 w-48 mb-6" />
+                  ) : (
+                    emaeData && (
+                      <p className="text-indec-gray-dark mb-6">
+                        <span className="font-medium">Último dato disponible:</span> {formatDate(emaeData.date)}
+                      </p>
+                    )
+                  )}
+                  
                   <p className="text-indec-gray-dark mb-6">
                     Análisis detallado del desempeño de distintos sectores económicos, permitiendo identificar fortalezas y debilidades en la economía argentina.
                   </p>
-                  <div className="space-y-4 mb-6">
-                    <div className="flex justify-between items-center p-2 hover:bg-indec-gray-light rounded-md transition-colors">
-                      <span className="text-indec-gray-dark">Agricultura</span>
-                      <div className="font-mono font-medium text-indec-green">+4.8%</div>
-                    </div>
-                    <div className="flex justify-between items-center p-2 hover:bg-indec-gray-light rounded-md transition-colors">
-                      <span className="text-indec-gray-dark">Industria</span>
-                      <div className="font-mono font-medium text-indec-red">-1.2%</div>
-                    </div>
-                    <div className="flex justify-between items-center p-2 hover:bg-indec-gray-light rounded-md transition-colors">
-                      <span className="text-indec-gray-dark">Servicios</span>
-                      <div className="font-mono font-medium text-indec-green">+2.7%</div>
-                    </div>
+                  
+                  <div className="space-y-3 mb-6 max-h-72 overflow-y-auto pr-2">
+                    {sectorLoading ? (
+                      <>
+                        <Skeleton className="h-12 w-full" />
+                        <Skeleton className="h-12 w-full" />
+                        <Skeleton className="h-12 w-full" />
+                        <Skeleton className="h-12 w-full" />
+                        <Skeleton className="h-12 w-full" />
+                      </>
+                    ) : (
+                      sectorError ? (
+                        <p className="text-indec-red">Error al cargar datos sectoriales</p>
+                      ) : (
+                        sectorData?.map((sector, index) => (
+                          <div key={index} className="flex justify-between items-center p-3 hover:bg-indec-gray-light rounded-md transition-colors border border-indec-gray-medium/30">
+                            <span className="text-indec-gray-dark font-medium text-sm">{sector.sector_name}</span>
+                            <div className={`font-mono font-medium ${sector.year_over_year_change > 0 ? 'text-indec-green' : 'text-indec-red'}`}>
+                              {`${sector.year_over_year_change > 0 ? '+' : ''}${sector.year_over_year_change.toFixed(1)}%`}
+                            </div>
+                          </div>
+                        ))
+                      )
+                    )}
                   </div>
                   <Button asChild className="gap-2">
                     <Link href="/indicadores/emae-por-actividad">
@@ -139,7 +238,7 @@ export default function Indicators() {
                 <div className="lg:col-span-3 bg-indec-gray-light rounded-lg p-4 h-80 flex items-center justify-center">
                   {/* Aquí podría ir un gráfico simple con datos estáticos */}
                   <div className="w-full h-full bg-indec-gray-medium/30 rounded-lg flex items-center justify-center">
-                    <p className="text-indec-gray-dark">Gráfico Sectores</p>
+                    <p className="text-indec-gray-dark">Gráfico EMAE</p>
                   </div>
                 </div>
               </div>

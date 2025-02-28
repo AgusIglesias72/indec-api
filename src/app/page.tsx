@@ -2,9 +2,9 @@ import HeaderHero from "@/components/landing/HeaderHero"
 import Stats from "@/components/landing/Stats"
 import Indicators from "@/components/landing/Indicators"
 import CtaFooter from "@/components/landing/CTAFooter"
-import EnhancedFeaturesSection from "@/components/landing/DashboardFeatures"
-import EnhancedApiSection from "@/components/landing/ApiSection"
-import Features from "@/components/landing/Features"
+import DashboardFeature from "@/components/landing/DashboardFeatures"
+import APISection from "@/components/landing/APISection"
+import Features from "@/components/landing/FeatureCards"
 
 export default function HomePage() {
   return (
@@ -19,9 +19,11 @@ export default function HomePage() {
         ></div>
       
       <HeaderHero />
-      <EnhancedFeaturesSection />
-      <EnhancedApiSection />
+      <DashboardFeature />
       <Stats />
+
+      <APISection />
+      <Features />
       <Indicators />
       <CtaFooter />
     </div>

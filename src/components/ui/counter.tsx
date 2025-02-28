@@ -7,6 +7,7 @@ interface CounterProps {
   decimals?: number;
   prefix?: string;
   suffix?: string;
+  separator?: string;
   className?: string;
 }
 
@@ -15,7 +16,8 @@ export default function Counter({
   duration = 0.5,
   decimals = 0,
   prefix = "",
-  suffix = "",
+  suffix = "",  
+  separator = ",",
   className = "",
 }: CounterProps) {
   const [count, setCount] = useState(0);
@@ -56,17 +58,23 @@ export default function Counter({
   }, [inView, end, duration]);
 
   // Format number according to specified decimals
-  const formatNumber = (num: number) => {
+  const formatNumber = (num: number, separator: string = ',') => {
+    if (separator === '.') {
+      return num.toLocaleString('es-AR', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+      }).replace(/,/g, '.');
+    }
+
     return num.toLocaleString('es-AR', {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
-      
     });
   };
 
   return (
     <span ref={counterRef} className={className}>
-      {prefix}{formatNumber(count)}{suffix}
+      {prefix}{formatNumber(count, separator)}{suffix}
     </span>
   );
 }

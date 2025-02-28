@@ -20,7 +20,7 @@ export default function DataMetric({
     <div className={cn("flex flex-col", className)}>
       <p className="text-indec-gray-dark text-sm mb-1">{label}</p>
       <div className="flex items-baseline">
-        <span className="text-2xl md:text-3xl font-mono font-semibold text-indec-blue">{value}</span>
+        <span className="text-2xl md:text-3xl font-mono font-semibold text-indec-blue">{value.toString().replace('.', ',')}</span>
         
         {trend && (
           <div className={cn(

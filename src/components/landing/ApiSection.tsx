@@ -8,18 +8,16 @@ import {
   Share2, 
   ExternalLink,
   Database,
-  LineChart
+  LineChart,
+  ArrowRight,
+  LogIn
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import DotBackground from "@/components/DotBackground"
 
-export default function EnhancedApiSection() {
+export default function APISection() {
   return (
-    <section className="py-20 bg-indec-blue text-white relative overflow-hidden">
-      {/* Dot pattern with white dots */}
-      <DotBackground dotColor="#ffffff" spacing={24} opacity={0.07} />
-      
+    <section className="py-20 bg-indec-blue text-white relative overflow-hidden">      
       {/* Decorative circles */}
       <div className="absolute top-0 left-0 w-[400px] h-[400px] rounded-full bg-white/5 -translate-x-1/2 -translate-y-1/2"></div>
       <div className="absolute bottom-0 right-0 w-[600px] h-[600px] rounded-full bg-white/5 translate-x-1/3 translate-y-1/3"></div>
@@ -43,7 +41,7 @@ export default function EnhancedApiSection() {
               API potente y fácil de integrar
             </h2>
             
-            <p className="text-indec-gray-light text-lg font-light leading-relaxed mb-8">
+            <p className="text-indec-gray-light text-lg font-light leading-relaxed mb-8 text-pretty text-center md:text-left">
               Accede programáticamente a todos los datos económicos para integrarlos en tus aplicaciones, 
               dashboards o análisis personalizados. Nuestra API está diseñada para ser intuitiva y flexible.
             </p>
@@ -81,18 +79,21 @@ export default function EnhancedApiSection() {
             </div>
             
             <div className="flex flex-wrap gap-4">
-              <Button asChild size="lg" className="bg-white text-indec-blue hover:bg-indec-gray-light">
+              <Button asChild size="lg" className="bg-white text-indec-blue hover:bg-indec-gray-light flex-1 lg:flex-none">
                 <Link href="/api-docs">
                   Documentación API <ExternalLink className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
               
-              <Button asChild size="lg" variant="outline" className="bg-indec-blue text-white hover:bg-indec-blue-dark hover:text-white">
+              <Button asChild size="lg" variant="outline" className="bg-indec-blue text-white hover:bg-indec-blue-dark hover:text-white flex-1 lg:flex-none">
                 <Link href="/registro">
-                  Iniciar prueba gratuita
+                  Iniciar prueba gratuita <LogIn className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
             </div>
+
+
+          
           </motion.div>
           
           <motion.div
