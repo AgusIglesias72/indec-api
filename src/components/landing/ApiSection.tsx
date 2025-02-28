@@ -9,7 +9,6 @@ import {
   ExternalLink,
   Database,
   LineChart,
-  ArrowRight,
   LogIn
 } from "lucide-react"
 

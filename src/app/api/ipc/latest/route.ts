@@ -47,7 +47,7 @@ export async function GET() {
     previousYearDate.setFullYear(previousYearDate.getFullYear() - 1);
     const previousYearDateStr = previousYearDate.toISOString().split('T')[0];
 
-    const { data: previousYearData, error: previousYearError } = await supabase
+    const { data: previousYearData } = await supabase
       .from('ipc')
       .select('*')
       .eq('component_type', 'GENERAL')
@@ -59,7 +59,7 @@ export async function GET() {
     const currentYear = new Date(latestIPC.date).getFullYear();
     const lastDecemberStr = `${currentYear}-12-01`;
 
-    const { data: lastDecemberData, error: lastDecemberError } = await supabase
+    const { data: lastDecemberData} = await supabase
       .from('ipc')
       .select('*')
       .eq('component_type', 'GENERAL')
@@ -104,8 +104,9 @@ export async function GET() {
     return NextResponse.json(responseData);
   } catch (error) {
     console.error('Error en API de IPC latest:', error);
+
     return NextResponse.json(
-      { error: 'Error interno del servidor', details: (error as Error).message },
+      { error: 'Error interno del servidor', details: (error as Error).message  },
       { status: 500 }
     );
   }

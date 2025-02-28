@@ -8,8 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Skeleton } from "@/components/ui/skeleton"
 import DataMetric from "@/components/DataMetric"
 import { 
-  useLatestEmaeData, 
-  useLatestIPCData, 
   useHistoricalEmaeData,
   useHistoricalIPCData 
 } from "@/hooks/useApiData"

@@ -262,6 +262,7 @@ const getCachedLatestEmaeData = cache(async () => {
 
 export async function GET(request: Request) {
   try {
+    console.log('Fetching latest EMAE data from database', request);
     // Configurar caché para 1 hora
     const CACHE_MAX_AGE = 3600; // 1 hora en segundos
     const CACHE_STALE_WHILE_REVALIDATE = 86400; // 24 horas
