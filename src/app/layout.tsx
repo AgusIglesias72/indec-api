@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import AppWrapper from "@/lib/AppWrapper";
+import NavBar from "@/components/landing/Navbar"
 
 // Definición de fuentes
 const inter = Inter({
@@ -31,6 +32,8 @@ export default function RootLayout({
     <html lang="es" className={`${inter.variable} ${jetbrainsMono.variable}`}>
       <body>
         <AppWrapper>
+        <NavBar />
+
           {children}
         </AppWrapper>
       </body>

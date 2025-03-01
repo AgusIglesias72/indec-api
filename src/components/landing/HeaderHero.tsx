@@ -4,12 +4,10 @@ import { motion } from "framer-motion"
 import { ArrowRight, Code, Github, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import NavBar from "@/components/navigation/NavBar"
 
 export default function HeaderHero() {
   return (
     <>
-      <NavBar />
 
       {/* Hero section con solo texto */}
       <section className="relative bg-white text-indec-blue-dark pt-20 pb-20 md:pt-24 md:pb-28 overflow-y-visible overflow-x-clip">
