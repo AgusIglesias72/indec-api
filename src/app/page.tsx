@@ -26,7 +26,6 @@ export default function HomePage() {
       <Indicators />
 
       <Features />
-      <CtaFooter />
     </div>
   )
 }

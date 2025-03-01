@@ -215,20 +215,7 @@ export async function getHistoricalEmaeData(): Promise<EmaeHistoricalData[]> {
   } catch (error) {
     console.error('Error en getHistoricalEmaeData:', error);
     // Fallback a valores por defecto en caso de error
-    return [
-      { date: '2024-01-01', original_value: 162.7, seasonally_adjusted_value: 159.8, monthly_change: 0.8 },
-      { date: '2024-02-01', original_value: 160.5, seasonally_adjusted_value: 158.6, monthly_change: -0.7 },
-      { date: '2024-03-01', original_value: 159.8, seasonally_adjusted_value: 159.4, monthly_change: 0.5 },
-      { date: '2024-04-01', original_value: 161.2, seasonally_adjusted_value: 160.5, monthly_change: 0.7 },
-      { date: '2024-05-01', original_value: 162.5, seasonally_adjusted_value: 161.8, monthly_change: 0.8 },
-      { date: '2024-06-01', original_value: 164.0, seasonally_adjusted_value: 162.4, monthly_change: 0.4 },
-      { date: '2024-07-01', original_value: 163.2, seasonally_adjusted_value: 162.1, monthly_change: -0.2 },
-      { date: '2024-08-01', original_value: 162.3, seasonally_adjusted_value: 162.5, monthly_change: 0.2 },
-      { date: '2024-09-01', original_value: 163.1, seasonally_adjusted_value: 162.8, monthly_change: 0.2 },
-      { date: '2024-10-01', original_value: 164.5, seasonally_adjusted_value: 163.2, monthly_change: 0.3 },
-      { date: '2024-11-01', original_value: 165.2, seasonally_adjusted_value: 164.4, monthly_change: 0.7 },
-      { date: '2024-12-01', original_value: 166.8, seasonally_adjusted_value: 165.2, monthly_change: 0.5 }
-    ];
+    return [];
   }
 }
 

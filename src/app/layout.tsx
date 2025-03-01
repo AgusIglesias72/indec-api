@@ -4,6 +4,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import AppWrapper from "@/lib/AppWrapper";
 import NavBar from "@/components/landing/Navbar"
+import CtaFooter from "@/components/landing/CTAFooter";
 
 // Definición de fuentes
 const inter = Inter({
@@ -30,11 +31,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={`${inter.variable} ${jetbrainsMono.variable}`}>
-      <body>
+      <body>    
         <AppWrapper>
+     
         <NavBar />
 
           {children}
+      <CtaFooter />
+          
         </AppWrapper>
       </body>
     </html>
