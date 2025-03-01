@@ -17,13 +17,15 @@ const eslintConfig = [
       // Permitir el uso de 'any' en ciertos casos
       "@typescript-eslint/no-explicit-any": "off", // Cambiado de 'error' a 'warn'
       
+      
       // Configuración para variables no utilizadas
       "@typescript-eslint/no-unused-vars": ["error", {
         // Ignorar variables que empiezan con '_' o usadas en destructuring
+        // aplica el ignore para cualquier variable que no sea '_'
+        "varsIgnorePattern": ".*",
         "argsIgnorePattern": "^_",
-        "varsIgnorePattern": "^_",
         // Permite variables no utilizadas en la desestructuración
-        "ignoreRestSiblings": true
+        "ignoreRestSiblings": true,
       }],
       
       // Otras reglas que podrían ser útiles
