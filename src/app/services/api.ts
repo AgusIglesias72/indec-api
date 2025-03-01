@@ -18,12 +18,13 @@ export interface ApiStats {
     monthly_change: number; // variación intermensual (desestacionalizada)
     year_over_year_change: number; // variación interanual (serie original)
   }
-  
+ 
   export interface IPCLatestData {
     date: string;
     monthly_change: number; // variación mensual (respecto al mes anterior)
     year_over_year_change: number; // variación interanual
     accumulated_change: number; // variación acumulada en el año
+    monthly_change_diff?: number; // diferencia con la variación mensual del periodo anterior
   }
   
   export interface SectorPerformance {
@@ -112,7 +113,8 @@ export interface ApiStats {
         date: data.date,
         monthly_change: data.monthly_change,
         year_over_year_change: data.year_over_year_change,
-        accumulated_change: data.accumulated_change
+        accumulated_change: data.accumulated_change,
+        monthly_change_diff: data.monthly_change_diff
       };
     } catch (error) {
       console.error('Error en getLatestIPCData:', error);

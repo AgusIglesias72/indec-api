@@ -99,7 +99,8 @@ export default function HeaderHero() {
             transition={{ duration: 0.5, delay: 0.5 }}
           >
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2L14.4 9.6H22L16.8 14.4L19.2 22L12 17.2L4.8 22L7.2 14.4L2 9.6H9.6L12 2Z" fill="#4F46E5" fillOpacity="0.3" stroke="#4F46E5" strokeWidth="1.5"/>
+              <path d="M12 2L14.4 9.6H22L16.8 14.4L19.2 22L12 17.2L4.8 22L7.2 14.4L2 9.6H9.6L12 2Z" fill="blue" 
+              fillOpacity="0.3" stroke="blue" strokeWidth="1"/>
             </svg>
           </motion.div>
         </div>

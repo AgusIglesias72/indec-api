@@ -34,6 +34,8 @@ export default function DashboardPreview() {
     }
   }, [emaeData]);
 
+  console.log(ipcData)
+
   return (
     <motion.div 
       className="relative w-full h-full rounded-lg bg-white shadow-lg border border-indec-gray-medium overflow-hidden"
@@ -126,21 +128,28 @@ export default function DashboardPreview() {
                   )}
                 </div>
               </div>
-              <div className="flex items-center text-indec-red text-xs font-medium">
+              <div className={`flex items-center text-xs font-medium ${
+                (ipcData?.monthly_change_diff && ipcData?.monthly_change_diff < 0)
+                
+                  ? 'text-indec-green' 
+                  : 'text-indec-red'
+              }`}>
                 {loadingIPC ? (
                   <div className="animate-pulse h-4 w-12 bg-indec-gray-light rounded"></div>
-                ) : ipcData && (
+                ) : ipcData?.monthly_change_diff !== undefined && (
                   <>
-                    <ArrowUpRight className="w-3 h-3 mr-1" />
-                    <span>
-                      <Counter 
-                        end={0.3} 
-                        decimals={1} 
-                        prefix="+" 
-                        suffix="pp" 
-                        duration={1.5} 
-                      />
-                    </span>
+                    {ipcData.monthly_change_diff < 0 ? (
+                      <ArrowDownRight className="w-3 h-3 mr-1" />
+                    ) : (
+                      <ArrowUpRight className="w-3 h-3 mr-1" />
+                    )}
+                    <Counter 
+                      end={Math.abs(ipcData.monthly_change_diff)} 
+                      decimals={1} 
+                      prefix={ipcData.monthly_change_diff >= 0 ? "+" : "-"} 
+                      suffix="pp" 
+                      duration={1.5} 
+                    />
                   </>
                 )}
               </div>
