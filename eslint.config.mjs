@@ -19,14 +19,8 @@ const eslintConfig = [
       
       
       // Configuración para variables no utilizadas
-      "@typescript-eslint/no-unused-vars": ["error", {
-        // Ignorar variables que empiezan con '_' o usadas en destructuring
-        // aplica el ignore para cualquier variable que no sea '_'
-        "varsIgnorePattern": ".*",
-        "argsIgnorePattern": "^_",
-        // Permite variables no utilizadas en la desestructuración
-        "ignoreRestSiblings": true,
-      }],
+      "@typescript-eslint/no-unused-vars": "off", 
+    
       
       // Otras reglas que podrían ser útiles
       "no-console": ["warn", { allow: ["warn", "error", "info"] }], // Permitir ciertos console.*
