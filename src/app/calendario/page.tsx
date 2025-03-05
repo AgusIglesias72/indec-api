@@ -48,14 +48,8 @@ export default function CalendarPage() {
   };
   
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-white to-gray-100">
-      {/* Fondo con puntitos */}
-      <div className="absolute inset-0 z-0 opacity-10">
-        <div className="absolute inset-0" style={{
-          backgroundImage: 'radial-gradient(#3b82f6 1px, transparent 1px)',
-          backgroundSize: '30px 30px'
-        }}></div>
-      </div>
+    <div className="relative min-h-screen ">
+     
       
       <HeroSection 
         title="Calendario Económico" 
@@ -76,7 +70,7 @@ export default function CalendarPage() {
         {/* Contenedor scrolleable para el calendario */}
         <div className="py-8">
           {loading ? (
-            <div className="flex justify-center my-12">
+            <div className="flex justify-center my-12 h-screen">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
             </div>
           ) : (

@@ -11,7 +11,7 @@ interface HeroSectionProps {
   export default function HeroSection({ title, subtitle }: HeroSectionProps) {
     return (
         <section className="relative bg-white text-indec-blue-dark 
-        pt-20 pb-20 md:pt-24 md:pb-0 overflow-y-visible overflow-x-clip">
+        pt-20 pb-0 md:pt-24 md:pb-0 overflow-y-visible overflow-x-clip">
        
         
         <div className="container mx-auto px-4 relative z-10">
