@@ -23,17 +23,7 @@ const indicators = [
     title: "IPC",
     href: "/indicadores/ipc",
     description: "Índice de Precios al Consumidor",
-  },
-  {
-    title: "EMAE por Actividad",
-    href: "/indicadores/emae-por-actividad",
-    description: "Actividad económica por sectores",
-  },
-  {
-    title: "Comparativas",
-    href: "/indicadores/comparativas",
-    description: "Análisis comparativos de indicadores",
-  },
+  }, 
 ]
 
 const apiLinks = [
@@ -41,16 +31,6 @@ const apiLinks = [
     title: "Documentación",
     href: "/api-docs",
     description: "Guías y referencias completas",
-  },
-  {
-    title: "Ejemplos de Código",
-    href: "/api-docs/ejemplos",
-    description: "Ejemplos prácticos de implementación",
-  },
-  {
-    title: "Referencias de Endpoints",
-    href: "/api-docs/endpoints",
-    description: "Detalles técnicos de cada endpoint",
   },
   {
     title: "Playground",
@@ -66,8 +46,8 @@ export function MainNavigation() {
         <NavigationMenuItem>
           <NavigationMenuTrigger>Indicadores</NavigationMenuTrigger>
           <NavigationMenuContent>
-            <ul className="grid gap-3 p-4 md:w-[400px] lg:w-[500px] lg:grid-cols-2">
-              {indicators.map((indicator) => (
+          <ul className="grid gap-3 p-4 md:w-[300px] lg:w-[400px] lg:grid-cols-1">
+          {indicators.map((indicator) => (
                 <ListItem
                   key={indicator.title}
                   title={indicator.title}
@@ -83,7 +63,7 @@ export function MainNavigation() {
         <NavigationMenuItem>
           <NavigationMenuTrigger>API</NavigationMenuTrigger>
           <NavigationMenuContent>
-            <ul className="grid gap-3 p-4 md:w-[400px] lg:w-[500px] lg:grid-cols-2">
+            <ul className="grid gap-3 p-4 md:w-[300px] lg:w-[400px] lg:grid-cols-1">
               {apiLinks.map((link) => (
                 <ListItem
                   key={link.title}
@@ -98,9 +78,9 @@ export function MainNavigation() {
         </NavigationMenuItem>
 
         <NavigationMenuItem>
-          <Link href="/documentacion" legacyBehavior passHref>
+          <Link href="/calendario-economico" legacyBehavior passHref>
             <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-              Documentación
+              Calendario Económico
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>
