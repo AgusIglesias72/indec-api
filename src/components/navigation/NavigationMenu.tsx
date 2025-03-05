@@ -78,7 +78,7 @@ export function MainNavigation() {
         </NavigationMenuItem>
 
         <NavigationMenuItem>
-          <Link href="/calendario-economico" legacyBehavior passHref>
+          <Link href="/calendario" legacyBehavior passHref>
             <NavigationMenuLink className={navigationMenuTriggerStyle()}>
               Calendario Económico
             </NavigationMenuLink>

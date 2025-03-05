@@ -21,11 +21,9 @@ export default function HomePage() {
       <HeaderHero />
       <DashboardFeature />
       <Stats />
-
       <APISection />
       <Indicators />
-
-      <Features />
+       {/* <Features /> */}
     </div>
   )
 }

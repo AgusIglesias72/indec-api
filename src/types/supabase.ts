@@ -33,6 +33,33 @@ export type Database = {
         }
         Relationships: []
       }
+      economic_calendar: {
+        Row: {
+          date: string
+          day_week: string
+          id: number
+          indicator: string
+          period: string
+          source: string | null
+        }
+        Insert: {
+          date: string
+          day_week: string
+          id?: number
+          indicator: string
+          period: string
+          source?: string | null
+        }
+        Update: {
+          date?: string
+          day_week?: string
+          id?: number
+          indicator?: string
+          period?: string
+          source?: string | null
+        }
+        Relationships: []
+      }
       emae: {
         Row: {
           activities_data: Json[] | null
@@ -182,6 +209,15 @@ export type Database = {
           id?: string | null
           index_value?: number | null
           region?: string | null
+        }
+        Relationships: []
+      }
+      ipc_components_metadata: {
+        Row: {
+          component: string | null
+          component_code: string | null
+          component_type: string | null
+          region: string | null
         }
         Relationships: []
       }
