@@ -152,6 +152,32 @@ export type Database = {
       }
     }
     Views: {
+      emae_by_activity_with_variations: {
+        Row: {
+          date: string | null
+          id: string | null
+          monthly_pct_change: number | null
+          original_value: number | null
+          sector: string | null
+          sector_code: string | null
+          yearly_pct_change: number | null
+        }
+        Relationships: []
+      }
+      emae_with_variations: {
+        Row: {
+          cycle_trend_value: number | null
+          date: string | null
+          id: string | null
+          monthly_pct_change: number | null
+          original_value: number | null
+          seasonally_adjusted_value: number | null
+          sector: string | null
+          sector_code: string | null
+          yearly_pct_change: number | null
+        }
+        Relationships: []
+      }
       ipc_bienes_servicios: {
         Row: {
           component: string | null
@@ -278,6 +304,21 @@ export type Database = {
           id?: string | null
           index_value?: number | null
           region?: string | null
+        }
+        Relationships: []
+      }
+      ipc_with_variations: {
+        Row: {
+          accumulated_pct_change: number | null
+          component: string | null
+          component_code: string | null
+          component_type: string | null
+          date: string | null
+          id: string | null
+          index_value: number | null
+          monthly_pct_change: number | null
+          region: string | null
+          yearly_pct_change: number | null
         }
         Relationships: []
       }

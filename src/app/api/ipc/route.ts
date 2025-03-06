@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/supabase';
 import { IpcRow, IpcResponse } from '@/types';
+import { cache } from 'react';
 
 // Inicializar cliente Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
@@ -18,226 +19,228 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient<Database>(supabaseUrl, supabaseKey);
 
+// Función en caché para obtener datos del IPC
+const getCachedIpcData = cache(async (
+  startDate: string | null,
+  endDate: string | null,
+  month: number | null,
+  year: number | null,
+  limit: number,
+  page: number,
+  format: string,
+  componentType: string | null,
+  componentCode: string,
+  region: string,
+  includeVariations: boolean
+) => {
+  console.log('Fetching IPC data from database');
+  
+  // Si es formato CSV, usar un límite mucho mayor
+  const isCSV = format.toLowerCase() === 'csv';
+  const effectiveLimit = isCSV ? 10000 : limit;
+  
+  // Calcular offset para paginación
+  const offset = (page - 1) * effectiveLimit;
+  
+  // Construir consulta base - ahora usando la vista que incluye variaciones
+  let query = supabase
+    .from('ipc_with_variations')
+    .select('*');
+  
+  // Aplicar filtros si existen
+  if (startDate) {
+    query = query.gte('date', startDate);
+  }
+  
+  if (endDate) {
+    query = query.lte('date', endDate);
+  }
+  
+  // Filtrar por tipo de componente si se especifica
+  if (componentType) {
+    query = query.eq('component_type', componentType);
+  }
+  
+  // Filtrar por código de componente si se especifica
+  if (componentCode) {
+    query = query.eq('component_code', componentCode);
+  }
+  
+  // Filtrar por región
+  if (region) {
+    query = query.eq('region', region);
+  }
+  
+  // Ordenar resultados
+  query = query.order('date', { ascending: false });
+  
+  // Ejecutar consulta sin paginación para obtener todos los datos y filtrarlos después
+  const { data: allData, error } = await query;
+  
+  if (error) {
+    throw new Error(`Error al consultar datos IPC: ${error.message}`);
+  }
+  
+  // Filtrar por mes y/o año en JavaScript
+  let filteredData = allData || [];
+  
+  if (month !== null || year !== null) {
+    filteredData = filteredData.filter(item => {
+      const itemDate = new Date(item.date + 'T00:00:00');
+      
+      if (month !== null && year !== null) {
+        // Filtrar por mes y año
+        return itemDate.getMonth() + 1 === month && itemDate.getFullYear() === year;
+      } else if (month !== null) {
+        // Filtrar solo por mes
+        return itemDate.getMonth() + 1 === month;
+      } else if (year !== null) {
+        // Filtrar solo por año
+        return itemDate.getFullYear() === year;
+      }
+      
+      return true;
+    });
+  }
+  
+  // Calcular el conteo total después del filtrado
+  const totalCount = filteredData.length;
+  
+  // Aplicar paginación manualmente
+  const paginatedData = filteredData.slice(offset, offset + effectiveLimit);
+  
+  // Transformar datos para la respuesta
+  const transformedData = paginatedData.map(item => {
+    // Crear objeto base con propiedades obligatorias
+    const result: IpcResponse = {
+      date: item.date || '', 
+      category: item.component || '',
+      category_code: item.component_code || '',
+      category_type: item.component_type || '',
+      index_value: item.index_value || 0,
+      region: item.region || ''
+    };
+    
+    // Añadir variaciones solo si se solicitan
+    if (includeVariations) {
+      result.monthly_pct_change = item.monthly_pct_change || undefined;
+      result.yearly_pct_change = item.yearly_pct_change || undefined;
+      result.accumulated_pct_change = item.accumulated_pct_change || undefined;
+    }
+    
+    return result;
+  });
+  
+  return {
+    data: transformedData,
+    totalCount,
+    metadata: {
+      count: transformedData.length,
+      total_count: totalCount,
+      page,
+      limit: effectiveLimit,
+      start_date: startDate,
+      end_date: endDate,
+      month,
+      year,
+      component_type: componentType,
+      component_code: componentCode,
+      region: region,
+      include_variations: includeVariations
+    }
+  };
+});
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     
-    // Obtener parámetros de consulta
+    // Obtener parámetros de consulta y normalizar strings a minúsculas
     const startDate = searchParams.get('start_date');
     const endDate = searchParams.get('end_date');
-    const limit = parseInt(searchParams.get('limit') || '100');
+    const monthParam = searchParams.get('month');
+    const yearParam = searchParams.get('year');
+    const limit = parseInt(searchParams.get('limit') || '12');
     const page = parseInt(searchParams.get('page') || '1');
-    const format = searchParams.get('format') || 'json';
-    const componentType = searchParams.get('component_type');
-    const componentCode = searchParams.get('component_code') || 'GENERAL';
-    const region = searchParams.get('region') || 'Nacional';
-    const includeVariations = searchParams.get('include_variations') !== 'false'; // Por defecto, incluir variaciones
+    const format = searchParams.get('format')?.toLowerCase() || 'json';
+    const componentType = searchParams.get('component_type')?.toLowerCase() || null;
+    const componentCode = (searchParams.get('category') || 'GENERAL').toUpperCase();
+    const region = searchParams.get('region')?.toLowerCase() || 'nacional';
+    const includeVariations = searchParams.get('include_variations')?.toLowerCase() !== 'false';
     
-    // Construir consulta base
-    let query = supabase
-      .from('ipc')
-      .select('*');
+    // Convertir mes y año a números o null
+    const month = monthParam ? parseInt(monthParam) : null;
+    const year = yearParam ? parseInt(yearParam) : null;
     
-    // Aplicar filtros si existen
-    if (startDate) {
-      query = query.gte('date', startDate);
-    }
+    // Normalizar región (primera letra mayúscula, resto minúsculas)
+    const normalizedRegion = region.charAt(0).toUpperCase() + region.slice(1).toLowerCase();
     
-    if (endDate) {
-      query = query.lte('date', endDate);
-    }
+    // Obtener datos en caché
+    const { data: transformedData, totalCount, metadata } = await getCachedIpcData(
+      startDate,
+      endDate,
+      month,
+      year,
+      limit,
+      page,
+      format,
+      componentType,
+      componentCode,
+      normalizedRegion,
+      includeVariations
+    );
     
-    // Filtrar por tipo de componente si se especifica
-    if (componentType) {
-      query = query.eq('component_type', componentType);
-    }
-    
-    // Filtrar por código de componente si se especifica
-    if (componentCode) {
-      query = query.eq('component_code', componentCode);
-    }
-    
-    // Filtrar por región
-    if (region) {
-      query = query.eq('region', region);
-    }
-    
-    // Ordenar resultados
-    query = query.order('date', { ascending: true });
-    
-    // Aplicar paginación
-    const offset = (page - 1) * limit;
-    query = query.range(offset, offset + limit - 1);
-    
-    // Ejecutar consulta
-    const { data, error } = await query;
-    
-    if (error) {
-      console.error('Error al consultar datos IPC:', error);
-      return NextResponse.json(
-        { error: 'Error al consultar la base de datos', details: error.message },
-        { status: 500 }
-      );
-    }
-    
-    // Transformar datos y calcular variaciones si se solicitan
-    let transformedData: any[] = data || [];
-    
-    if (includeVariations && data && data.length > 0) {
-      // Agrupar por componente y región para calcular variaciones
-      const dataByKey: Record<string, IpcRow[]> = {};
-      
-      // Primero, agrupar por componente y región
-      data.forEach(item => {
-        const key = `${item.region}_${item.component_code}`;
-        if (!dataByKey[key]) {
-          dataByKey[key] = [];
-        }
-        dataByKey[key].push(item as IpcRow);
-      });
-      
-      // Para cada grupo, obtener datos adicionales necesarios para calcular variaciones
-      const allKeys = Object.keys(dataByKey);
-      const additionalDataPromises = allKeys.map(async (key) => {
-        const items = dataByKey[key];
-        const earliestDate = items[0].date; // Ya están ordenados cronológicamente
-        
-        // Obtener datos para este componente y región desde el año anterior
-        // para poder calcular variaciones
-        const [regionPart] = key.split('_', 1);
-        const componentCode = key.substring(regionPart.length + 1);
-        const earliestDateObj = new Date(earliestDate);
-        const oneYearBefore = new Date(earliestDateObj);
-        oneYearBefore.setFullYear(earliestDateObj.getFullYear() - 1);
-        
-        // Obtener datos del año anterior y último diciembre
-        const { data: historicalData } = await supabase
-          .from('ipc')
-          .select('*')
-          .eq('region', regionPart)
-          .eq('component_code', componentCode)
-          .lt('date', earliestDate)
-          .gte('date', oneYearBefore.toISOString().slice(0, 10))
-          .order('date', { ascending: true });
-        
-        if (historicalData && historicalData.length > 0) {
-          // Añadir datos históricos a los grupos
-          dataByKey[key] = [...historicalData as IpcRow[], ...dataByKey[key]];
-        }
-      });
-      
-      // Esperar a que se completen todas las consultas adicionales
-      await Promise.all(additionalDataPromises);
-      
-      // Ahora, calcular las variaciones para cada item en los resultados
-      transformedData = data.map(item => {
-        const key = `${item.region}_${item.component_code}`;
-        const itemsInGroup = dataByKey[key];
-        
-        // Ordenar por fecha para garantizar orden cronológico
-        const sortedItems = [...itemsInGroup].sort((a, b) => 
-          new Date(a.date).getTime() - new Date(b.date).getTime()
-        );
-        
-        const currentIndex = sortedItems.findIndex(i => i.id === item.id);
-        const result: IpcResponse = {
-          id: item.id,
-          date: item.date,
-          component: item.component,
-          component_code: item.component_code,
-          component_type: item.component_type,
-          index_value: item.index_value,
-          region: item.region
-        };
-        
-        // Calcular variación mensual (respecto al mes anterior)
-        if (currentIndex > 0) {
-          const prevItem = sortedItems[currentIndex - 1];
-          result.monthly_pct_change = calculatePercentageChange(
-            prevItem.index_value, 
-            item.index_value
-          );
-        }
-        
-        // Calcular variación anual (respecto al mismo mes del año anterior)
-        const currentDate = new Date(item.date);
-        const targetMonth = currentDate.getMonth();
-        const targetYear = currentDate.getFullYear() - 1;
-        
-        const sameMonthLastYear = sortedItems.find(i => {
-          const itemDate = new Date(i.date);
-          return itemDate.getMonth() === targetMonth && 
-                 itemDate.getFullYear() === targetYear;
-        });
-        
-        if (sameMonthLastYear) {
-          result.yearly_pct_change = calculatePercentageChange(
-            sameMonthLastYear.index_value, 
-            item.index_value
-          );
-        }
-        
-        // Calcular variación acumulada (respecto a diciembre del año anterior)
-        const lastDecemberYear = currentDate.getFullYear() - 1;
-        
-        const lastDecember = sortedItems.find(i => {
-          const itemDate = new Date(i.date);
-          return itemDate.getMonth() === 11 && 
-                 itemDate.getFullYear() === lastDecemberYear;
-        });
-        
-        if (lastDecember) {
-          result.accumulated_pct_change = calculatePercentageChange(
-            lastDecember.index_value, 
-            item.index_value
-          );
-        }
-        
-        return result;
-      });
-    }
-    
-    // Responder en el formato solicitado
+    // Responder en el formato solicitado 
     if (format === 'csv') {
       return respondWithCSV(transformedData, 'ipc_data.csv');
     }
     
+    // Configurar caché para 1 hora
+    const CACHE_MAX_AGE = 3600; // 1 hora en segundos
+    const CACHE_STALE_WHILE_REVALIDATE = 86400; // 24 horas
+    
+    // Configurar encabezados de caché
+    const headers = new Headers();
+    headers.set('Content-Type', 'application/json');
+    headers.set('Cache-Control', `public, max-age=${CACHE_MAX_AGE}, stale-while-revalidate=${CACHE_STALE_WHILE_REVALIDATE}`);
+    
+    // Calcular información de paginación
+    const totalPages = Math.ceil(totalCount / limit);
+    
     // Responder con JSON por defecto
-    return NextResponse.json({
+    return new NextResponse(JSON.stringify({
       data: transformedData,
-      metadata: {
-        count: transformedData.length,
+      metadata,
+      pagination: {
         page,
         limit,
-        start_date: startDate,
-        end_date: endDate,
-        component_type: componentType,
-        component_code: componentCode,
-        region: region,
-        include_variations: includeVariations
+        total_items: totalCount,
+        total_pages: totalPages,
+        has_more: page < totalPages
       }
+    }), { 
+      status: 200, 
+      headers 
     });
     
   } catch (error) {
     console.error('Error en la API de IPC:', error);
     return NextResponse.json(
       { error: 'Error interno del servidor', details: (error as Error).message },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      }
     );
   }
 }
 
 /**
- * Calcula el cambio porcentual entre dos valores
- */
-function calculatePercentageChange(oldValue: number, newValue: number): number {
-  if (oldValue === 0) return 0;
-  const change = ((newValue - oldValue) / oldValue) * 100;
-  return parseFloat(change.toFixed(1));
-}
-
-/**
- * Genera una respuesta en formato CSV
+ * Genera una respuesta en formato CSV con codificación UTF-8
  */
 function respondWithCSV(data: Record<string, any>[], filename: string) {
   if (!data || data.length === 0) {
@@ -259,7 +262,7 @@ function respondWithCSV(data: Record<string, any>[], filename: string) {
       .map(header => {
         // Formatear el valor según el tipo
         const value = row[header];
-        // Si es string y contiene comas, rodearlo con comillas
+        // Si es string y contiene comas o comillas, rodearlo con comillas
         if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
           return `"${value.replace(/"/g, '""')}"`;
         }
@@ -268,11 +271,18 @@ function respondWithCSV(data: Record<string, any>[], filename: string) {
       .join(',');
   }).join('\n');
   
-  // Configurar la respuesta HTTP
-  return new NextResponse(csvContent, {
+  // Agregar BOM (Byte Order Mark) para indicar que es UTF-8
+  const BOM = '\uFEFF';
+  const csvWithBOM = BOM + csvContent;
+  
+  // Configurar la respuesta HTTP con codificación UTF-8 explícita
+  return new NextResponse(csvWithBOM, {
     headers: {
-      'Content-Type': 'text/csv',
+      'Content-Type': 'text/csv; charset=UTF-8',
       'Content-Disposition': `attachment; filename="${filename}"`
     }
   });
 }
+
+// Revalidación programada cada hora
+export const revalidate = 3600; // 1 hora

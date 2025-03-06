@@ -11,7 +11,7 @@ import {
   useHistoricalEmaeData,
   useHistoricalIPCData 
 } from "@/hooks/useApiData"
-import EmaeChart from "@/components/charts/Emaechart"
+import EmaeMonthlyBarChart from "@/components/charts/EmaeMonthlyBarChart"
 import IPCChart from "@/components/charts/IPCChart"
 import SectorActivityList  from "@/components/charts/SectorActivityList"
 
@@ -36,6 +36,7 @@ export default function Indicators() {
     error: emaeHistoricalError 
   } = useHistoricalEmaeData();
   
+  console.log(emaeHistorical);
   const { 
     data: ipcHistorical, 
     loading: ipcHistoricalLoading, 
@@ -146,12 +147,13 @@ export default function Indicators() {
                     </Link>
                   </Button>
                 </div>
-                <div className="lg:col-span-3 bg-indec-gray-light/50 rounded-lg p-4 h-80">
-                  {/* Gráfico del EMAE */}
-                  <EmaeChart 
+                <div className="lg:col-span-3 bg-indec-gray-light/50 rounded-lg p-6 h-auto">
+                  {/* Usar el nuevo gráfico de variaciones mensuales con altura personalizada */}
+                  <EmaeMonthlyBarChart 
                     data={emaeHistorical} 
                     loading={emaeHistoricalLoading} 
-                    error={emaeHistoricalError} 
+                    error={emaeHistoricalError}
+                    height={280} 
                   />
                 </div>
               </div>

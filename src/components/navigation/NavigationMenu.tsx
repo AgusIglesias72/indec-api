@@ -26,18 +26,6 @@ const indicators = [
   }, 
 ]
 
-const apiLinks = [
-  {
-    title: "Documentación",
-    href: "/api-docs",
-    description: "Guías y referencias completas",
-  },
-  {
-    title: "Playground",
-    href: "/api-docs/playground",
-    description: "Prueba la API interactivamente",
-  },
-]
 
 export function MainNavigation() {
   return (
@@ -60,27 +48,18 @@ export function MainNavigation() {
           </NavigationMenuContent>
         </NavigationMenuItem>
 
-        <NavigationMenuItem>
-          <NavigationMenuTrigger>API</NavigationMenuTrigger>
-          <NavigationMenuContent>
-            <ul className="grid gap-3 p-4 md:w-[300px] lg:w-[400px] lg:grid-cols-1">
-              {apiLinks.map((link) => (
-                <ListItem
-                  key={link.title}
-                  title={link.title}
-                  href={link.href}
-                >
-                  {link.description}
-                </ListItem>
-              ))}
-            </ul>
-          </NavigationMenuContent>
-        </NavigationMenuItem>
+          <NavigationMenuItem>
+            <Link href="/api-docs" legacyBehavior passHref>
+              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                API Docs
+              </NavigationMenuLink>
+            </Link>
+          </NavigationMenuItem>
 
         <NavigationMenuItem>
           <Link href="/calendario" legacyBehavior passHref>
             <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-              Calendario Económico
+              Calendario INDEC
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>

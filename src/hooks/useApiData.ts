@@ -13,7 +13,12 @@ import {
   IPCLatestData,
   SectorPerformance,
   EmaeHistoricalData,
-  IPCHistoricalData
+  IPCHistoricalData,
+  fetchHistoricalEmaeData,
+  fetchLatestEmaeData,
+  fetchHistoricalIPCData,
+  fetchLatestIPCData,
+  fetchEmaeByActivity
 } from '@/app/services/api';
 
 /**
@@ -135,28 +140,28 @@ export function useSectorPerformance() {
 /**
  * Hook para obtener los datos históricos del EMAE
  */
-export function useHistoricalEmaeData() {
-  const [data, setData] = useState<EmaeHistoricalData[] | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+export function useHistoricalEmaeData(limit = 24) {
+  const [data, setData] = useState<any[] | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<any>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
+    async function fetchData() {
       try {
         setLoading(true);
-        const emaeData = await getHistoricalEmaeData();
+        const emaeData = await fetchHistoricalEmaeData(limit);
         setData(emaeData);
         setError(null);
       } catch (err) {
-        setError(err instanceof Error ? err : new Error('Error desconocido'));
-        console.error('Error al obtener datos históricos del EMAE:', err);
+        console.error("Error en useHistoricalEmaeData:", err);
+        setError(err);
       } finally {
         setLoading(false);
       }
-    };
+    }
 
     fetchData();
-  }, []);
+  }, [limit]);
 
   return { data, loading, error };
 }

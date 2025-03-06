@@ -17,7 +17,7 @@ export default function CalendarPage() {
     const year = currentDate.getFullYear();
     
     try {
-      const response = await fetch(`/api/calendar?month=${month}&year=${year}`);
+      const response = await fetch(`/api/calendar?month=${month}&year=${year}&limit=100`);
       const { data } = await response.json();
       setEvents(data);
     } catch (error) {
@@ -52,7 +52,7 @@ export default function CalendarPage() {
      
       
       <HeroSection 
-        title="Calendario Económico" 
+        title="Calendario INDEC" 
         subtitle="Mantente al día con los principales indicadores y publicaciones económicas"
       />
       
@@ -74,7 +74,7 @@ export default function CalendarPage() {
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
             </div>
           ) : (
-            <CalendarView events={events} />
+            <CalendarView events={events} />  
           )}
         </div>
       </div>

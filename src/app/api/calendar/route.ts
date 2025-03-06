@@ -1,34 +1,34 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+import { cache } from 'react';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY!;
 
 // Límite por defecto de eventos por página
-const DEFAULT_LIMIT = 100;
+const DEFAULT_LIMIT = 10;
+const MAX_LIMIT = 500;
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  
-  // Parámetros de filtro
-  const month = searchParams.get('month');
-  const year = searchParams.get('year');
-  const start_date = searchParams.get('start_date');
-  const end_date = searchParams.get('end_date');
-  
-  // Parámetros de paginación
-  const page = parseInt(searchParams.get('page') || '1');
-  const limit = parseInt(searchParams.get('limit') || String(DEFAULT_LIMIT));
-  
-  // Validar parámetros de paginación
-  const validPage = page > 0 ? page : 1;
-  const validLimit = limit > 0 && limit <= 500 ? limit : DEFAULT_LIMIT;
-  const offset = (validPage - 1) * validLimit;
+// Función en caché para obtener datos del calendario
+const getCachedCalendarData = cache(async (
+  month: string | null, 
+  year: string | null, 
+  start_date: string | null, 
+  end_date: string | null,
+  page: number,
+  limit: number
+) => {
+  console.log('Fetching calendar data from database');
   
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
   
+  // Validar parámetros de paginación
+  const validPage = page > 0 ? page : 1;
+  const validLimit = limit > 0 && limit <= MAX_LIMIT ? limit : DEFAULT_LIMIT;
+  const offset = (validPage - 1) * validLimit;
+  
   // Consulta base
-  let query = supabase.from('economic_calendar').select('*', { count: 'exact' });
+  let query = supabase.from('economic_calendar').select('date, day_week, indicator, period, source', { count: 'exact' });
   
   // Aplicar filtros según los parámetros proporcionados
   if (start_date) {
@@ -72,7 +72,7 @@ export async function GET(request: Request) {
     .range(offset, offset + validLimit - 1);
   
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    throw new Error(`Error fetching calendar data: ${error.message}`);
   }
 
   const dataWithDates = data?.map(item => ({
@@ -84,8 +84,7 @@ export async function GET(request: Request) {
   const totalCount = count || 0;
   const totalPages = Math.ceil(totalCount / validLimit);
   
-  // Preparar la respuesta con datos, metadata y paginación
-  const response = {
+  return {
     data: dataWithDates || [],
     metadata: {
       count: data?.length || 0,
@@ -104,6 +103,61 @@ export async function GET(request: Request) {
       has_more: validPage < totalPages
     }
   };
-  
-  return NextResponse.json(response);
+});
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    
+    // Parámetros de filtro
+    const month = searchParams.get('month');
+    const year = searchParams.get('year');
+    const start_date = searchParams.get('start_date');
+    const end_date = searchParams.get('end_date');
+    
+    // Parámetros de paginación
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || String(DEFAULT_LIMIT));
+    
+    // Obtener datos en caché
+    const calendarData = await getCachedCalendarData(
+      month, 
+      year, 
+      start_date, 
+      end_date, 
+      page, 
+      limit
+    );
+    
+    // Configurar caché para 1 hora
+    const CACHE_MAX_AGE = 3600; // 1 hora en segundos
+    const CACHE_STALE_WHILE_REVALIDATE = 86400; // 24 horas
+    
+    // Configurar encabezados de caché
+    const headers = new Headers();
+    headers.set('Content-Type', 'application/json');
+    headers.set('Cache-Control', `public, max-age=${CACHE_MAX_AGE}, stale-while-revalidate=${CACHE_STALE_WHILE_REVALIDATE}`);
+    
+    return new NextResponse(JSON.stringify(calendarData), { 
+      status: 200, 
+      headers 
+    });
+    
+  } catch (error) {
+    console.error('Error en API de calendario:', error);
+    return NextResponse.json(
+      { error: 'Error interno del servidor', details: (error as Error).message },
+      { 
+        status: 500,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      }
+    );
+  }
 }
+
+// Revalidación programada cada hora
+export const revalidate = 3600; // 1 hora

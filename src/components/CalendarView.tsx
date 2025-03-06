@@ -43,11 +43,11 @@ export default function CalendarView({ events }: CalendarViewProps) {
   };
   
   if (sortedDates.length === 0) {
-    return <div className="text-center py-12">No hay eventos para este mes</div>;
+    return <div className="text-center py-12 min-h-[400px] flex items-center justify-center">No hay eventos para este mes</div>;
   }
   
   return (
-    <div className="relative w-full lg:w-1/2 mx-auto px-2">
+    <div className="relative w-full lg:w-1/2 mx-auto px-2 min-h-[400px]">
       {/* Línea vertical */}
       <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-gray-200 transform -translate-x-1/2"></div>
       

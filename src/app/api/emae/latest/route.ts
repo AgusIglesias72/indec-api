@@ -1,286 +1,104 @@
 // src/app/api/emae/latest/route.ts
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/supabase';
+import { EmaeResponse } from '@/types';
 import { cache } from 'react';
 
-
+// Inicializar cliente Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY as string;
 
-// Inicializar cliente Supabase
 if (!supabaseUrl || !supabaseKey) {
-  throw new Error(`Unable to initialize Supabase client. Missing environment variables.`);
+  throw new Error(
+    `Unable to initialize Supabase client. Missing environment variables: ${
+      !supabaseUrl ? 'NEXT_PUBLIC_SUPABASE_URL ' : ''
+    }${!supabaseKey ? 'NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY' : ''}`
+  );
 }
 
 const supabase = createClient<Database>(supabaseUrl, supabaseKey);
-/*
-export async function GET() {
+
+// Función en caché para obtener los datos más recientes del EMAE
+const getLatestEmaeData = cache(async (
+  sectorCode: string,
+  byActivity: boolean
+) => {
+  console.log(`Fetching latest EMAE data for ${sectorCode}, by_activity: ${byActivity}`);
+  
+  // Determinar qué vista usar según si queremos datos por actividad o generales
+  const viewName = byActivity ? 'emae_by_activity_with_variations' : 'emae_with_variations';
+  
+  // Construir consulta base
+  let query = supabase
+    .from(viewName)
+    .select('*')
+    .order('date', { ascending: false })
+    .limit(1);
+  
+  // Filtrar por código de sector si se especifica y no es 'GENERAL' o estamos en modo por actividad
+  if (sectorCode && (sectorCode !== 'GENERAL' || byActivity)) {
+    query = query.eq('sector_code', sectorCode);
+  }
+  
+  const { data, error } = await query;
+  
+  if (error) {
+    throw new Error(`Error al consultar datos EMAE: ${error.message}`);
+  }
+  
+  if (!data || data.length === 0) {
+    return null;
+  }
+  
+  // Transformar el resultado
+  const item = data[0];
+  const result: EmaeResponse = {
+    date: item.date || '',
+    sector: item.sector || '',
+    sector_code: item.sector_code || '',
+    original_value: item.original_value || 0,
+    yearly_pct_change: item.yearly_pct_change || undefined,
+  };
+  
+  return result;
+});
+
+export async function GET(request: NextRequest) {
   try {
-    // Obtener el registro más reciente de EMAE
-    const { data: latestEmae, error: emaeError } = await supabase
-      .from('emae')
-      .select('*')
-      .order('date', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (emaeError) {
-      console.error('Error al consultar el último dato de EMAE:', emaeError);
+    const searchParams = request.nextUrl.searchParams;
+    
+    // Obtener parámetros de consulta
+    const sectorParam = searchParams.get('sector_code')?.toUpperCase() || 'GENERAL';
+    const byActivity = searchParams.get('by_activity') === 'true';
+    
+    // Obtener datos en caché
+    const latestData = await getLatestEmaeData(sectorParam, byActivity);
+    
+    if (!latestData) {
       return NextResponse.json(
-        { error: 'Error al consultar la base de datos', details: emaeError.message },
-        { status: 500 }
-      );
-    }
-
-    if (!latestEmae) {
-      return NextResponse.json(
-        { error: 'No se encontraron datos de EMAE' },
+        { error: 'No se encontraron datos para el sector especificado' },
         { status: 404 }
       );
     }
-
-    // Obtener el dato del mes anterior para calcular variación intermensual
-    const previousMonthDate = new Date(latestEmae.date);
-    previousMonthDate.setMonth(previousMonthDate.getMonth() - 1);
-    const previousMonthDateStr = previousMonthDate.toISOString().split('T')[0];
-
-    console.log(`Buscando datos para el mes anterior: ${previousMonthDateStr}`);
-
-    // Intentar encontrar exactamente el mes anterior, pero si no existe, buscar el más cercano
-    let { data: previousMonthData, error: previousMonthError } = await supabase
-      .from('emae')
-      .select('*')
-      .eq('date', previousMonthDateStr)
-      .maybeSingle();
-      
-    if (!previousMonthData) {
-      console.log('No se encontró dato exacto del mes anterior, buscando el más cercano');
-      // Si no hay dato exacto, buscar el registro más reciente anterior a la fecha actual
-      const { data: closestPreviousData, error: closestError } = await supabase
-        .from('emae')
-        .select('*')
-        .lt('date', latestEmae.date)
-        .order('date', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-        
-      if (closestPreviousData && !closestError) {
-        previousMonthData = closestPreviousData;
-        console.log(`Se encontró un dato cercano para: ${previousMonthData.date}`);
-      }
-    }
-
-    // Obtener el dato del mismo mes del año anterior para variación interanual
-    const previousYearDate = new Date(latestEmae.date);
-    previousYearDate.setFullYear(previousYearDate.getFullYear() - 1);
-    const previousYearDateStr = previousYearDate.toISOString().split('T')[0];
-
-    console.log(`Buscando datos para el año anterior: ${previousYearDateStr}`);
-
-    // Intentar encontrar exactamente el mismo mes del año anterior, pero si no existe, buscar el más cercano
-    let { data: previousYearData, error: previousYearError } = await supabase
-      .from('emae')
-      .select('*')
-      .eq('date', previousYearDateStr)
-      .maybeSingle();
-      
-    if (!previousYearData) {
-      console.log('No se encontró dato exacto del año anterior, buscando el más cercano');
-      // Buscar en un rango de ±1 mes
-      const yearBefore = previousYearDate.getFullYear();
-      const monthBefore = previousYearDate.getMonth() + 1; // +1 porque getMonth() devuelve 0-11
-      
-      // Construir fechas para un mes antes y después
-      const monthBeforeStr = `${yearBefore}-${String(monthBefore - 1 || 12).padStart(2, '0')}-01`;
-      const monthAfterStr = `${yearBefore}-${String(monthBefore + 1 > 12 ? 1 : monthBefore + 1).padStart(2, '0')}-01`;
-      
-      // Buscar en un rango de fechas
-      const { data: rangeData, error: rangeError } = await supabase
-        .from('emae')
-        .select('*')
-        .gte('date', monthBeforeStr)
-        .lte('date', monthAfterStr)
-        .order('date', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-        
-      if (rangeData && !rangeError) {
-        previousYearData = rangeData;
-        console.log(`Se encontró un dato cercano para año anterior: ${previousYearData.date}`);
-      }
-    }
-
-    // Calcular variaciones
-    let monthly_change = 0;
-    let year_over_year_change = 0;
-
-    if (previousMonthData) {
-      // Asegurarse de que hay un valor desestacionalizado válido para calcular
-      if (previousMonthData.seasonally_adjusted_value > 0 && latestEmae.seasonally_adjusted_value > 0) {
-        monthly_change = ((latestEmae.seasonally_adjusted_value - previousMonthData.seasonally_adjusted_value) / 
-                          previousMonthData.seasonally_adjusted_value) * 100;
-      } else {
-        console.warn('Valores desestacionalizados no válidos para calcular variación mensual');
-      }
-    } else {
-      console.warn('No se encontraron datos del mes anterior para calcular variación mensual');
-    }
-
-    if (previousYearData) {
-      // Asegurarse de que hay un valor original válido para calcular
-      if (previousYearData.original_value > 0 && latestEmae.original_value > 0) {
-        year_over_year_change = ((latestEmae.original_value - previousYearData.original_value) / 
-                                previousYearData.original_value) * 100;
-      } else {
-        console.warn('Valores originales no válidos para calcular variación interanual');
-      }
-    } else {
-      console.warn('No se encontraron datos del año anterior para calcular variación interanual');
-    }
-
-    // Formatear la respuesta
-    const responseData = {
-      date: latestEmae.date,
-      original_value: latestEmae.original_value,
-      seasonally_adjusted_value: latestEmae.seasonally_adjusted_value,
-      monthly_change: parseFloat(monthly_change.toFixed(1)),
-      year_over_year_change: parseFloat(year_over_year_change.toFixed(1))
-    };
-
-    return NextResponse.json(responseData);
-  } catch (error) {
-    console.error('Error en API de EMAE latest:', error);
-    return NextResponse.json(
-      { error: 'Error interno del servidor', details: (error as Error).message },
-      { status: 500 }
-    );
-  }
-}
-
-*/
-
-
-// Función en caché para obtener el último dato de EMAE
-const getCachedLatestEmaeData = cache(async () => {
-  console.log('Fetching latest EMAE data from database');
-  
-  // Obtener el registro más reciente de EMAE
-  const { data: latestEmae, error: emaeError } = await supabase
-    .from('emae')
-    .select('*')
-    .order('date', { ascending: false })
-    .limit(1)
-    .single();
-
-  if (emaeError) {
-    console.error('Error al consultar el último dato de EMAE:', emaeError);
-    throw new Error('Error al consultar la base de datos');
-  }
-
-  if (!latestEmae) {
-    throw new Error('No se encontraron datos de EMAE');
-  }
-
-  // Obtener el dato del mes anterior para calcular variación intermensual
-  const previousMonthDate = new Date(latestEmae.date);
-  previousMonthDate.setMonth(previousMonthDate.getMonth() - 1);
-  const previousMonthDateStr = previousMonthDate.toISOString().split('T')[0];
-
-  // Intentar encontrar exactamente el mes anterior, pero si no existe, buscar el más cercano
-  let { data: previousMonthData } = await supabase
-    .from('emae')
-    .select('*')
-    .eq('date', previousMonthDateStr)
-    .maybeSingle();
     
-  if (!previousMonthData) {
-    const { data: closestPreviousData } = await supabase
-      .from('emae')
-      .select('*')
-      .lt('date', latestEmae.date)
-      .order('date', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-      
-    previousMonthData = closestPreviousData;
-  }
-
-  // Obtener el dato del mismo mes del año anterior para variación interanual
-  const previousYearDate = new Date(latestEmae.date);
-  previousYearDate.setFullYear(previousYearDate.getFullYear() - 1);
-  const previousYearDateStr = previousYearDate.toISOString().split('T')[0];
-
-  let { data: previousYearData } = await supabase
-    .from('emae')
-    .select('*')
-    .eq('date', previousYearDateStr)
-    .maybeSingle();
-    
-  if (!previousYearData) {
-    const yearBefore = previousYearDate.getFullYear();
-    const monthBefore = previousYearDate.getMonth() + 1;
-    
-    const monthBeforeStr = `${yearBefore}-${String(monthBefore - 1 || 12).padStart(2, '0')}-01`;
-    const monthAfterStr = `${yearBefore}-${String(monthBefore + 1 > 12 ? 1 : monthBefore + 1).padStart(2, '0')}-01`;
-    
-    const { data: rangeData } = await supabase
-      .from('emae')
-      .select('*')
-      .gte('date', monthBeforeStr)
-      .lte('date', monthAfterStr)
-      .order('date', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-      
-    previousYearData = rangeData;
-  }
-
-  // Calcular variaciones
-  let monthly_change = 0;
-  let year_over_year_change = 0;
-
-  if (previousMonthData && previousMonthData.seasonally_adjusted_value > 0 && latestEmae.seasonally_adjusted_value > 0) {
-    monthly_change = ((latestEmae.seasonally_adjusted_value - previousMonthData.seasonally_adjusted_value) / 
-                      previousMonthData.seasonally_adjusted_value) * 100;
-  }
-
-  if (previousYearData && previousYearData.original_value > 0 && latestEmae.original_value > 0) {
-    year_over_year_change = ((latestEmae.original_value - previousYearData.original_value) / 
-                            previousYearData.original_value) * 100;
-  }
-
-  return {
-    date: latestEmae.date,
-    original_value: latestEmae.original_value,
-    seasonally_adjusted_value: latestEmae.seasonally_adjusted_value,
-    monthly_change: parseFloat(monthly_change.toFixed(1)),
-    year_over_year_change: parseFloat(year_over_year_change.toFixed(1))
-  };
-});
-
-
-export async function GET(request: Request) {
-  try {
-    console.log('Fetching latest EMAE data from database', request);
     // Configurar caché para 1 hora
     const CACHE_MAX_AGE = 3600; // 1 hora en segundos
     const CACHE_STALE_WHILE_REVALIDATE = 86400; // 24 horas
-
-    // Obtener datos en caché
-    const emaeData = await getCachedLatestEmaeData();
-
+    
     // Configurar encabezados de caché
     const headers = new Headers();
     headers.set('Content-Type', 'application/json');
     headers.set('Cache-Control', `public, max-age=${CACHE_MAX_AGE}, stale-while-revalidate=${CACHE_STALE_WHILE_REVALIDATE}`);
-
-    return new NextResponse(JSON.stringify(emaeData), { 
+    
+    // Responder con JSON
+    return new NextResponse(JSON.stringify(latestData), { 
       status: 200, 
       headers 
     });
+    
   } catch (error) {
-    console.error('Error en API de EMAE latest:', error);
+    console.error('Error en la API de EMAE/latest:', error);
     return NextResponse.json(
       { error: 'Error interno del servidor', details: (error as Error).message },
       { 

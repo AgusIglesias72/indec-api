@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 export default function ApiDocsPage() {
   const [baseUrl, setBaseUrl] = useState(process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.example.com');
-  
+
   return (
     <div className="container mx-auto px-4 py-12 max-w-6xl">
       <div className="mb-12 text-center">
@@ -16,7 +16,7 @@ export default function ApiDocsPage() {
           Guía completa para utilizar nuestras APIs de datos económicos y estadísticos
         </p>
       </div>
-      
+
       <Card className="mb-12">
         <CardHeader>
           <CardTitle>Información General</CardTitle>
@@ -28,21 +28,21 @@ export default function ApiDocsPage() {
               <h3 className="text-lg font-medium">URL Base</h3>
               <p className="text-gray-600">{baseUrl}</p>
             </div>
-            
+
             <div>
               <h3 className="text-lg font-medium">Autenticación</h3>
               <p className="text-gray-600">
                 Actualmente, nuestras APIs son de acceso público y no requieren autenticación.
               </p>
             </div>
-            
+
             <div>
               <h3 className="text-lg font-medium">Formato de Respuesta</h3>
               <p className="text-gray-600">
-                Todas las APIs devuelven datos en formato JSON.
+                Todas las APIs devuelven datos en formato JSON y soportan formato CSV.
               </p>
             </div>
-            
+
             <div>
               <h3 className="text-lg font-medium">Manejo de Errores</h3>
               <p className="text-gray-600">
@@ -57,145 +57,573 @@ export default function ApiDocsPage() {
           </div>
         </CardContent>
       </Card>
-      
+
       <Tabs defaultValue="calendar">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="calendar">Calendario Económico</TabsTrigger>
+          <TabsTrigger value="calendar">Calendario</TabsTrigger>
           <TabsTrigger value="emae">EMAE</TabsTrigger>
           <TabsTrigger value="ipc">IPC</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="calendar">
-          <ApiSection 
-            title="API de Calendario Económico"
-            description="Accede a información sobre eventos económicos programados"
+          <ApiSection
+            title="API de Calendario"
+            description="Accede a información sobre publicaciones programadas del INDEC"
             baseUrl={baseUrl}
             endpoints={[
               {
                 method: "GET",
                 path: "/api/calendar",
-                description: "Obtiene eventos del calendario económico",
+                description: "Obtiene eventos del calendario de publicaciones",
                 parameters: [
                   { name: "month", type: "number", required: false, description: "Mes (1-12)" },
                   { name: "year", type: "number", required: false, description: "Año (ej. 2023)" },
                   { name: "start_date", type: "string", required: false, description: "Fecha de inicio (YYYY-MM-DD)" },
-                  { name: "end_date", type: "string", required: false, description: "Fecha de fin (YYYY-MM-DD)" }
+                  { name: "end_date", type: "string", required: false, description: "Fecha de fin (YYYY-MM-DD)" },
+                  { name: "limit", type: "number", required: false, description: "Cantidad de eventos a devolver (máx. 100, por defecto 10)" },
+                  { name: "page", type: "number", required: false, description: "Número de página para paginación" }
+                ],
+                notes: [
+                  "Se recomienda utilizar o bien la combinación month/year, o bien start_date/end_date, pero no ambas simultáneamente.",
+                  "La respuesta incluye metadata con información sobre la cantidad total de eventos, filtros aplicados y paginación."
                 ],
                 responseExample: `{
   "data": [
     {
-      "date": "2023-08-15",
-      "day_week": "martes",
-      "indicator": "Índice de Precios al Consumidor",
-      "period": "Julio 2023"
+      "date": "2025-01-03T00:00:00",
+      "day_week": "Viernes",
+      "indicator": "Encuesta Nacional a Grandes Empresas",
+      "period": "Año 2023",
+      "source": "INDEC"
     },
     {
-      "date": "2023-08-23",
-      "day_week": "miércoles",
-      "indicator": "Estimador Mensual de Actividad Económica",
-      "period": "Junio 2023"
-    }
+      "date": "2025-01-08T00:00:00",
+      "day_week": "Miércoles",
+      "indicator": "Índice de producción industrial manufacturero (IPI manufacturero)",
+      "period": "Noviembre 2024",
+      "source": "INDEC"
+    },
+    ...resto de los eventos
   ],
   "metadata": {
-    "count": 2,
-    "filtered_by": {
-      "month": 8,
-      "year": 2023
+    "count": 150,
+    "total_count": 336,
+    "filtered_by": {},    
     },
-    "last_updated": "2023-08-01T12:00:00Z",
-    "total_events": 150,
-    "source": "INDEC"
-  }
+  "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total_pages": 34,
+      "has_more": true
+    } 
 }`
-              }
+}
             ]}
           />
         </TabsContent>
-        
+
         <TabsContent value="emae">
-          <ApiSection 
+          <ApiSection
             title="API de EMAE"
-            description="Estimador Mensual de Actividad Económica"
+            description="Estimador Mensual de Actividad Económica - Datos generales y por sectores económicos"
             baseUrl={baseUrl}
             endpoints={[
               {
                 method: "GET",
                 path: "/api/emae",
-                description: "Obtiene datos del EMAE",
+                description: "Obtiene datos generales del EMAE con series original, desestacionalizada y tendencia-ciclo.",
                 parameters: [
                   { name: "start_date", type: "string", required: false, description: "Fecha de inicio (YYYY-MM-DD)" },
                   { name: "end_date", type: "string", required: false, description: "Fecha de fin (YYYY-MM-DD)" },
-                  { name: "series", type: "string", required: false, description: "Tipos de series a incluir (separadas por comas)" }
+                  { name: "limit", type: "number", required: false, description: "Cantidad de registros por página (por defecto 10)" },
+                  { name: "page", type: "number", required: false, description: "Número de página para paginación (por defecto 1)" },
+                  { name: "format", type: "string", required: false, description: "Formato de respuesta: 'json' (por defecto) o 'csv'" }
+                ],
+                notes: [
+                  "Al solicitar formato CSV (format=csv), se omite la paginación y se devuelven hasta 10.000 registros.",
+                  "La respuesta incluye metadata con información sobre filtros aplicados y paginación."
                 ],
                 responseExample: `{
   "data": [
     {
       "date": "2023-06-01",
-      "value": 145.2,
-      "variation_monthly": 0.8,
-      "variation_yearly": 4.2,
-      "series_type": "original"
+      "original_value": 145.2,
+      "seasonally_adjusted_value": 144.5,
+      "cycle_trend_value": 143.8
     },
     {
-      "date": "2023-06-01",
-      "value": 144.5,
-      "variation_monthly": 0.5,
-      "variation_yearly": 3.9,
-      "series_type": "desestacionalizada"
+      "date": "2023-05-01",
+      "original_value": 142.7,
+      "seasonally_adjusted_value": 143.9,
+      "cycle_trend_value": 143.2
     }
   ],
   "metadata": {
     "count": 2,
-    "last_updated": "2023-08-23T14:30:00Z",
-    "source": "INDEC"
+    "filtered_by": {
+      "start_date": "2023-05-01",
+      "end_date": "2023-06-01"
+    }
+  },
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total_items": 234,
+    "total_pages": 24,
+    "has_more": true
   }
+}`
+              },
+              {
+                method: "GET",
+                path: "/api/emae/sectors",
+                description: "Obtiene datos del EMAE desagregados por sectores económicos.",
+                parameters: [
+                  { name: "start_date", type: "string", required: false, description: "Fecha de inicio (YYYY-MM-DD)" },
+                  { name: "end_date", type: "string", required: false, description: "Fecha de fin (YYYY-MM-DD)" },
+                  { name: "sector_code", type: "string", required: false, description: "Código del sector económico (A, B, C, etc.)" },
+                  { name: "limit", type: "number", required: false, description: "Cantidad de registros por página (por defecto 16)" },
+                  { name: "page", type: "number", required: false, description: "Número de página para paginación (por defecto 1)" },
+                  { name: "format", type: "string", required: false, description: "Formato de respuesta: 'json' (por defecto) o 'csv'" }
+                ],
+                notes: [
+                  "Al solicitar formato CSV (format=csv), se omite la paginación y se devuelven hasta 10.000 registros.",
+                  "Los datos por sector solo incluyen la serie original (sin desestacionalizar).",
+                  "Para obtener la lista completa de sectores y sus códigos, consulte el endpoint de metadata."
+                ],
+                responseExample: `{
+  "data": [
+   {
+    "date": "2023-01-01",
+    "economy_sector": "Agricultura, ganadería, caza y silvicultura",
+    "economy_sector_code": "A",
+    "original_value": 81.4273753163762
+    },
+    {
+    "date": "2023-01-01",
+    "economy_sector": "Pesca",
+    "economy_sector_code": "B",
+    "original_value": 176.518839342202
+    },
+    {
+    "date": "2023-01-01",
+    "economy_sector": "Explotación de minas y canteras",
+    "economy_sector_code": "C",
+    "original_value": 102.883370327119
+    },
+    {
+    "date": "2023-01-01",
+    "economy_sector": "Industria manufacturera",
+    "economy_sector_code": "D",
+    "original_value": 113.605761133453
+    }
+    "...resto de los sectores"
+  ],
+  "metadata": {
+    "count": 2,
+    "date_range": {
+      "first_date": "2004-01-01",
+      "last_date": "2023-06-01",
+      "total_months": 234
+    },
+    "filtered_by": {
+      "end_date": "2023-06-01"
+    }
+  },
+  "pagination": {
+    "page": 1,
+    "limit": 16,
+    "total_items": 32,
+    "total_pages": 2,
+    "has_more": true
+  }
+}`
+              },
+              {
+                method: "GET",
+                path: "/api/emae/metadata",
+                description: "Obtiene metadata sobre los datos del EMAE, incluyendo sectores disponibles y rango de fechas.",
+                parameters: [],
+                notes: [
+                  "Este endpoint no requiere parámetros y devuelve información útil para trabajar con los otros endpoints de EMAE.",
+                  "Incluye la lista completa de sectores económicos con sus códigos y el rango de fechas disponibles."
+                ],
+                responseExample: `{
+  "sectors": [
+    {
+      "code": "A",
+      "name": "Agricultura, ganadería, caza y silvicultura"
+    },
+    {
+      "code": "B",
+      "name": "Pesca"
+    },
+    {
+      "code": "C",
+      "name": "Explotación de minas y canteras"
+    }
+  ],
+  "date_range": {
+    "first_date": "2004-01-01",
+    "last_date": "2023-06-01",
+    "total_months": 234
+  },
+  "available_series": {
+    "general": ["original_value", "seasonally_adjusted_value", "cycle_trend_value"],
+    "by_activity": ["original_value"]
+  },
+  "metadata": {
+    "last_updated": "2024-08-23",
+    "available_formats": ["json", "csv"],
+    "endpoints": {
+      "main": "/api/emae",
+      "sectors": "/api/emae/sectors",
+      "metadata": "/api/emae/metadata"
+    }
+  }
+}`
+              },
+              {
+                method: "GET",
+                path: "/api/emae/latest",
+                description: "Obtiene los datos más recientes del EMAE, incluyendo variaciones mensuales e interanuales.",
+                parameters: [],
+                notes: [
+                  "Este endpoint no requiere parámetros y devuelve los datos del último mes disponible.",
+                  "Incluye variaciones porcentuales respecto al mes anterior y al mismo mes del año anterior.",
+                  "También proporciona los datos desagregados por sector económico."
+                ],
+                responseExample: `{ 
+    "date": "2024-12-01",
+    "original_value": 145.968275964961,
+    "seasonally_adjusted_value": 149.183720667308,
+    "monthly_change": 0.5,
+    "year_over_year_change": 5.5
 }`
               }
             ]}
           />
         </TabsContent>
-        
+
         <TabsContent value="ipc">
-          <ApiSection 
+          <ApiSection
             title="API de IPC"
-            description="Índice de Precios al Consumidor"
+            description="Índice de Precios al Consumidor - Datos generales y por categorías"
             baseUrl={baseUrl}
             endpoints={[
               {
                 method: "GET",
                 path: "/api/ipc",
-                description: "Obtiene datos del IPC",
+                description: "Obtiene datos del IPC general y por categorías.",
                 parameters: [
                   { name: "start_date", type: "string", required: false, description: "Fecha de inicio (YYYY-MM-DD)" },
                   { name: "end_date", type: "string", required: false, description: "Fecha de fin (YYYY-MM-DD)" },
-                  { name: "categories", type: "string", required: false, description: "Categorías a incluir (separadas por comas)" }
+                  { name: "month", type: "number", required: false, description: "Filtrar por mes específico (1-12)" },
+                  { name: "year", type: "number", required: false, description: "Filtrar por año específico (ej. 2023)" },
+                  { name: "category", type: "string", required: false, description: "Categoría específica a consultar (ej. 'GENERAL', 'RUBRO_ALIMENTOS')" },
+                  { name: "region", type: "string", required: false, description: "Región específica (ej. 'Nacional', 'GBA')" },
+                  { name: "component_type", type: "string", required: false, description: "Tipo de componente (ej. 'RUBRO', 'BYS', 'CATEGORIA')" },
+                  { name: "include_variations", type: "boolean", required: false, description: "Incluir variaciones mensuales, anuales y acumuladas (por defecto: true)" },
+                  { name: "limit", type: "number", required: false, description: "Cantidad de registros por página (por defecto 12)" },
+                  { name: "page", type: "number", required: false, description: "Número de página para paginación (por defecto 1)" },
+                  { name: "format", type: "string", required: false, description: "Formato de respuesta: 'json' (por defecto) o 'csv'" }
+                ],
+                notes: [
+                  "Los datos se ordenan por fecha descendente (más recientes primero).",
+                  "Al solicitar formato CSV (format=csv), se omite la paginación y se devuelven hasta 10.000 registros.",
+                  "Si no se especifica una categoría, se devuelven datos para la categoría 'GENERAL'.",
+                  "Los filtros de mes y año permiten analizar tendencias específicas (ej. todos los eneros, o toda la evolución de un año).",
+                  "La variación acumulada se calcula respecto a diciembre del año anterior.",
+                  "Para obtener la lista completa de categorías y regiones, consulte el endpoint de metadata."
                 ],
                 responseExample: `{
   "data": [
     {
-      "date": "2023-07-01",
-      "value": 272.8,
-      "variation_monthly": 6.3,
-      "variation_yearly": 113.4,
-      "category": "nivel_general"
+      "date": "2025-01-01",
+      "component": "Nivel General",
+      "component_code": "GENERAL",
+      "component_type": "NIVEL",
+      "index_value": 7864.13,
+      "region": "Nacional",
+      "monthly_pct_change": 2.2,
+      "yearly_pct_change": 84.5,
+      "accumulated_pct_change": 2.2
     },
     {
-      "date": "2023-07-01",
-      "value": 285.6,
-      "variation_monthly": 5.8,
-      "variation_yearly": 115.2,
-      "category": "alimentos_bebidas"
+      "date": "2024-12-01",
+      "component": "Nivel General",
+      "component_code": "GENERAL",
+      "component_type": "NIVEL",
+      "index_value": 7694.84,
+      "region": "Nacional",
+      "monthly_pct_change": 2.7,
+      "yearly_pct_change": 88.3,
+      "accumulated_pct_change": 211.4
     }
   ],
   "metadata": {
     "count": 2,
-    "last_updated": "2023-08-15T10:00:00Z",
-    "source": "INDEC"
+    "total_count": 96,
+    "page": 1,
+    "limit": 12,
+    "start_date": null,
+    "end_date": null,
+    "month": null,
+    "year": null,
+    "component_type": null,
+    "component_code": "GENERAL",
+    "region": "Nacional",
+    "include_variations": true
+  },
+  "pagination": {
+    "page": 1,
+    "limit": 12,
+    "total_items": 96,
+    "total_pages": 8,
+    "has_more": true
+  }
+}`
+              },
+              {
+                method: "GET",
+                path: "/api/ipc/latest",
+                description: "Obtiene los datos más recientes del IPC para una categoría y región específicas.",
+                parameters: [
+                  { name: "category", type: "string", required: false, description: "Categoría específica (ej. 'GENERAL', 'RUBRO_ALIMENTOS'). Por defecto: 'GENERAL'" },
+                  { name: "region", type: "string", required: false, description: "Región específica (ej. 'Nacional', 'GBA'). Por defecto: 'Nacional'" }
+                ],
+                notes: [
+                  "Este endpoint devuelve los datos del último mes disponible para la categoría y región especificadas.",
+                  "Incluye variaciones mensuales, interanuales y acumuladas.",
+                  "Es útil para obtener rápidamente el último valor del IPC sin necesidad de filtrar por fecha."
+                ],
+                responseExample: `{
+  "date": "2025-01-01",
+  "category": "Nivel General",
+  "category_code": "GENERAL",
+  "category_type": "NIVEL",
+  "index_value": 7864.13,
+  "region": "Nacional",
+  "monthly_pct_change": 2.2,
+  "yearly_pct_change": 84.5,
+  "accumulated_pct_change": 2.2
+}`
+              },
+              {
+                method: "GET",
+                path: "/api/ipc/metadata",
+                description: "Obtiene metadata sobre los datos del IPC, incluyendo regiones y componentes disponibles.",
+                parameters: [],
+                notes: [
+                  "Este endpoint no requiere parámetros y devuelve información útil para trabajar con los otros endpoints de IPC.",
+                  "Incluye información sobre la última actualización y los endpoints disponibles."
+                ],
+                responseExample: `{
+  "regions": [
+    "Cuyo",
+    "GBA",
+    "Nacional",
+    "Noreste",
+    "Noroeste",
+    "Pampeana",
+    "Patagonia"
+  ],
+  "components": {
+    "BYS": [
+      {
+        "code": "BYS_BIENES",
+        "name": "Bienes"
+      },
+      {
+        "code": "BYS_SERVICIOS",
+        "name": "Servicios"
+      }
+    ],
+    "CATEGORIA": [
+      {
+        "code": "CAT_ESTACIONAL",
+        "name": "Estacional"
+      },
+      {
+        "code": "CAT_NUCLEO",
+        "name": "Núcleo"
+      },
+      {
+        "code": "CAT_REGULADOS",
+        "name": "Regulados"
+      }
+    ],
+    "RUBRO": [
+      {
+        "code": "RUBRO_ALIMENTOS",
+        "name": "Alimentos y bebidas no alcohólicas"
+      },
+      {
+        "code": "RUBRO_COMUNICACION",
+        "name": "Comunicación"
+      },
+      {
+        "code": "RUBRO_EDUCACION",
+        "name": "Educación"
+      },
+      {
+        "code": "RUBRO_EQUIPAMIENTO",
+        "name": "Equipamiento y mantenimiento del hogar"
+      },
+      ...resto de los rubros
+    ]
+  },
+  "metadata": {
+    "last_updated": "2025-01-01",
+    "available_formats": ["json", "csv"],
+    "endpoints": {
+      "main": "/api/ipc",
+      "latest": "/api/ipc/latest",
+      "metadata": "/api/ipc/metadata"
+    }
   }
 }`
               }
             ]}
           />
+          
+          <div className="mt-8 space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Filtrado por Región</CardTitle>
+                <CardDescription>Cómo consultar datos específicos por región</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="mb-4">
+                  Puedes filtrar los datos del IPC por región utilizando el parámetro <code>region</code>. Las regiones disponibles son:
+                </p>
+                <ul className="list-disc pl-6 mb-4 space-y-1">
+                  <li><strong>Nacional</strong>: Datos a nivel país (valor por defecto)</li>
+                  <li><strong>GBA</strong>: Gran Buenos Aires</li>
+                  <li><strong>Cuyo</strong>: Región de Cuyo</li>
+                  <li><strong>Noreste</strong>: Región Noreste</li>
+                  <li><strong>Noroeste</strong>: Región Noroeste</li>
+                  <li><strong>Pampeana</strong>: Región Pampeana</li>
+                  <li><strong>Patagonia</strong>: Región Patagónica</li>
+                </ul>
+                <p className="mb-2">Ejemplo de consulta:</p>
+                <pre className="bg-gray-100 p-3 rounded-md overflow-x-auto">
+                  <code>{`${baseUrl}/api/ipc?region=Patagonia&limit=5`}</code>
+                </pre>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Filtrado por Categoría</CardTitle>
+                <CardDescription>Cómo consultar datos específicos por categoría</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="mb-4">
+                  Puedes filtrar los datos del IPC por categoría utilizando el parámetro <code>category</code>. Las categorías se dividen en varios tipos:
+                </p>
+                
+                <h4 className="font-semibold mt-4 mb-2">Nivel General</h4>
+                <ul className="list-disc pl-6 mb-3 space-y-1">
+                  <li><code>GENERAL</code>: Nivel general del IPC (valor por defecto)</li>
+                </ul>
+                
+                <h4 className="font-semibold mt-4 mb-2">Rubros</h4>
+                <ul className="list-disc pl-6 mb-3 space-y-1">
+                  <li><code>RUBRO_ALIMENTOS</code>: Alimentos y bebidas no alcohólicas</li>
+                  <li><code>RUBRO_BEBIDAS_TABACO</code>: Bebidas alcohólicas y tabaco</li>
+                  <li><code>RUBRO_PRENDAS</code>: Prendas de vestir y calzado</li>
+                  <li><code>RUBRO_VIVIENDA</code>: Vivienda, agua, electricidad y otros combustibles</li>
+                  <li>Y otros rubros (consulta el endpoint de metadata para la lista completa)</li>
+                </ul>
+                
+                <h4 className="font-semibold mt-4 mb-2">Categorías</h4>
+                <ul className="list-disc pl-6 mb-3 space-y-1">
+                  <li><code>CAT_NUCLEO</code>: IPC Núcleo</li>
+                  <li><code>CAT_ESTACIONAL</code>: Estacionales</li>
+                  <li><code>CAT_REGULADOS</code>: Regulados</li>
+                </ul>
+                
+                <h4 className="font-semibold mt-4 mb-2">Bienes y Servicios</h4>
+                <ul className="list-disc pl-6 mb-4 space-y-1">
+                  <li><code>BYS_BIENES</code>: Bienes</li>
+                  <li><code>BYS_SERVICIOS</code>: Servicios</li>
+                </ul>
+                
+                <p className="mb-2">Ejemplo de consulta:</p>
+                <pre className="bg-gray-100 p-3 rounded-md overflow-x-auto">
+                  <code>{`${baseUrl}/api/ipc?category=RUBRO_ALIMENTOS&region=Nacional&limit=5`}</code>
+                </pre>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Análisis Temporal</CardTitle>
+                <CardDescription>Cómo analizar tendencias específicas por mes o año</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="mb-4">
+                  La API permite realizar análisis temporales específicos utilizando los parámetros <code>month</code> y <code>year</code>:
+                </p>
+                
+                <h4 className="font-semibold mt-2 mb-2">Análisis de un mes específico a lo largo de los años</h4>
+                <p className="mb-2">
+                  Para ver la evolución de un mes específico (por ejemplo, todos los eneros):
+                </p>
+                <pre className="bg-gray-100 p-3 rounded-md overflow-x-auto mb-4">
+                  <code>{`${baseUrl}/api/ipc?month=1&category=GENERAL&region=Nacional`}</code>
+                </pre>
+                
+                <h4 className="font-semibold mt-4 mb-2">Análisis de un año completo</h4>
+                <p className="mb-2">
+                  Para ver todos los datos de un año específico:
+                </p>
+                <pre className="bg-gray-100 p-3 rounded-md overflow-x-auto mb-4">
+                  <code>{`${baseUrl}/api/ipc?year=2023&category=GENERAL&region=Nacional`}</code>
+                </pre>
+                
+                <h4 className="font-semibold mt-4 mb-2">Análisis de un mes específico en un año específico</h4>
+                <p className="mb-2">
+                  Para ver los datos de un mes y año específicos:
+                </p>
+                <pre className="bg-gray-100 p-3 rounded-md overflow-x-auto">
+                  <code>{`${baseUrl}/api/ipc?month=7&year=2023&category=GENERAL&region=Nacional`}</code>
+                </pre>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Variaciones</CardTitle>
+                <CardDescription>Entendiendo las variaciones calculadas</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="mb-4">
+                  La API calcula automáticamente tres tipos de variaciones porcentuales:
+                </p>
+                
+                <ul className="list-disc pl-6 mb-4 space-y-2">
+                  <li>
+                    <strong>monthly_pct_change</strong>: Variación porcentual respecto al mes anterior.
+                  </li>
+                  <li>
+                    <strong>yearly_pct_change</strong>: Variación porcentual interanual (respecto al mismo mes del año anterior).
+                  </li>
+                  <li>
+                    <strong>accumulated_pct_change</strong>: Variación porcentual acumulada desde diciembre del año anterior.
+                  </li>
+                </ul>
+                
+                <p className="mb-2">
+                  Si no necesitas estos cálculos, puedes excluirlos para obtener respuestas más ligeras:
+                </p>
+                <pre className="bg-gray-100 p-3 rounded-md overflow-x-auto">
+                  <code>{`${baseUrl}/api/ipc?include_variations=false&limit=10`}</code>
+                </pre>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

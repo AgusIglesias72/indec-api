@@ -1,132 +1,103 @@
 // src/app/api/ipc/latest/route.ts
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/supabase';
+import { IpcResponse } from '@/types';
 import { cache } from 'react';
 
+// Inicializar cliente Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY as string;
 
-// Inicializar cliente Supabase
 if (!supabaseUrl || !supabaseKey) {
-  throw new Error(`Unable to initialize Supabase client. Missing environment variables.`);
+  throw new Error(
+    `Unable to initialize Supabase client. Missing environment variables: ${
+      !supabaseUrl ? 'NEXT_PUBLIC_SUPABASE_URL ' : ''
+    }${!supabaseKey ? 'NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY' : ''}`
+  );
 }
 
 const supabase = createClient<Database>(supabaseUrl, supabaseKey);
 
-// Función en caché para obtener el último dato de IPC
-const getCachedLatestIPCData = cache(async () => {
-  console.log('Fetching latest IPC data from database');
+// Función en caché para obtener los datos más recientes del IPC
+const getLatestIpcData = cache(async (
+  componentCode: string,
+  region: string
+) => {
+  console.log(`Fetching latest IPC data for ${componentCode} in ${region}`);
   
-  // Obtener los registros de IPC más recientes
-  const { data: ipcData, error: ipcError } = await supabase
-    .from('ipc')
+  // Consultar la vista que incluye variaciones
+  const { data, error } = await supabase
+    .from('ipc_with_variations')
     .select('*')
-    .eq('component_type', 'GENERAL')
-    .eq('region', 'Nacional')
+    .eq('component_code', componentCode)
+    .eq('region', region)
     .order('date', { ascending: false })
-    .limit(3);
-
-  if (ipcError) {
-    throw new Error(`Error al consultar los datos de IPC: ${ipcError.message}`);
-  }
-
-  if (!ipcData || ipcData.length === 0) {
-    throw new Error('No se encontraron datos de IPC');
-  }
-
-  const latestIPC = ipcData[0];
-  const previousMonthIPC = ipcData.length > 1 ? ipcData[1] : null;
-  const twoMonthsAgoIPC = ipcData.length > 2 ? ipcData[2] : null;
-
-  // Obtener el dato del mismo mes del año anterior para variación interanual
-  const previousYearDate = new Date(latestIPC.date);
-  previousYearDate.setFullYear(previousYearDate.getFullYear() - 1);
-  const previousYearDateStr = previousYearDate.toISOString().split('T')[0];
-
-  const { data: previousYearData } = await supabase
-    .from('ipc')
-    .select('*')
-    .eq('component_type', 'GENERAL')
-    .eq('region', 'Nacional')
-    .eq('date', previousYearDateStr)
-    .maybeSingle();
-
-  // Obtener el dato de diciembre del año anterior para variación acumulada
-  const currentYear = new Date(latestIPC.date + 1).getFullYear();
-  const lastDecemberStr = `${currentYear - 1}-12-01`;
-
-  const { data: lastDecemberData } = await supabase
-    .from('ipc')
-    .select('*')
-    .eq('component_type', 'GENERAL')
-    .eq('region', 'Nacional')
-    .eq('date', lastDecemberStr)
-    .maybeSingle();
-
-  // Calcular variaciones
-  let monthly_change = 0;
-  let year_over_year_change = 0;
-  let accumulated_change = 0;
-  let previous_monthly_change = 0;
-
-  // Calcular variación mensual
-  if (previousMonthIPC && previousMonthIPC.index_value > 0) {
-    monthly_change = ((latestIPC.index_value - previousMonthIPC.index_value) / 
-                     previousMonthIPC.index_value) * 100;
+    .limit(1);
+  
+  if (error) {
+    throw new Error(`Error al consultar datos IPC: ${error.message}`);
   }
   
-  // Calcular variación mensual del periodo anterior para comparar
-  if (previousMonthIPC && twoMonthsAgoIPC && twoMonthsAgoIPC.index_value > 0) {
-    previous_monthly_change = ((previousMonthIPC.index_value - twoMonthsAgoIPC.index_value) / 
-                              twoMonthsAgoIPC.index_value) * 100;
+  if (!data || data.length === 0) {
+    return null;
   }
-
-  // Calcular variación interanual
-  if (previousYearData && previousYearData.index_value > 0) {
-    year_over_year_change = ((latestIPC.index_value - previousYearData.index_value) / 
-                            previousYearData.index_value) * 100;
-  }
-
-  // Calcular variación acumulada
-  if (lastDecemberData && lastDecemberData.index_value > 0) {
-    accumulated_change = ((latestIPC.index_value - lastDecemberData.index_value) / 
-                         lastDecemberData.index_value) * 100;
-  }
-
-  // Calcular la diferencia entre la variación mensual actual y la anterior
-  const monthly_change_diff = parseFloat((monthly_change - previous_monthly_change).toFixed(1));
-
-  return {
-    date: latestIPC.date,
-    index_value: latestIPC.index_value,
-    monthly_change: parseFloat(monthly_change.toFixed(1)),
-    year_over_year_change: parseFloat(year_over_year_change.toFixed(1)),
-    accumulated_change: parseFloat(accumulated_change.toFixed(1)),
-    monthly_change_diff: monthly_change_diff
+  
+  // Transformar el resultado
+  const item = data[0];
+  const result: IpcResponse = {
+    date: item.date || '',
+    category: item.component || '',
+    category_code: item.component_code || '',
+    category_type: item.component_type || '',
+    index_value: item.index_value || 0,
+    region: item.region || '',
+    monthly_pct_change: item.monthly_pct_change || undefined,
+    yearly_pct_change: item.yearly_pct_change || undefined,
+    accumulated_pct_change: item.accumulated_pct_change || undefined
   };
+  
+  return result;
 });
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const searchParams = request.nextUrl.searchParams;
+    
+    // Obtener parámetros de consulta y normalizar strings a minúsculas
+    const categoryParam = searchParams.get('category')?.toUpperCase() || 'GENERAL';
+    const regionParam = searchParams.get('region')?.toLowerCase() || 'nacional';
+    
+    // Normalizar región (primera letra mayúscula, resto minúsculas)
+    const normalizedRegion = regionParam.charAt(0).toUpperCase() + regionParam.slice(1).toLowerCase();
+    
+    // Obtener datos en caché
+    const latestData = await getLatestIpcData(categoryParam, normalizedRegion);
+    
+    if (!latestData) {
+      return NextResponse.json(
+        { error: 'No se encontraron datos para la categoría y región especificadas' },
+        { status: 404 }
+      );
+    }
+    
     // Configurar caché para 1 hora
     const CACHE_MAX_AGE = 3600; // 1 hora en segundos
     const CACHE_STALE_WHILE_REVALIDATE = 86400; // 24 horas
-
-    // Obtener datos en caché
-    const ipcData = await getCachedLatestIPCData();
-
+    
     // Configurar encabezados de caché
     const headers = new Headers();
     headers.set('Content-Type', 'application/json');
     headers.set('Cache-Control', `public, max-age=${CACHE_MAX_AGE}, stale-while-revalidate=${CACHE_STALE_WHILE_REVALIDATE}`);
-
-    return new NextResponse(JSON.stringify(ipcData), { 
+    
+    // Responder con JSON
+    return new NextResponse(JSON.stringify(latestData), { 
       status: 200, 
       headers 
     });
+    
   } catch (error) {
-    console.error('Error en API de IPC latest:', error);
+    console.error('Error en la API de IPC/latest:', error);
     return NextResponse.json(
       { error: 'Error interno del servidor', details: (error as Error).message },
       { 

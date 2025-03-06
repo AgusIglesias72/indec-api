@@ -171,11 +171,10 @@ export type IpcRow = {
 
 // Tipo para las respuestas de API que incluye variaciones calculadas dinámicamente
 export type IpcResponse = {
-  id: string;
   date: string;
-  component: string;
-  component_code: string;
-  component_type: string;
+  category: string;
+  category_code: string;
+  category_type: string;
   index_value: number;
   region: string;
   // Variaciones calculadas dinámicamente
@@ -186,3 +185,15 @@ export type IpcResponse = {
 
 export type IpcInsert = Omit<IpcRow, 'id'>;
 export type IpcUpdate = Partial<IpcInsert>;
+
+// Actualizar la interfaz EmaeResponse
+export interface EmaeResponse {
+  date: string;
+  sector: string;
+  sector_code: string;
+  original_value: number;
+  seasonally_adjusted_value?: number;
+  trend_cycle_value?: number;
+  monthly_pct_change?: number;
+  yearly_pct_change?: number;
+}

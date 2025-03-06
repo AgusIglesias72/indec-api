@@ -18,6 +18,7 @@ interface EndpointProps {
     description: string;
     parameters: Parameter[];
     responseExample: string;
+    notes?: string[];
   };
   baseUrl: string;
 }
@@ -88,6 +89,17 @@ export default function EndpointCard({ endpoint, baseUrl }: EndpointProps) {
             <div>
               <h3 className="text-lg font-medium mb-3">Parámetros</h3>
               <ParameterTable parameters={endpoint.parameters} />
+            </div>
+          )}
+
+          {endpoint.notes && endpoint.notes.length > 0 && (
+            <div>
+              <h3 className="text-md font-medium mb-3">Notas</h3>
+              <ul className="list-disc text-sm pl-5 space-y-1 text-gray-600">
+                {endpoint.notes.map((note, index) => (
+                  <li key={index}>{note}</li>
+                ))}
+              </ul>
             </div>
           )}
           

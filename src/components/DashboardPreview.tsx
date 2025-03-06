@@ -34,7 +34,6 @@ export default function DashboardPreview() {
     }
   }, [emaeData]);
 
-  console.log(ipcData)
 
   return (
     <motion.div 

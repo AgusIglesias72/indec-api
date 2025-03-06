@@ -268,3 +268,48 @@ export async function getHistoricalIPCData(): Promise<IPCHistoricalData[]> {
     ];
   }
 }
+
+// Función para obtener datos históricos del EMAE
+export async function fetchHistoricalEmaeData(limit = 24) {
+  try {
+    const response = await fetch(`/api/emae?limit=${limit}&include_variations=true`);
+    
+    if (!response.ok) {
+      throw new Error(`Error al obtener datos históricos del EMAE: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error("Error fetching historical EMAE data:", error);
+    throw error;
+  }
+}
+
+// Función para obtener el último dato del EMAE
+export async function fetchLatestEmaeData(sectorCode = 'GENERAL') {
+  try {
+    const response = await fetch(`/api/emae/latest?sector_code=${sectorCode}`);
+    
+    if (!response.ok) {
+      throw new Error(`Error al obtener el último dato del EMAE: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    // Ya no necesitamos calcular las variaciones, vienen de la API
+    return {
+      date: data.date,
+      sector: data.sector,
+      sector_code: data.sector_code,
+      original_value: data.original_value,
+      seasonally_adjusted_value: data.seasonally_adjusted_value,
+      trend_cycle_value: data.trend_cycle_value,
+      monthly_change: data.monthly_pct_change || 0,
+      year_over_year_change: data.yearly_pct_change || 0
+    };
+  } catch (error) {
+    console.error("Error fetching latest EMAE data:", error);
+    throw error;
+  }
+}
