@@ -171,6 +171,7 @@ export type IpcRow = {
 
 // Tipo para las respuestas de API que incluye variaciones calculadas dinámicamente
 export type IpcResponse = {
+  monthly_change_variation: number;
   date: string;
   category: string;
   category_code: string;

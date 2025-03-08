@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/supabase';
 import { IpcResponse } from '@/types';
-import { cache } from 'react';
 
 // Inicializar cliente Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
@@ -20,45 +19,6 @@ if (!supabaseUrl || !supabaseKey) {
 const supabase = createClient<Database>(supabaseUrl, supabaseKey);
 
 // Función en caché para obtener los datos más recientes del IPC
-const getLatestIpcData = cache(async (
-  componentCode: string,
-  region: string
-) => {
-  console.log(`Fetching latest IPC data for ${componentCode} in ${region}`);
-  
-  // Consultar la vista que incluye variaciones
-  const { data, error } = await supabase
-    .from('ipc_with_variations')
-    .select('*')
-    .eq('component_code', componentCode)
-    .eq('region', region)
-    .order('date', { ascending: false })
-    .limit(1);
-  
-  if (error) {
-    throw new Error(`Error al consultar datos IPC: ${error.message}`);
-  }
-  
-  if (!data || data.length === 0) {
-    return null;
-  }
-  
-  // Transformar el resultado
-  const item = data[0];
-  const result: IpcResponse = {
-    date: item.date || '',
-    category: item.component || '',
-    category_code: item.component_code || '',
-    category_type: item.component_type || '',
-    index_value: item.index_value || 0,
-    region: item.region || '',
-    monthly_pct_change: item.monthly_pct_change || undefined,
-    yearly_pct_change: item.yearly_pct_change || undefined,
-    accumulated_pct_change: item.accumulated_pct_change || undefined
-  };
-  
-  return result;
-});
 
 export async function GET(request: NextRequest) {
   try {
@@ -102,7 +62,7 @@ export async function GET(request: NextRequest) {
     const prevDateStr = `${prevYear}-${prevMonth}-01`;
     
     // Obtener el dato del mes anterior
-    const { data: prevMonthData, error: prevMonthError } = await supabase
+    const { data: prevMonthData } = await supabase
       .from('ipc_with_variations')
       .select('*')
       .eq('component_code', componentCode)
@@ -136,7 +96,8 @@ export async function GET(request: NextRequest) {
       region: latestData.region || '',
       monthly_pct_change: latestData.monthly_pct_change || undefined,
       yearly_pct_change: latestData.yearly_pct_change || undefined,
-      accumulated_pct_change: latestData.accumulated_pct_change || undefined
+      accumulated_pct_change: latestData.accumulated_pct_change || undefined,
+      monthly_change_variation: 0
     };
     
     // Calcular la variación del cambio mensual si tenemos datos de los meses anteriores
@@ -193,5 +154,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
+
 // Revalidación programada cada hora
-export const revalidate = 3600; // 1 hora
+export const REVALIDATE = 3600; // 1 hora
