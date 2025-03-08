@@ -1,7 +1,6 @@
 import HeaderHero from "@/components/landing/HeaderHero"
 import Stats from "@/components/landing/Stats"
 import Indicators from "@/components/landing/Indicators"
-import CtaFooter from "@/components/landing/CTAFooter"
 import DashboardFeature from "@/components/landing/DashboardFeatures"
 import APISection from "@/components/landing/ApiSection"
 import Features from "@/components/landing/FeatureCards"

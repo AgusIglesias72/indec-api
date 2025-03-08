@@ -13,7 +13,7 @@ import {
   SectorPerformance,
   IPCHistoricalData,
   fetchHistoricalEmaeData,
-} from '@/app/services/api';
+} from '@/services/api';
 
 /**
  * Hook para obtener las estadísticas generales

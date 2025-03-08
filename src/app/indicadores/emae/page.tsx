@@ -1,16 +1,12 @@
 'use client';
 import React, { useState } from 'react';
 import { 
-  Calendar, 
   Filter, 
   Download, 
   Info, 
   LineChart, 
-  BarChart, 
-  ChevronDown,
   ArrowRight,
   TrendingUp,
-  Sparkles,
   CalendarRange
 } from 'lucide-react';
 import { 
@@ -18,10 +14,9 @@ import {
   CardContent, 
   CardHeader, 
   CardTitle,
-  CardFooter
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Tooltip,
@@ -31,7 +26,6 @@ import {
 } from '@/components/ui/tooltip';
 import { Skeleton } from "@/components/ui/skeleton";
 import DataMetric from '@/components/DataMetric';
-import DotBackground from '@/components/DotBackground';
 import { motion } from "framer-motion";
 import { ResponsiveContainer, LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ReferenceArea } from 'recharts';
 import { useAppData } from '@/lib/DataProvider';
@@ -302,9 +296,7 @@ export default function EmaeDashboard() {
         <div className="hidden lg:block absolute top-0 right-0 w-[800px] h-[800px] rounded-full bg-indec-blue/20 -mr-96 -mt-96"></div>
         <div className="hidden lg:block absolute bottom-0 left-0 w-[800px] h-[800px] rounded-full bg-indec-blue/20 -ml-96 -mb-96"></div>
         
-        {/* Dot pattern background */}
-        <DotBackground className="opacity-[0.85]" />
-        
+     
         <div className="container mx-auto px-4 relative z-10">
           <motion.div 
             className="flex justify-center mb-6"

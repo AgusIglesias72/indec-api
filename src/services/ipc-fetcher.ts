@@ -1,6 +1,6 @@
 import axios from "axios";
 import * as XLSX from "xlsx";
-import { IpcRow } from "../../../types";
+import { IpcRow } from "../types";
 
 /**
  * Genera un código a partir del nombre de un componente

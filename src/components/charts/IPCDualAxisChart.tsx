@@ -9,15 +9,12 @@ import {
   XAxis, 
   YAxis, 
   CartesianGrid, 
-  Tooltip, 
-  Legend 
 } from "recharts"
 import { Skeleton } from "@/components/ui/skeleton"
-import { IPCHistoricalData } from "@/app/services/api"
-import { CardFooter, CardHeader } from "../ui/card"
+import { IPCHistoricalData } from "@/services/api"
+import {  CardHeader } from "../ui/card"
 import { Card, CardContent, CardDescription, CardTitle } from "../ui/card"
 import { ChartTooltip } from "../ui/chart"
-import { TrendingDown, TrendingUp } from "lucide-react"
 
 interface IPCDualAxisChartProps {
   data: IPCHistoricalData[] | null

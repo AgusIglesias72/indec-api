@@ -11,7 +11,7 @@ import {
   EmaeLatestData,
   IPCLatestData,
   SectorPerformance
-} from '@/app/services/api';
+} from '@/services/api';
 
 // Definir la estructura del contexto
 interface DataContextType {

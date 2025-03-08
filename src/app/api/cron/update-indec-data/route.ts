@@ -1,7 +1,7 @@
 // src/app/api/cron/update-indec-data/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { fetchINDECData } from '@/app/services/indec/fetcher';
+import { fetchINDECData } from '@/services/emae-fetcher';
 import { CronTaskResult } from '@/types';
 import { Database } from '@/types/supabase';
 

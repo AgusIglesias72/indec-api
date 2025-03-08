@@ -6,7 +6,7 @@ import { Menu } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { MainNavigation } from "@/components/navigation/NavigationMenu"
+import { MainNavigation } from "@/components/NavigationMenu"
 import { cn } from "@/lib/utils"
 
 export default function NavBar() {
