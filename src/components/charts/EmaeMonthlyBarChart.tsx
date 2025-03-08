@@ -64,7 +64,7 @@ export default function EmaeMonthlyBarChart({
   data, 
   loading, 
   error,
-  height = 280 // Volvemos al valor anterior
+  height = 280 
 }: EmaeMonthlyBarChartProps) {
   // Si está cargando o hay un error, mostrar un estado de carga o error
   if (loading) {
@@ -113,7 +113,6 @@ export default function EmaeMonthlyBarChart({
   // Calcular la tendencia para el footer
   const lastItem = chartData[chartData.length - 1];
   const monthlyChange = lastItem ? lastItem.value : 0;
-  const trend = monthlyChange > 0;
   
   // Configuración del gráfico
   const chartConfig = {
@@ -158,6 +157,7 @@ export default function EmaeMonthlyBarChart({
                 tickMargin={10}
                 axisLine={true}
                 fontSize={12}
+                
               />
               <YAxis 
                 tickLine={false}
@@ -165,7 +165,7 @@ export default function EmaeMonthlyBarChart({
                 fontSize={12}
                 tickFormatter={(value) => `${value}%`}
                 domain={yAxisDomain}
-                width={45}
+                width={30}
               />
               {/* Línea de referencia en el valor 0 */}
               <ReferenceLine y={0} stroke="#000" strokeWidth={1} />
@@ -199,7 +199,9 @@ export default function EmaeMonthlyBarChart({
           </ResponsiveContainer>
         </div>
       </CardContent>
-      <CardFooter className="flex-col items-start gap-2 text-sm px-0 pb-0 mt-4 w-full justify-center">
+      {
+        /*
+           <CardFooter className="flex-col items-start gap-2 text-sm px-0 pb-0 mt-4 w-full justify-center">
         <div className="flex gap-2 font-medium leading-none text-base w-full justify-center items-center">
           {trend ? (
             <>
@@ -215,6 +217,9 @@ export default function EmaeMonthlyBarChart({
           Mostrando la variación mensual desestacionalizada del EMAE
         </div>
       </CardFooter>
+        */
+      }
+   
     </Card>
   )
 } 

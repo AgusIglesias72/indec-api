@@ -2,7 +2,6 @@
 
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
-
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -12,9 +11,8 @@ import {
   useHistoricalIPCData 
 } from "@/hooks/useApiData"
 import EmaeMonthlyBarChart from "@/components/charts/EmaeMonthlyBarChart"
-import IPCChart from "@/components/charts/IPCChart"
+import IPCDualAxisChart from "@/components/charts/IPCDualAxisChart"
 import SectorActivityList  from "@/components/charts/SectorActivityList"
-
 import { useAppData } from '@/lib/DataProvider';
 
 
@@ -27,7 +25,8 @@ export default function Indicators() {
         errorEmae: emaeError,
         errorIPC: ipcError
       } = useAppData();
-    
+      
+
   
   // Datos históricos para los gráficos
   const { 
@@ -36,12 +35,12 @@ export default function Indicators() {
     error: emaeHistoricalError 
   } = useHistoricalEmaeData();
   
-  console.log(emaeHistorical);
   const { 
     data: ipcHistorical, 
     loading: ipcHistoricalLoading, 
     error: ipcHistoricalError 
   } = useHistoricalIPCData();
+
 
   // Función para formatear fecha
   const formatDate = (dateString: string | undefined) => {
@@ -70,7 +69,7 @@ export default function Indicators() {
       {/* Fondo sólido para bloquear los puntitos del fondo */}
       <div className="absolute inset-0 bg-transparent"></div>
       
-      <div className="container mx-auto px-4 md:px-8 lg:px-12 max-w-7xl relative z-10">
+      <div className="container mx-auto px-2 md:px-8 lg:px-12 max-w-7xl relative z-10">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-3xl font-bold text-indec-blue-dark mb-4">
             Indicadores económicos destacados
@@ -99,10 +98,17 @@ export default function Indicators() {
             <TabsContent value="emae">
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-center">
                 <div className="lg:col-span-2">
+                 
+
                   <h3 className="text-2xl font-bold text-indec-blue-dark mb-4 text-center lg:text-left">
+                    EMAE 
+                    <br />
+                    <span className="text-indec-gray-dark text-base font-normal">
                     Estimador Mensual de Actividad Económica
+                    </span>
                   </h3>
-                  
+
+
                   {emaeLoading ? (
                     <Skeleton className="h-5 w-48 mb-6" />
                   ) : (
@@ -115,7 +121,7 @@ export default function Indicators() {
                     El EMAE refleja la evolución mensual de la actividad económica de los sectores productivos a nivel nacional, permitiendo anticipar las tasas de variación del PIB.
                   </p>
                   
-                  <div className="flex flex-row flex-wrap-reverse items-start gap-6 mb-6 justify-evenly lg:justify-start">
+                  <div className="flex flex-row flex-wrap-reverse items-start gap-6 mb-6 justify-evenly">
                     {emaeLoading ? (
                       <>
                         <Skeleton className="h-16 w-40 mb-1" />
@@ -126,17 +132,17 @@ export default function Indicators() {
                       <>
                         <DataMetric 
                           label="Últ. valor" 
-                          value={emaeError ? "N/A" : emaeData?.original_value.toFixed(1) || "N/A"} 
+                          value={emaeError ? "N/A" : emaeData?.original_value?.toFixed(1) || "N/A"} 
                         />
                         <DataMetric 
                           label="Var. m/m (desest.)" 
-                          value={`${emaeError ? "N/A" : (emaeData?.monthly_change.toFixed(1) || "N/A")}%`} 
-                          trend={emaeData && emaeData.monthly_change > 0 ? "up" : "down"} 
+                          value={`${emaeError ? "N/A" : (emaeData?.monthly_pct_change?.toFixed(1) || "N/A")}%`} 
+                          trend={emaeData && emaeData.monthly_pct_change > 0 ? "up" : "down"} 
                         />
                         <DataMetric 
                           label="Var. i/a" 
-                          value={`${emaeError ? "N/A" : (emaeData?.year_over_year_change.toFixed(1) || "N/A")}%`} 
-                          trend={emaeData && emaeData.year_over_year_change > 0 ? "up" : "down"} 
+                          value={`${emaeError ? "N/A" : (emaeData?.yearly_pct_change?.toFixed(1) || "N/A")}%`} 
+                          trend={emaeData && emaeData.yearly_pct_change > 0 ? "up" : "down"} 
                         />
                       </>
                     )}
@@ -147,23 +153,28 @@ export default function Indicators() {
                     </Link>
                   </Button>
                 </div>
-                <div className="lg:col-span-3 bg-indec-gray-light/50 rounded-lg p-6 h-auto">
+                <div className="lg:col-span-3 bg-indec-gray-light/50 rounded-lg p-4 
+                h-auto">
                   {/* Usar el nuevo gráfico de variaciones mensuales con altura personalizada */}
                   <EmaeMonthlyBarChart 
                     data={emaeHistorical} 
                     loading={emaeHistoricalLoading} 
                     error={emaeHistoricalError}
-                    height={280} 
+                    height={220} 
                   />
                 </div>
               </div>
             </TabsContent>
             
             <TabsContent value="ipc">
-              <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
-                <div className="lg:col-span-2">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-center">
+            <div className="lg:col-span-2">
                   <h3 className="text-2xl font-bold text-indec-blue-dark mb-4 text-center lg:text-left">
-                    Índice de Precios al Consumidor
+                    IPC 
+                    <br />
+                    <span className="text-indec-gray-dark text-base font-normal">
+                      Índice de Precios al Consumidor
+                    </span>
                   </h3>
                   
                   {ipcLoading ? (
@@ -178,7 +189,7 @@ export default function Indicators() {
                     El IPC mide la evolución de los precios de bienes y servicios representativos del gasto de consumo de los hogares residentes en la región especificada.
                   </p>
                   
-                  <div className="flex flex-row flex-wrap-reverse items-start gap-6 mb-6 justify-evenly lg:justify-start">
+                  <div className="flex flex-row flex-wrap-reverse items-start gap-6 mb-6 justify-evenly">
                     {ipcLoading ? (
                       <>
                         <Skeleton className="h-16 w-40 mb-1" />
@@ -189,18 +200,15 @@ export default function Indicators() {
                       <>
                         <DataMetric 
                           label="Var. m/m" 
-                          value={`${ipcError ? "N/A" : (ipcData?.monthly_change.toFixed(1) || "N/A")}%`}
-                          trend="up" 
+                          value={`${ipcError ? "N/A" : (ipcData?.monthly_change?.toFixed(1) || "N/A")}%`}
                         />
                         <DataMetric 
                           label="Var. i/a" 
-                          value={`${ipcError ? "N/A" : (ipcData?.year_over_year_change.toFixed(1) || "N/A")}%`}
-                          trend="up" 
+                          value={`${ipcError ? "N/A" : (ipcData?.year_over_year_change?.toFixed(1) || "N/A")}%`}
                         />
                         <DataMetric 
                           label={`Acum. ${ipcData?.date.split('-')[0]}`} 
-                          value={`${ipcError ? "N/A" : (ipcData?.accumulated_change.toFixed(1) || "N/A")}%`}
-                          trend="up" 
+                          value={`${ipcError ? "N/A" : (ipcData?.accumulated_change?.toFixed(1) || "N/A")}%`}
                         />
                       </>
                     )}
@@ -211,12 +219,15 @@ export default function Indicators() {
                     </Link>
                   </Button>
                 </div>
-                <div className="lg:col-span-3 bg-indec-gray-light/50 rounded-lg p-4 h-80">
+                <div className="lg:col-span-3 bg-indec-gray-light/50 rounded-lg p-4 
+                h-auto">
                   {/* Gráfico del IPC */}
-                  <IPCChart 
+
+                  <IPCDualAxisChart 
                     data={ipcHistorical} 
                     loading={ipcHistoricalLoading} 
                     error={ipcHistoricalError} 
+                    height={220} 
                   />
                 </div>
               </div>

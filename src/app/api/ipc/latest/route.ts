@@ -64,21 +64,95 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     
-    // Obtener parámetros de consulta y normalizar strings a minúsculas
-    const categoryParam = searchParams.get('category')?.toUpperCase() || 'GENERAL';
-    const regionParam = searchParams.get('region')?.toLowerCase() || 'nacional';
+    // Obtener parámetros de consulta
+    const region = searchParams.get('region')?.toLowerCase() || 'nacional';
+    const componentCode = (searchParams.get('category') || 'GENERAL').toUpperCase();
     
     // Normalizar región (primera letra mayúscula, resto minúsculas)
-    const normalizedRegion = regionParam.charAt(0).toUpperCase() + regionParam.slice(1).toLowerCase();
+    const normalizedRegion = region.charAt(0).toUpperCase() + region.slice(1).toLowerCase();
     
-    // Obtener datos en caché
-    const latestData = await getLatestIpcData(categoryParam, normalizedRegion);
+    // Obtener el último dato del IPC
+    const { data: latestData, error: latestError } = await supabase
+      .from('ipc_with_variations')
+      .select('*')
+      .eq('component_code', componentCode)
+      .eq('region', normalizedRegion)
+      .order('date', { ascending: false })
+      .limit(1)
+      .single();
+    
+    if (latestError) {
+      throw new Error(`Error al obtener el último dato del IPC: ${latestError.message}`);
+    }
     
     if (!latestData) {
       return NextResponse.json(
-        { error: 'No se encontraron datos para la categoría y región especificadas' },
+        { error: 'No se encontraron datos para los parámetros especificados' },
         { status: 404 }
       );
+    }
+    
+    // Obtener el dato del mes anterior para calcular la variación del cambio mensual
+    const currentDate = new Date(latestData.date || '');
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    
+    // Formatear la fecha anterior al formato YYYY-MM-DD
+    const prevYear = currentDate.getFullYear();
+    const prevMonth = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+    const prevDateStr = `${prevYear}-${prevMonth}-01`;
+    
+    // Obtener el dato del mes anterior
+    const { data: prevMonthData, error: prevMonthError } = await supabase
+      .from('ipc_with_variations')
+      .select('*')
+      .eq('component_code', componentCode)
+      .eq('region', normalizedRegion)
+      .eq('date', prevDateStr)
+      .limit(1)
+      .single();
+    
+    // Obtener el dato de dos meses atrás para calcular la variación del cambio mensual
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    const prevPrevYear = currentDate.getFullYear();
+    const prevPrevMonth = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+    const prevPrevDateStr = `${prevPrevYear}-${prevPrevMonth}-01`;
+    
+    const { data: prevPrevMonthData } = await supabase
+      .from('ipc_with_variations')
+      .select('*')
+      .eq('component_code', componentCode)
+      .eq('region', normalizedRegion)
+      .eq('date', prevPrevDateStr)
+      .limit(1)
+      .single();
+    
+    // Transformar el dato para la respuesta
+    const result: IpcResponse = {
+      date: latestData.date || '',
+      category: latestData.component || '',
+      category_code: latestData.component_code || '',
+      category_type: latestData.component_type || '',
+      index_value: latestData.index_value || 0,
+      region: latestData.region || '',
+      monthly_pct_change: latestData.monthly_pct_change || undefined,
+      yearly_pct_change: latestData.yearly_pct_change || undefined,
+      accumulated_pct_change: latestData.accumulated_pct_change || undefined
+    };
+    
+    // Calcular la variación del cambio mensual si tenemos datos de los meses anteriores
+    if (
+      prevMonthData?.monthly_pct_change !== null && 
+      prevMonthData?.monthly_pct_change !== undefined &&
+      prevPrevMonthData?.monthly_pct_change !== null &&
+      prevPrevMonthData?.monthly_pct_change !== undefined
+    ) {
+      // Calcular la variación del cambio mensual actual respecto al anterior
+      const currentMonthlyChange = latestData.monthly_pct_change || 0;
+      const prevMonthlyChange = prevMonthData.monthly_pct_change || 0;
+      
+      // La variación es la diferencia entre los cambios mensuales
+      result.monthly_change_variation = currentMonthlyChange - prevMonthlyChange;
+
     }
     
     // Configurar caché para 1 hora
@@ -91,7 +165,14 @@ export async function GET(request: NextRequest) {
     headers.set('Cache-Control', `public, max-age=${CACHE_MAX_AGE}, stale-while-revalidate=${CACHE_STALE_WHILE_REVALIDATE}`);
     
     // Responder con JSON
-    return new NextResponse(JSON.stringify(latestData), { 
+    return new NextResponse(JSON.stringify({
+      data: result,
+      metadata: {
+        region: normalizedRegion,
+        component_code: componentCode,
+        last_updated: new Date().toISOString()
+      }
+    }), { 
       status: 200, 
       headers 
     });

@@ -6,19 +6,13 @@ import {
   getLatestEmaeData, 
   getLatestIPCData, 
   getSectorPerformance,
-  getHistoricalEmaeData,
   getHistoricalIPCData,
   ApiStats,
   EmaeLatestData,
   IPCLatestData,
   SectorPerformance,
-  EmaeHistoricalData,
   IPCHistoricalData,
   fetchHistoricalEmaeData,
-  fetchLatestEmaeData,
-  fetchHistoricalIPCData,
-  fetchLatestIPCData,
-  fetchEmaeByActivity
 } from '@/app/services/api';
 
 /**

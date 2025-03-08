@@ -13,7 +13,7 @@ export default function DashboardPreview() {
     if (emaeData) {
       // Crear puntos para la línea del gráfico
       // Simulamos datos de 6 meses basados en el valor real y tendencias aleatorias
-      const monthlyChange = emaeData.monthly_change / 100; // convertir a decimal
+      const monthlyChange = emaeData.monthly_pct_change / 100; // convertir a decimal
       
       // Generar puntos para 6 meses usando el cambio mensual como tendencia base
       const newChartData = [
@@ -74,7 +74,7 @@ export default function DashboardPreview() {
                 </div>
               </div>
               <div className={`flex items-center ${
-                emaeData && emaeData.year_over_year_change >= 0 
+                emaeData && emaeData.yearly_pct_change >= 0 
                   ? 'text-indec-green' 
                   : 'text-indec-red'
               } text-xs font-medium`}>
@@ -82,17 +82,17 @@ export default function DashboardPreview() {
                   <div className="animate-pulse h-4 w-12 bg-indec-gray-light rounded"></div>
                 ) : emaeData && (
                   <>
-                    {emaeData.year_over_year_change >= 0 ? (
+                    {emaeData.yearly_pct_change >= 0 ? (
                       <ArrowUpRight className="w-3 h-3 mr-1" />
                     ) : (
                       <ArrowDownRight className="w-3 h-3 mr-1" />
                     )}
                     <span>
                       <Counter 
-                        end={Math.abs(emaeData.year_over_year_change)} 
+                        end={Math.abs(emaeData.yearly_pct_change)} 
                         decimals={1} 
                         suffix="%" 
-                        prefix={emaeData.year_over_year_change >= 0 ? "+" : "-"}
+                        prefix={emaeData.yearly_pct_change >= 0 ? "+" : "-"}
                         duration={1.5} 
                       />
                     </span>
@@ -102,13 +102,13 @@ export default function DashboardPreview() {
             </div>
             <div className="h-1.5 w-full bg-indec-gray-medium/20 rounded-full overflow-hidden">
               <div className={`h-full rounded-full ${
-                emaeData && emaeData.year_over_year_change >= 0 
+                emaeData && emaeData.yearly_pct_change >= 0 
                   ? 'bg-indec-blue' 
                   : 'bg-indec-red'
               } transition-all duration-1000`} style={{
                 width: loadingEmae 
                   ? '50%' 
-                  : `${Math.min(Math.abs(emaeData?.year_over_year_change || 0) * 3 + 30, 90)}%`
+                  : `${Math.min(Math.abs(emaeData?.yearly_pct_change || 0) * 3 + 30, 90)}%`
               }}></div>
             </div>
           </div>
@@ -135,20 +135,23 @@ export default function DashboardPreview() {
               }`}>
                 {loadingIPC ? (
                   <div className="animate-pulse h-4 w-12 bg-indec-gray-light rounded"></div>
-                ) : ipcData?.monthly_change_diff !== undefined && (
+                ) : ipcData?.monthly_change_variation !== undefined && (
                   <>
-                    {ipcData.monthly_change_diff < 0 ? (
-                      <ArrowDownRight className="w-3 h-3 mr-1" />
+
+                    <div className={`flex items-center ${ipcData.monthly_change_variation < 0 ? 'text-indec-blue' : 'text-indec-red'}`}>
+                    {ipcData.monthly_change_variation < 0 ? (
+                      <ArrowDownRight className="w-3 h-3 mr-1 " />
                     ) : (
-                      <ArrowUpRight className="w-3 h-3 mr-1" />
+                      <ArrowUpRight className="w-3 h-3 mr-1 " />
                     )}
                     <Counter 
-                      end={Math.abs(ipcData.monthly_change_diff)} 
+                      end={Math.abs(ipcData.monthly_change_variation)} 
                       decimals={1} 
-                      prefix={ipcData.monthly_change_diff >= 0 ? "+" : "-"} 
+                      prefix={ipcData.monthly_change_variation >= 0 ? "+" : "-"} 
                       suffix="pp" 
                       duration={1.5} 
                     />
+                    </div>
                   </>
                 )}
               </div>
@@ -188,7 +191,7 @@ export default function DashboardPreview() {
               <path 
                 d={`M${chartData.map(point => `${point.x},${point.y}`).join(' ')}`}
                 fill="none" 
-                stroke={emaeData && emaeData.monthly_change >= 0 ? "#005288" : "#D10A10"}
+                stroke={emaeData && emaeData.monthly_pct_change >= 0 ? "#005288" : "#D10A10"}
                 strokeWidth="2"
                 vectorEffect="non-scaling-stroke"
               />
@@ -199,7 +202,7 @@ export default function DashboardPreview() {
               <div 
                 key={index} 
                 className={`absolute h-2 w-2 rounded-full ${
-                  emaeData && emaeData.monthly_change >= 0 ? 'bg-indec-blue' : 'bg-indec-red'
+                  emaeData && emaeData.monthly_pct_change >= 0 ? 'bg-indec-blue' : 'bg-indec-red'
                 }`}
                 style={{ 
                   bottom: `${point.y}px`, 

@@ -4,7 +4,7 @@
 /**
  * Tipos para los datos de la API
  */
-export interface ApiStats {
+  export interface ApiStats {
     dataPoints: number;
     apiUptime: number;
     indicatorsCount: number;
@@ -14,9 +14,12 @@ export interface ApiStats {
   export interface EmaeLatestData {
     date: string;
     original_value: number;
-    seasonally_adjusted_value: number;
-    monthly_change: number; // variación intermensual (desestacionalizada)
-    year_over_year_change: number; // variación interanual (serie original)
+    monthly_pct_change: number; // variación intermensual (desestacionalizada)
+    yearly_pct_change: number; // variación interanual (serie original)
+    monthly_change_variation?: number; // variación del cambio mensual respecto al mes anterior
+    sector_code: string;
+    sector: string;
+
   }
  
   export interface IPCLatestData {
@@ -25,12 +28,27 @@ export interface ApiStats {
     year_over_year_change: number; // variación interanual
     accumulated_change: number; // variación acumulada en el año
     monthly_change_diff?: number; // diferencia con la variación mensual del periodo anterior
+    monthly_change_variation?: number; // variación del cambio mensual respecto al mes anterior
   }
   
   export interface SectorPerformance {
     sector_name: string;
     sector_code: string;
     value: number;
+    year_over_year_change: number;
+  }
+
+  export interface EmaeHistoricalData {
+    date: string;
+    original_value: number;
+    seasonally_adjusted_value: number;
+    monthly_change: number;
+  }
+  
+  export interface IPCHistoricalData {
+    date: string;
+    index_value: number;
+    monthly_change: number;
     year_over_year_change: number;
   }
   
@@ -79,9 +97,10 @@ export interface ApiStats {
       return {
         date: data.date,
         original_value: data.original_value,
-        seasonally_adjusted_value: data.seasonally_adjusted_value,
-        monthly_change: data.monthly_change,
-        year_over_year_change: data.year_over_year_change
+        monthly_pct_change: data.monthly_pct_change,
+        yearly_pct_change: data.yearly_pct_change,
+        sector_code: data.sector_code,
+        sector: data.sector
       };
     } catch (error) {
       console.error('Error en getLatestEmaeData:', error);
@@ -89,9 +108,10 @@ export interface ApiStats {
       return {
         date: new Date().toISOString().split('T')[0],
         original_value: 162.7,
-        seasonally_adjusted_value: 159.8,
-        monthly_change: 0.8,
-        year_over_year_change: 3.5
+        monthly_pct_change: 0.8,
+        yearly_pct_change: 3.5,
+        sector_code: 'GENERAL',
+        sector: 'General'
       };
     }
   }
@@ -107,14 +127,16 @@ export interface ApiStats {
         throw new Error('Error al obtener datos del IPC');
       }
       
-      const data = await response.json();
+      const data = (await response.json()).data;
+      
       
       return {
         date: data.date,
-        monthly_change: data.monthly_change,
-        year_over_year_change: data.year_over_year_change,
-        accumulated_change: data.accumulated_change,
-        monthly_change_diff: data.monthly_change_diff
+        monthly_change: data.monthly_pct_change,
+        year_over_year_change: data.yearly_pct_change,
+        accumulated_change: data.accumulated_pct_change,
+        monthly_change_diff: data.monthly_change_diff,
+        monthly_change_variation: data.monthly_change_variation
       };
     } catch (error) {
       console.error('Error en getLatestIPCData:', error);
@@ -155,22 +177,6 @@ export interface ApiStats {
     }
   }
 
-// Actualización para src/app/services/api.ts
-// Añadir estas interfaces y funciones al archivo existente
-
-export interface EmaeHistoricalData {
-  date: string;
-  original_value: number;
-  seasonally_adjusted_value: number;
-  monthly_change: number;
-}
-
-export interface IPCHistoricalData {
-  date: string;
-  index_value: number;
-  monthly_change: number;
-  year_over_year_change: number;
-}
 
 /**
  * Obtiene los datos históricos del EMAE de los últimos 13 meses
@@ -227,19 +233,17 @@ export async function getHistoricalIPCData(): Promise<IPCHistoricalData[]> {
     // Calcular la fecha de hace 13 meses
     const today = new Date();
     const thirteenMonthsAgo = new Date(today);
-    thirteenMonthsAgo.setMonth(today.getMonth() - 13);
+    thirteenMonthsAgo.setMonth(today.getMonth() - 14);
     const startDate = thirteenMonthsAgo.toISOString().split('T')[0];
     
     // Usar la API base con parámetros de consulta
-    const response = await fetch(`${API_BASE_URL}/ipc?start_date=${startDate}&component_type=GENERAL&region=Nacional&include_variations=true`);
-
-    console.log(response);
+    const response = await fetch(`${API_BASE_URL}/ipc?start_date=${startDate}&component_code=GENERAL&region=Nacional`);
     if (!response.ok) {
       throw new Error('Error al obtener datos históricos del IPC');
     }
     
     const data = await response.json();
-    
+    console.log(data);
     // Mapear los datos al formato que espera nuestro componente
     const mappedData = data.data.map((item: any) => ({
       date: item.date + 'T00:00:00-04:00',
@@ -305,8 +309,8 @@ export async function fetchLatestEmaeData(sectorCode = 'GENERAL') {
       original_value: data.original_value,
       seasonally_adjusted_value: data.seasonally_adjusted_value,
       trend_cycle_value: data.trend_cycle_value,
-      monthly_change: data.monthly_pct_change || 0,
-      year_over_year_change: data.yearly_pct_change || 0
+      monthly_pct_change: data.monthly_pct_change || 0,
+      yearly_pct_change: data.yearly_pct_change || 0
     };
   } catch (error) {
     console.error("Error fetching latest EMAE data:", error);

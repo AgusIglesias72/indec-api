@@ -59,6 +59,7 @@ const getLatestEmaeData = cache(async (
     sector_code: item.sector_code || '',
     original_value: item.original_value || 0,
     yearly_pct_change: item.yearly_pct_change || undefined,
+    monthly_pct_change: item.monthly_pct_change || undefined
   };
   
   return result;

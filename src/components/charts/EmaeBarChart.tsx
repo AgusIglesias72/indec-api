@@ -144,7 +144,8 @@ export default function EmaeMonthlyBarChart({ data, loading, error }: EmaeMonthl
               />
               <Bar 
                 dataKey="value" 
-                fill={(data: any) => data.value >= 0 ? "var(--color-value)" : "#ef4444"}
+                fill="var(--color-value)" // Valor por defecto
+                fillOpacity={chartData.some(item => item.value < 0) ? 1 : 0} // Opacidad para el color de caída
                 radius={[4, 4, 0, 0]}
                 maxBarSize={50}
               >
