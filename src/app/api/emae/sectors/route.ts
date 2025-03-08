@@ -28,20 +28,28 @@ export async function GET(request: NextRequest) {
     const yearParam = searchParams.get('year');
     const sectorCode = searchParams.get('sector_code');
     const format = searchParams.get('format')?.toLowerCase() || 'json';
+    const includeVariations = searchParams.get('include_variations') !== 'false';
     
     // Parámetros de paginación - si es CSV, usar un límite mucho mayor
     const isCSV = format === 'csv';
-    const defaultLimit = isCSV ? 10000 : 16;
+    const defaultLimit = isCSV ? 10000 : 50;
     const limit = parseInt(searchParams.get('limit') || defaultLimit.toString());
     const page = parseInt(searchParams.get('page') || '1');
     const offset = (page - 1) * limit;
     
-    // Obtener información base (fechas)
-    const firstDate = "2004-01-01";
+    // Obtener información base de fechas (primera y última fecha disponible)
+    const { data: firstDateData, error: firstDateError } = await supabase
+      .from('emae_by_activity_with_variations')
+      .select('date')
+      .order('date', { ascending: true })
+      .limit(1);
     
-    // Obtener la fecha más reciente
+    if (firstDateError) {
+      throw new Error(`Error fetching first date: ${firstDateError.message}`);
+    }
+    
     const { data: lastDateData, error: lastDateError } = await supabase
-      .from('emae_by_activity')
+      .from('emae_by_activity_with_variations')
       .select('date')
       .order('date', { ascending: false })
       .limit(1);
@@ -50,20 +58,17 @@ export async function GET(request: NextRequest) {
       throw new Error(`Error fetching last date: ${lastDateError.message}`);
     }
     
+    const firstDate = firstDateData && firstDateData.length > 0 ? firstDateData[0].date : null;
     const lastDate = lastDateData && lastDateData.length > 0 ? lastDateData[0].date : null;
     
     // Calcular el número total de meses (aproximado)
-    const totalMonths = lastDate ? calculateMonthDifference(new Date(firstDate), new Date(lastDate)) + 1 : 0;
+    const totalMonths = (firstDate && lastDate) ? 
+      calculateMonthDifference(new Date(firstDate), new Date(lastDate)) + 1 : 0;
     
-    // Para filtrado por month/year, necesitamos traer todos los datos primero
-    // Si se usan estos filtros, omitimos paginación en la consulta inicial
-    const needsJsFiltering = monthParam !== null || yearParam !== null;
-    
-    // Construir consulta base para obtener los datos
+    // Construir consulta base para obtener los datos, usando la vista que incluye variaciones
     let query = supabase
-      .from('emae_by_activity')
-      .select('date, economy_sector, economy_sector_code, original_value')
-      .order('date', { ascending: true });
+      .from('emae_by_activity_with_variations')
+      .select('*');
     
     // Aplicar filtros de base de datos
     if (startDate) {
@@ -75,78 +80,58 @@ export async function GET(request: NextRequest) {
     }
     
     if (sectorCode) {
-      query = query.eq('economy_sector_code', sectorCode);
+      query = query.eq('sector_code', sectorCode);
     }
     
-    // Si no es CSV y no necesitamos filtrado JS, aplicar paginación aquí
-    if (!isCSV && !needsJsFiltering) {
+    // Filtrar directamente por mes y año usando las columnas específicas
+    if (monthParam) {
+      const month = parseInt(monthParam);
+      query = query.eq('month', month);
+    }
+    
+    if (yearParam) {
+      const year = parseInt(yearParam);
+      query = query.eq('year', year);
+    }
+    
+    // Ordenar resultados
+    query = query.order('date', { ascending: false });
+    
+    // Si no es CSV, aplicar paginación
+    if (!isCSV) {
       query = query.range(offset, offset + limit - 1);
     }
-    
     // Ejecutar consulta
-    const { data: queryData, error: queryError } = await query;
+    const { data: queryData, error: queryError, count } = await query;
     
     if (queryError) {
       throw new Error(`Error fetching EMAE sectors data: ${queryError.message}`);
     }
     
-    // Ahora aplicamos el filtrado por mes o año
-    let filteredData = queryData || [];
+    // Transformar datos para la respuesta
+    const formattedData = queryData?.map((item: any) => ({
+      date: item.date + "T00:00:00",
+      economy_sector: item.economy_sector || '',
+      economy_sector_code: item.economy_sector_code || '',
+      original_value: item.original_value || 0,
+      year_over_year_change: includeVariations ? (item.yearly_pct_change || 0) : undefined
+    })) || [];
     
-    // Filtrar por mes y/o año en JavaScript si se especifican
-    if (monthParam !== null || yearParam !== null) {
-      const month = monthParam ? parseInt(monthParam) : null;
-      const year = yearParam ? parseInt(yearParam) : null;
-      
-      console.log('Filtrando por mes/año:', { month, year, totalRegistros: filteredData.length });
-      
-      filteredData = filteredData.filter(item => {
-        if (!item.date) return false;
-        
-        // Convertir string de fecha a objeto Date
-        // El formato esperado es 'YYYY-MM-DD'
-        const dateParts = item.date.split('-');
-        if (dateParts.length !== 3) return false;
-        
-        const itemYear = parseInt(dateParts[0]);
-        const itemMonth = parseInt(dateParts[1]);
-        
-        if (month !== null && year !== null) {
-          // Filtrar por mes y año
-          return itemMonth === month && itemYear === year;
-        } else if (month !== null) {
-          // Filtrar solo por mes
-          return itemMonth === month;
-        } else if (year !== null) {
-          // Filtrar solo por año
-          return itemYear === year;
-        }
-        
-        return true;
-      });
-      
-      console.log('Resultado después de filtrar:', filteredData.length);
-    }
-    
-    // Aplicar paginación si es necesario (cuando usamos filtrado JS)
-    let paginatedData = filteredData;
-    if (!isCSV && needsJsFiltering) {
-      const start = offset;
-      const end = offset + limit;
-      paginatedData = filteredData.slice(start, end);
-    }
-    
-    // Si se solicita formato CSV, responder con CSV (usar datos filtrados completos)
+    // Si se solicita formato CSV, responder con CSV
     if (isCSV) {
-      return respondWithCSV(filteredData as Record<string, any>[], 'emae_sectors_data.csv');
+      return respondWithCSV(formattedData, 'emae_sectors_data.csv');
     }
     
-    // Construir respuesta JSON (usar datos paginados)
+    // Calcular total de páginas
+    const totalCount = count || 0;
+    const totalPages = Math.ceil(totalCount / limit);
+    
+    // Construir respuesta JSON
     const response = {
-      data: paginatedData,
+      data: formattedData,
       metadata: {
-        count: paginatedData.length,
-        total_count: filteredData.length,
+        count: formattedData.length,
+        total_count: totalCount,
         date_range: {
           first_date: firstDate,
           last_date: lastDate,
@@ -163,9 +148,9 @@ export async function GET(request: NextRequest) {
       pagination: {
         page,
         limit,
-        total_items: filteredData.length,
-        total_pages: Math.ceil(filteredData.length / limit),
-        has_more: (page * limit) < filteredData.length
+        total_items: totalCount,
+        total_pages: totalPages,
+        has_more: page < totalPages
       }
     };
     

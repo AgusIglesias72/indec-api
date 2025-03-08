@@ -12,7 +12,6 @@ import {
 } from "@/hooks/useApiData"
 import EmaeMonthlyBarChart from "@/components/charts/EmaeMonthlyBarChart"
 import IPCDualAxisChart from "@/components/charts/IPCDualAxisChart"
-import SectorActivityList  from "@/components/charts/SectorActivityList"
 import { useAppData } from '@/lib/DataProvider';
 import ActivitySectorTabContent from "@/components/ActivityTab"
 
