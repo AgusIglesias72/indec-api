@@ -74,6 +74,7 @@ const getCachedEmaeData = cache(async (
   
   // Filtrar por mes y/o año en JavaScript
   let filteredData = allData || [];
+  console.log(filteredData);
   
   if (month !== null || year !== null) {
     filteredData = filteredData.filter(item => {

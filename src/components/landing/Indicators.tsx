@@ -14,7 +14,7 @@ import EmaeMonthlyBarChart from "@/components/charts/EmaeMonthlyBarChart"
 import IPCDualAxisChart from "@/components/charts/IPCDualAxisChart"
 import SectorActivityList  from "@/components/charts/SectorActivityList"
 import { useAppData } from '@/lib/DataProvider';
-
+import ActivitySectorTabContent from "@/components/ActivityTab"
 
 export default function Indicators() {
     const { 
@@ -234,36 +234,7 @@ export default function Indicators() {
             </TabsContent>
             
             <TabsContent value="actividad">
-              <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
-                <div className="lg:col-span-2">
-                  <h3 className="text-2xl font-bold text-indec-blue-dark mb-4 text-center lg:text-left">
-                    Actividad Económica por Sectores
-                  </h3>
-                  
-                  {emaeLoading ? (
-                    <Skeleton className="h-5 w-48 mb-6" />
-                  ) : (
-                    <p className="text-indec-gray-dark mb-6 text-center lg:text-left">
-                      <span className="font-medium">Último dato disponible:</span> {formatDate(emaeData?.date)}
-                    </p>
-                  )}
-                  
-                  <p className="text-indec-gray-dark mb-6 text-center lg:text-left">
-                    Análisis detallado del desempeño de los distintos sectores económicos, permitiendo identificar 
-                    fortalezas y debilidades en la economía argentina. Las variaciones interanuales muestran el 
-                    crecimiento o contracción respecto al mismo mes del año anterior.
-                  </p>
-                  
-                  <Button asChild className="gap-2 w-full lg:w-auto ">
-                    <Link href="/indicadores/emae-por-actividad">
-                      Ver análisis completo <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                </div>
-                <div className="lg:col-span-3">
-                  <SectorActivityList />
-                </div>
-              </div>
+            <ActivitySectorTabContent />
             </TabsContent>
           </Tabs>
         </div>
