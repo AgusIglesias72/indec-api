@@ -18,7 +18,6 @@ const getCachedCalendarData = cache(async (
   page: number,
   limit: number
 ) => {
-  console.log('Fetching calendar data from database');
   
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
   

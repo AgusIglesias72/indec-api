@@ -24,7 +24,6 @@ const getLatestEmaeData = cache(async (
   sectorCode: string,
   byActivity: boolean
 ) => {
-  console.log(`Fetching latest EMAE data for ${sectorCode}, by_activity: ${byActivity}`);
   
   // Determinar qué vista usar según si queremos datos por actividad o generales
   const viewName = byActivity ? 'emae_by_activity_with_variations' : 'emae_with_variations';

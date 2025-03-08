@@ -27,7 +27,6 @@ export function middleware(request: NextRequest) {
     );
     
     if (!isKnownPath) {
-      console.log(`Ruta no encontrada: ${request.nextUrl.pathname}`);
       return NextResponse.rewrite(new URL('/api/not-found', request.url));
     }
   }

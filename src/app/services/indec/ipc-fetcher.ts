@@ -220,7 +220,7 @@ export async function fetchIPCData(): Promise<Omit<IpcRow, "id">[]> {
     // URL del archivo Excel del INDEC
     const url = `https://www.indec.gob.ar/ftp/cuadros/economia/sh_ipc_${month}_25.xls`;
 
-    console.log(`Descargando Excel del IPC desde: ${url}`);
+    console.info(`Descargando Excel del IPC desde: ${url}`);
 
     // Descargar archivo
     let response;
@@ -244,13 +244,13 @@ export async function fetchIPCData(): Promise<Omit<IpcRow, "id">[]> {
     }
 
     // Procesar el archivo Excel
-    console.log("Archivo descargado, procesando Excel del IPC...");
+    console.info("Archivo descargado, procesando Excel del IPC...");
     const workbook = XLSX.read(response.data, {
       type: "buffer",
       cellDates: true,
     });
 
-    console.log("Hojas disponibles en el Excel:", workbook.SheetNames);
+    console.info("Hojas disponibles en el Excel:", workbook.SheetNames);
 
     // Encontrar la hoja "Índices IPC Cobertura Nacional"
     const targetSheetName = workbook.SheetNames.find(
@@ -274,7 +274,7 @@ export async function fetchIPCData(): Promise<Omit<IpcRow, "id">[]> {
       blankrows: false,
     }) as any[][];
 
-    console.log(`Filas totales en el Excel del IPC: ${data.length}`);
+    console.info(`Filas totales en el Excel del IPC: ${data.length}`);
 
     // Procesar los datos
     const processedData: Omit<IpcRow, "id">[] = [];
@@ -354,16 +354,16 @@ export async function fetchIPCData(): Promise<Omit<IpcRow, "id">[]> {
               startRow: i,
             });
 
-            console.log(`Región encontrada: ${regionName} (fila ${i + 1})`);
+            console.info(`Región encontrada: ${regionName} (fila ${i + 1})`);
 
             // Imprimir información sobre lo que hay en las columnas para depuración
-            console.log(
+            console.info(
               `  - Valor en columna B: ${data[i][1]}, tipo: ${typeof data[
                 i
               ][1]}`
             );
             if (data[i][2] !== null && data[i][2] !== undefined) {
-              console.log(
+              console.info(
                 `  - Valor en columna C: ${data[i][2]}, tipo: ${typeof data[
                   i
                 ][2]}`
@@ -374,20 +374,20 @@ export async function fetchIPCData(): Promise<Omit<IpcRow, "id">[]> {
       }
     }
 
-    console.log("Regiones identificadas:", regions.length);
+    console.info("Regiones identificadas:", regions.length);
     regions.forEach((region) => {
-      console.log(
+      console.info(
         `- ${region.name} (${region.shortName}): fila ${region.startRow + 1}`
       );
     });
 
     if (regions.length === 0) {
       // Si no encontramos regiones, vamos a imprimir algunos valores para depuración
-      console.log(
+      console.info(
         "No se encontraron regiones. Mostrando primeras filas para depuración:"
       );
       for (let i = 0; i < Math.min(20, data.length); i++) {
-        console.log(`Fila ${i + 1}:`, data[i] ? data[i].slice(0, 3) : null);
+        console.info(`Fila ${i + 1}:`, data[i] ? data[i].slice(0, 3) : null);
       }
       throw new Error(
         "No se pudieron identificar regiones en el Excel del IPC"
@@ -398,16 +398,16 @@ export async function fetchIPCData(): Promise<Omit<IpcRow, "id">[]> {
     const headerRow = data[regions[0].startRow];
     const dates: string[] = [];
 
-    console.log(
+    console.info(
       "Intentando extraer fechas de la fila:",
       regions[0].startRow + 1
     );
-    console.log("Contenido de headerRow:", headerRow);
+    console.info("Contenido de headerRow:", headerRow);
 
     // Buscar el primer valor para entender mejor el formato
     for (let i = 1; i < headerRow.length; i++) {
       if (headerRow[i] !== null && headerRow[i] !== undefined) {
-        console.log(
+        console.info(
           `Valor en columna ${i + 1} (índice ${i}):`,
           headerRow[i],
           "tipo:",
@@ -424,7 +424,7 @@ export async function fetchIPCData(): Promise<Omit<IpcRow, "id">[]> {
     for (let i = 1; i < headerRow.length; i++) {
       if (headerRow[i] !== null && headerRow[i] !== undefined) {
         // Intentar obtener una fecha de este valor
-        let date = extractDateFromValue(headerRow[i]);
+        const date = extractDateFromValue(headerRow[i]);
 
         if (date) {
           dates.push(date);
@@ -434,17 +434,17 @@ export async function fetchIPCData(): Promise<Omit<IpcRow, "id">[]> {
 
     // Si no encontramos fechas, intentar buscar en la siguiente fila (a veces las fechas están una fila más abajo)
     if (dates.length === 0 && regions[0].startRow + 1 < data.length) {
-      console.log(
+      console.info(
         "No se encontraron fechas en la fila de encabezado. Intentando con la siguiente fila."
       );
       const nextRow = data[regions[0].startRow + 1];
 
       if (nextRow) {
-        console.log("Contenido de la siguiente fila:", nextRow);
+        console.info("Contenido de la siguiente fila:", nextRow);
 
         for (let i = 1; i < nextRow.length; i++) {
           if (nextRow[i] !== null && nextRow[i] !== undefined) {
-            let date = extractDateFromValue(nextRow[i]);
+            const date = extractDateFromValue(nextRow[i]);
 
             if (date) {
               dates.push(date);
@@ -456,7 +456,7 @@ export async function fetchIPCData(): Promise<Omit<IpcRow, "id">[]> {
 
     // Última alternativa: generar fechas manualmente basadas en la cantidad de columnas
     if (dates.length === 0) {
-      console.log(
+      console.info(
         "No se encontraron fechas en las primeras filas. Intentando generar fechas automáticamente."
       );
 
@@ -491,18 +491,18 @@ export async function fetchIPCData(): Promise<Omit<IpcRow, "id">[]> {
       }
     }
 
-    console.log(`Fechas encontradas: ${dates.length}`);
+    console.info(`Fechas encontradas: ${dates.length}`);
     if (dates.length > 0) {
-      console.log("Primera fecha:", dates[0]);
-      console.log("Última fecha:", dates[dates.length - 1]);
-      console.log("Todas las fechas:", dates);
+      console.info("Primera fecha:", dates[0]);
+      console.info("Última fecha:", dates[dates.length - 1]);
+      console.info("Todas las fechas:", dates);
     } else {
       throw new Error("No se pudieron identificar fechas en el encabezado");
     }
 
     // Procesar cada región
     for (const region of regions) {
-      console.log(`Procesando región: ${region.name}`);
+      console.info(`Procesando región: ${region.name}`);
 
       // Buscar "Nivel general" después del encabezado de la región
       let foundNivelGeneral = false;
@@ -537,7 +537,7 @@ export async function fetchIPCData(): Promise<Omit<IpcRow, "id">[]> {
           data[nivelGeneralRow][colIndex] !== null &&
           data[nivelGeneralRow][colIndex] !== undefined
         ) {
-          let value =
+          const value =
             typeof data[nivelGeneralRow][colIndex] === "number"
               ? data[nivelGeneralRow][colIndex]
               : typeof data[nivelGeneralRow][colIndex] === "string" &&
@@ -560,7 +560,7 @@ export async function fetchIPCData(): Promise<Omit<IpcRow, "id">[]> {
       }
 
       // Procesar Rubros (se espera que estén en las filas siguientes a Nivel general)
-      let currentRow = nivelGeneralRow + 1;
+      const currentRow = nivelGeneralRow + 1;
       let rubroCount = 0;
 
       // Buscar hasta 15 filas para encontrar todos los rubros (debería haber 12)
@@ -595,7 +595,7 @@ export async function fetchIPCData(): Promise<Omit<IpcRow, "id">[]> {
               data[rubroRow][colIndex] !== null &&
               data[rubroRow][colIndex] !== undefined
             ) {
-              let value =
+              const value =
                 typeof data[rubroRow][colIndex] === "number"
                   ? data[rubroRow][colIndex]
                   : typeof data[rubroRow][colIndex] === "string" &&
@@ -622,7 +622,7 @@ export async function fetchIPCData(): Promise<Omit<IpcRow, "id">[]> {
         }
       }
 
-      console.log(
+      console.info(
         `Procesados ${rubroCount} rubros para la región ${region.name}`
       );
 
@@ -639,7 +639,7 @@ export async function fetchIPCData(): Promise<Omit<IpcRow, "id">[]> {
           const cellValue = String(data[i][0]).trim().toLowerCase();
           if (cellValue === "categorías" || cellValue.includes("categorias")) {
             categoriasHeaderRow = i;
-            console.log(
+            console.info(
               `Fila de categorías encontrada en índice ${i}: ${data[i][0]}`
             );
             break;
@@ -664,7 +664,7 @@ export async function fetchIPCData(): Promise<Omit<IpcRow, "id">[]> {
           const cellValue = String(data[categoriaRow][0]).trim();
 
           // Log para depuración
-          console.log(
+          console.info(
             `Valor de celda en fila de categoría ${i}: "${cellValue}"`
           );
 
@@ -676,7 +676,7 @@ export async function fetchIPCData(): Promise<Omit<IpcRow, "id">[]> {
               cat.toLowerCase().includes(cellValue.toLowerCase());
 
             if (matchCondition) {
-              console.log(`Categoría coincidente encontrada: ${cat}`);
+              console.info(`Categoría coincidente encontrada: ${cat}`);
             }
 
             return matchCondition;
@@ -685,7 +685,7 @@ export async function fetchIPCData(): Promise<Omit<IpcRow, "id">[]> {
           if (matchedCategoriaIndex !== -1) {
             const categoria = expectedCategorias[matchedCategoriaIndex];
             categoriaCount++;
-            console.log(`Procesando categoría: ${categoria}`);
+            console.info(`Procesando categoría: ${categoria}`);
 
             // Procesar valores para cada fecha
             for (let j = 0; j < dates.length; j++) {
@@ -696,7 +696,7 @@ export async function fetchIPCData(): Promise<Omit<IpcRow, "id">[]> {
                 data[categoriaRow][colIndex] !== null &&
                 data[categoriaRow][colIndex] !== undefined
               ) {
-                let value =
+                const value =
                   typeof data[categoriaRow][colIndex] === "number"
                     ? data[categoriaRow][colIndex]
                     : typeof data[categoriaRow][colIndex] === "string" &&
@@ -705,7 +705,7 @@ export async function fetchIPCData(): Promise<Omit<IpcRow, "id">[]> {
                     : null;
 
                 if (value !== null) {
-                  console.log(
+                  console.info(
                     `Añadiendo dato de categoría: ${categoria}, valor: ${value}, fecha: ${dates[j]}`
                   );
                   processedData.push({
@@ -726,7 +726,7 @@ export async function fetchIPCData(): Promise<Omit<IpcRow, "id">[]> {
           }
         }
 
-        console.log(
+        console.info(
           `Procesadas ${categoriaCount} categorías para la región ${region.name}`
         );
 
@@ -813,7 +813,7 @@ export async function fetchIPCData(): Promise<Omit<IpcRow, "id">[]> {
                 data[bysRow][colIndex] !== null &&
                 data[bysRow][colIndex] !== undefined
               ) {
-                let value =
+                const value =
                   typeof data[bysRow][colIndex] === "number"
                     ? data[bysRow][colIndex]
                     : typeof data[bysRow][colIndex] === "string" &&
@@ -837,16 +837,16 @@ export async function fetchIPCData(): Promise<Omit<IpcRow, "id">[]> {
           }
         }
 
-        console.log(
+        console.info(
           `Procesados ${bysCount} componentes de bienes y servicios para la región ${region.name}`
         );
       }
     }
 
-    console.log(
+    console.info(
       `Datos IPC procesados: ${processedData.length} registros totales`
     );
-    console.log(
+    console.info(
       `Regiones procesadas: ${[
         ...new Set(processedData.map((item) => item.region)),
       ].join(", ")}`

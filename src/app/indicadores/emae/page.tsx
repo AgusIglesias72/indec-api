@@ -262,11 +262,10 @@ export default function EmaeDashboard() {
     return `${year}-${month}-01`;
   };
   
-  // Calculate the actual date range for filtering
-  const dateRange = {
+  const dateRange = React.useMemo(() => ({
     start: formatDateString(startDate.year, startDate.month),
     end: formatDateString(endDate.year, endDate.month)
-  };
+  }), [startDate, endDate]);
 
   // Function to format date for display
   const formatDate = (dateString: string) => {
@@ -557,8 +556,8 @@ export default function EmaeDashboard() {
                     ) : (
                       <DataMetric 
                         label="" 
-                        value={`${emaeData?.year_over_year_change.toFixed(1)}%`} 
-                        trend={emaeData && emaeData.year_over_year_change >= 0 ? "up" : "down"} 
+                        value={`${emaeData?.yearly_pct_change.toFixed(1)}%`} 
+                        trend={emaeData && emaeData.yearly_pct_change >= 0 ? "up" : "down"} 
                         className="text-xl font-bold" 
                       />
                     )}

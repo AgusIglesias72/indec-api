@@ -255,7 +255,7 @@ async function updateIPCData() {
   console.info('Iniciando actualización de datos IPC...');
   
   // 1. Obtener datos nuevos del INDEC
-  let newData = await fetchINDECData('ipc');
+  const newData = await fetchINDECData('ipc');
   
   if (!newData || newData.length === 0) {
     return { count: 0, message: 'No hay datos nuevos para procesar' };

@@ -11,23 +11,23 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
   
-  const fetchCalendarData = async () => {
-    setLoading(true);
-    const month = currentDate.getMonth() + 1;
-    const year = currentDate.getFullYear();
-    
-    try {
-      const response = await fetch(`/api/calendar?month=${month}&year=${year}&limit=100`);
-      const { data } = await response.json();
-      setEvents(data);
-    } catch (error) {
-      console.error('Error fetching calendar data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
   useEffect(() => {
+    const fetchCalendarData = async () => {
+      setLoading(true);
+      const month = currentDate.getMonth() + 1;
+      const year = currentDate.getFullYear();
+      
+      try {
+        const response = await fetch(`/api/calendar?month=${month}&year=${year}&limit=100`);
+        const { data } = await response.json();
+        setEvents(data);
+      } catch (error) {
+        console.error('Error fetching calendar data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchCalendarData();
   }, [currentDate]);
   

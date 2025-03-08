@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Transformar datos según el formato solicitado
-    let transformedData = data || [];
+    const transformedData = data || [];
     
     // Si se solicita formato CSV, responder con CSV
     if (isCSV) {

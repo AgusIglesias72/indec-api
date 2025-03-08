@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/supabase';
-import { IpcRow, IpcResponse } from '@/types';
+import { IpcResponse } from '@/types';
 import { cache } from 'react';
 
 // Inicializar cliente Supabase
@@ -33,7 +33,6 @@ const getCachedIpcData = cache(async (
   region: string,
   includeVariations: boolean
 ) => {
-  console.log('Fetching IPC data from database');
   
   // Si es formato CSV, usar un límite mucho mayor
   const isCSV = format.toLowerCase() === 'csv';
@@ -118,7 +117,8 @@ const getCachedIpcData = cache(async (
       category_code: item.component_code || '',
       category_type: item.component_type || '',
       index_value: item.index_value || 0,
-      region: item.region || ''
+      region: item.region || '',
+      monthly_change_variation: 0
     };
     
     // Añadir variaciones solo si se solicitan

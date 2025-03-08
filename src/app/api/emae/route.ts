@@ -32,7 +32,6 @@ const getCachedEmaeData = cache(async (
   includeVariations: boolean,
   byActivity: boolean
 ) => {
-  console.log('Fetching EMAE data from database');
   
   // Si es formato CSV, usar un límite mucho mayor
   const isCSV = format.toLowerCase() === 'csv';

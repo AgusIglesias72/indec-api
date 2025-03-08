@@ -243,7 +243,6 @@ export async function getHistoricalIPCData(): Promise<IPCHistoricalData[]> {
     }
     
     const data = await response.json();
-    console.log(data);
     // Mapear los datos al formato que espera nuestro componente
     const mappedData = data.data.map((item: any) => ({
       date: item.date + 'T00:00:00-04:00',

@@ -29,7 +29,7 @@ async function fetchEmaeData(): Promise<Omit<EmaeRow, 'id'>[]> {
     // URL del archivo Excel del INDEC
     const url = 'https://www.indec.gob.ar/ftp/cuadros/economia/sh_emae_mensual_base2004.xls';
     
-    console.log(`Descargando Excel del INDEC desde: ${url}`);
+    console.info(`Descargando Excel del INDEC desde: ${url}`);
     
     // Descargar archivo
     const response = await axios.get(url, {
@@ -37,13 +37,13 @@ async function fetchEmaeData(): Promise<Omit<EmaeRow, 'id'>[]> {
     });
     
     // Procesar el archivo Excel
-    console.log('Archivo descargado, procesando Excel...');
+    console.info('Archivo descargado, procesando Excel...');
     const workbook = XLSX.read(response.data, { 
       type: 'buffer',
       cellDates: true
     });
     
-    console.log('Hojas disponibles en el Excel:', workbook.SheetNames);
+    console.info('Hojas disponibles en el Excel:', workbook.SheetNames);
     
     // En el EMAE, la hoja principal suele ser la primera
     const sheetName = workbook.SheetNames[0];
@@ -56,7 +56,7 @@ async function fetchEmaeData(): Promise<Omit<EmaeRow, 'id'>[]> {
       blankrows: false
     }) as any[][];
     
-    console.log(`Filas totales en el Excel: ${data.length}`);
+    console.info(`Filas totales en el Excel: ${data.length}`);
     
     // Procesar los datos - usar directamente las columnas especificadas
     const processedData: Omit<EmaeRow, 'id'>[] = [];
@@ -146,7 +146,7 @@ async function fetchEmaeData(): Promise<Omit<EmaeRow, 'id'>[]> {
       });
       
       if (processedData.length <= 3 || processedData.length % 20 === 0) {
-        console.log(`Registro ${processedData.length}: ${date}, Original=${originalValue}, Desest=${seasonallyAdjustedValue}, Tendencia=${cycleTrendValue}`);
+        console.info(`Registro ${processedData.length}: ${date}, Original=${originalValue}, Desest=${seasonallyAdjustedValue}, Tendencia=${cycleTrendValue}`);
       }
     }
     
@@ -161,11 +161,11 @@ async function fetchEmaeData(): Promise<Omit<EmaeRow, 'id'>[]> {
     
     const finalData = Object.values(uniqueData);
     
-    console.log(`Datos procesados: ${processedData.length} registros iniciales, ${finalData.length} registros únicos`);
+    console.info(`Datos procesados: ${processedData.length} registros iniciales, ${finalData.length} registros únicos`);
     
     if (finalData.length > 0) {
-      console.log('Primer registro:', finalData[0]);
-      console.log('Último registro:', finalData[finalData.length - 1]);
+      console.info('Primer registro:', finalData[0]);
+      console.info('Último registro:', finalData[finalData.length - 1]);
     } else {
       console.warn('No se encontraron datos válidos');
     }
@@ -185,7 +185,7 @@ async function fetchEmaeByActivityData(): Promise<Omit<EmaeByActivityInsert, 'id
       // URL del archivo Excel con datos por actividad
       const url = 'https://www.indec.gob.ar/ftp/cuadros/economia/sh_emae_actividad_base2004.xls';
       
-      console.log(`Descargando Excel de EMAE por actividad desde: ${url}`);
+      console.info(`Descargando Excel de EMAE por actividad desde: ${url}`);
       
       // Descargar archivo
       const response = await axios.get(url, {
@@ -193,13 +193,13 @@ async function fetchEmaeByActivityData(): Promise<Omit<EmaeByActivityInsert, 'id
       });
       
       // Procesar el archivo Excel
-      console.log('Archivo de actividades descargado, procesando Excel...');
+      console.info('Archivo de actividades descargado, procesando Excel...');
       const workbook = XLSX.read(response.data, { 
         type: 'buffer',
         cellDates: true
       });
       
-      console.log('Hojas disponibles en el Excel de actividades:', workbook.SheetNames);
+      console.info('Hojas disponibles en el Excel de actividades:', workbook.SheetNames);
       
       // En el EMAE por actividad, la hoja principal suele ser la primera
       const sheetName = workbook.SheetNames[0];
@@ -212,7 +212,7 @@ async function fetchEmaeByActivityData(): Promise<Omit<EmaeByActivityInsert, 'id
         blankrows: false
       }) as any[][];
       
-      console.log(`Filas totales en el Excel de actividades: ${data.length}`);
+      console.info(`Filas totales en el Excel de actividades: ${data.length}`);
       
       // Identificar las actividades económicas (nombres de las columnas)
       // Generalmente están en las primeras filas del Excel, buscamos el encabezado
@@ -234,7 +234,7 @@ async function fetchEmaeByActivityData(): Promise<Omit<EmaeByActivityInsert, 'id
         throw new Error('No se pudo encontrar la fila de encabezado con los nombres de las actividades');
       }
       
-      console.log(`Fila de encabezado encontrada en el índice ${headerRowIndex}`);
+      console.info(`Fila de encabezado encontrada en el índice ${headerRowIndex}`);
       
       // Mapeo de sectores económicos (columnas C a R, índices 2 a 17)
       // Determinamos los índices de cada sector y su nombre correspondiente
@@ -258,7 +258,7 @@ async function fetchEmaeByActivityData(): Promise<Omit<EmaeByActivityInsert, 'id
             name: sectorName
           });
           
-          console.log(`Sector encontrado: ${sectorCode} - ${sectorName} (columna ${i})`);
+          console.info(`Sector encontrado: ${sectorCode} - ${sectorName} (columna ${i})`);
         }
       }
       
@@ -296,7 +296,7 @@ async function fetchEmaeByActivityData(): Promise<Omit<EmaeByActivityInsert, 'id
           // Verificar si es un año válido (entre 1990 y 2030)
           if (row[0] >= 1990 && row[0] <= 2030) {
             currentYear = row[0];
-            console.log(`Año encontrado: ${currentYear}`);
+            console.info(`Año encontrado: ${currentYear}`);
           }
         }
         
@@ -339,7 +339,7 @@ async function fetchEmaeByActivityData(): Promise<Omit<EmaeByActivityInsert, 'id
         }
       }
       
-      console.log(`Datos procesados: ${processedData.length} registros para ${sectors.length} sectores`);
+      console.info(`Datos procesados: ${processedData.length} registros para ${sectors.length} sectores`);
       
       if (processedData.length === 0) {
         console.warn('No se encontraron datos válidos');
@@ -353,13 +353,13 @@ async function fetchEmaeByActivityData(): Promise<Omit<EmaeByActivityInsert, 'id
           groupedByDate[item.date].push(item);
         });
         
-        console.log(`Total de fechas encontradas: ${Object.keys(groupedByDate).length}`);
+        console.info(`Total de fechas encontradas: ${Object.keys(groupedByDate).length}`);
         
         // Mostrar la primera fecha como ejemplo
         const firstDate = Object.keys(groupedByDate).sort()[0];
-        console.log(`Ejemplo para la fecha ${firstDate}:`);
+        console.info(`Ejemplo para la fecha ${firstDate}:`);
         groupedByDate[firstDate].slice(0, 3).forEach(item => {
-          console.log(`  Sector ${item.economy_sector_code} (${item.economy_sector}): ${item.original_value}`);
+          console.info(`  Sector ${item.economy_sector_code} (${item.economy_sector}): ${item.original_value}`);
         });
       }
       
