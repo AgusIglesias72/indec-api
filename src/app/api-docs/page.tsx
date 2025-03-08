@@ -141,6 +141,7 @@ export default function ApiDocsPage() {
                 ],
                 notes: [
                   "Al solicitar formato CSV (format=csv), se omite la paginación y se devuelven hasta 10.000 registros.",
+                  "Los datos incluyen valores originales y, si están disponibles, series desestacionalizadas y tendencia-ciclo.",
                   "La respuesta incluye metadata con información sobre filtros aplicados y paginación."
                 ],
                 responseExample: `{
@@ -181,6 +182,8 @@ export default function ApiDocsPage() {
                 parameters: [
                   { name: "start_date", type: "string", required: false, description: "Fecha de inicio (YYYY-MM-DD)" },
                   { name: "end_date", type: "string", required: false, description: "Fecha de fin (YYYY-MM-DD)" },
+                  { name: "month", type: "number", required: false, description: "Mes específico (1-12)" },
+                  { name: "year", type: "number", required: false, description: "Año específico (ej. 2023)" },
                   { name: "sector_code", type: "string", required: false, description: "Código del sector económico (A, B, C, etc.)" },
                   { name: "limit", type: "number", required: false, description: "Cantidad de registros por página (por defecto 16)" },
                   { name: "page", type: "number", required: false, description: "Número de página para paginación (por defecto 1)" },
@@ -189,53 +192,59 @@ export default function ApiDocsPage() {
                 notes: [
                   "Al solicitar formato CSV (format=csv), se omite la paginación y se devuelven hasta 10.000 registros.",
                   "Los datos por sector solo incluyen la serie original (sin desestacionalizar).",
+                  "Los parámetros 'month' y 'year' permiten filtrar los datos para un mes y/o año específico, lo que facilita análisis comparativos.",
                   "Para obtener la lista completa de sectores y sus códigos, consulte el endpoint de metadata."
                 ],
                 responseExample: `{
   "data": [
    {
-    "date": "2023-01-01",
+    "date": "2023-01-01T00:00:00",
     "economy_sector": "Agricultura, ganadería, caza y silvicultura",
     "economy_sector_code": "A",
-    "original_value": 81.4273753163762
+    "original_value": 81.4273753163762,
+    "year_over_year_change": 5.2
     },
     {
-    "date": "2023-01-01",
+    "date": "2023-01-01T00:00:00",
     "economy_sector": "Pesca",
     "economy_sector_code": "B",
-    "original_value": 176.518839342202
+    "original_value": 176.518839342202,
+    "year_over_year_change": -2.8
     },
     {
-    "date": "2023-01-01",
+    "date": "2023-01-01T00:00:00",
     "economy_sector": "Explotación de minas y canteras",
     "economy_sector_code": "C",
-    "original_value": 102.883370327119
+    "original_value": 102.883370327119,
+    "year_over_year_change": 3.6
     },
     {
-    "date": "2023-01-01",
+    "date": "2023-01-01T00:00:00",
     "economy_sector": "Industria manufacturera",
     "economy_sector_code": "D",
-    "original_value": 113.605761133453
+    "original_value": 113.605761133453,
+    "year_over_year_change": -1.5
     }
-    "...resto de los sectores"
   ],
   "metadata": {
-    "count": 2,
+    "count": 4,
+    "total_count": 16,
     "date_range": {
       "first_date": "2004-01-01",
       "last_date": "2023-06-01",
       "total_months": 234
     },
     "filtered_by": {
-      "end_date": "2023-06-01"
+      "month": 1,
+      "year": 2023
     }
   },
   "pagination": {
     "page": 1,
     "limit": 16,
-    "total_items": 32,
-    "total_pages": 2,
-    "has_more": true
+    "total_items": 16,
+    "total_pages": 1,
+    "has_more": false
   }
 }`
               },
@@ -486,144 +495,6 @@ export default function ApiDocsPage() {
               }
             ]}
           />
-          
-          <div className="mt-8 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Filtrado por Región</CardTitle>
-                <CardDescription>Cómo consultar datos específicos por región</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="mb-4">
-                  Puedes filtrar los datos del IPC por región utilizando el parámetro <code>region</code>. Las regiones disponibles son:
-                </p>
-                <ul className="list-disc pl-6 mb-4 space-y-1">
-                  <li><strong>Nacional</strong>: Datos a nivel país (valor por defecto)</li>
-                  <li><strong>GBA</strong>: Gran Buenos Aires</li>
-                  <li><strong>Cuyo</strong>: Región de Cuyo</li>
-                  <li><strong>Noreste</strong>: Región Noreste</li>
-                  <li><strong>Noroeste</strong>: Región Noroeste</li>
-                  <li><strong>Pampeana</strong>: Región Pampeana</li>
-                  <li><strong>Patagonia</strong>: Región Patagónica</li>
-                </ul>
-                <p className="mb-2">Ejemplo de consulta:</p>
-                <pre className="bg-gray-100 p-3 rounded-md overflow-x-auto">
-                  <code>{`${baseUrl}/api/ipc?region=Patagonia&limit=5`}</code>
-                </pre>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Filtrado por Categoría</CardTitle>
-                <CardDescription>Cómo consultar datos específicos por categoría</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="mb-4">
-                  Puedes filtrar los datos del IPC por categoría utilizando el parámetro <code>category</code>. Las categorías se dividen en varios tipos:
-                </p>
-                
-                <h4 className="font-semibold mt-4 mb-2">Nivel General</h4>
-                <ul className="list-disc pl-6 mb-3 space-y-1">
-                  <li><code>GENERAL</code>: Nivel general del IPC (valor por defecto)</li>
-                </ul>
-                
-                <h4 className="font-semibold mt-4 mb-2">Rubros</h4>
-                <ul className="list-disc pl-6 mb-3 space-y-1">
-                  <li><code>RUBRO_ALIMENTOS</code>: Alimentos y bebidas no alcohólicas</li>
-                  <li><code>RUBRO_BEBIDAS_TABACO</code>: Bebidas alcohólicas y tabaco</li>
-                  <li><code>RUBRO_PRENDAS</code>: Prendas de vestir y calzado</li>
-                  <li><code>RUBRO_VIVIENDA</code>: Vivienda, agua, electricidad y otros combustibles</li>
-                  <li>Y otros rubros (consulta el endpoint de metadata para la lista completa)</li>
-                </ul>
-                
-                <h4 className="font-semibold mt-4 mb-2">Categorías</h4>
-                <ul className="list-disc pl-6 mb-3 space-y-1">
-                  <li><code>CAT_NUCLEO</code>: IPC Núcleo</li>
-                  <li><code>CAT_ESTACIONAL</code>: Estacionales</li>
-                  <li><code>CAT_REGULADOS</code>: Regulados</li>
-                </ul>
-                
-                <h4 className="font-semibold mt-4 mb-2">Bienes y Servicios</h4>
-                <ul className="list-disc pl-6 mb-4 space-y-1">
-                  <li><code>BYS_BIENES</code>: Bienes</li>
-                  <li><code>BYS_SERVICIOS</code>: Servicios</li>
-                </ul>
-                
-                <p className="mb-2">Ejemplo de consulta:</p>
-                <pre className="bg-gray-100 p-3 rounded-md overflow-x-auto">
-                  <code>{`${baseUrl}/api/ipc?category=RUBRO_ALIMENTOS&region=Nacional&limit=5`}</code>
-                </pre>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Análisis Temporal</CardTitle>
-                <CardDescription>Cómo analizar tendencias específicas por mes o año</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="mb-4">
-                  La API permite realizar análisis temporales específicos utilizando los parámetros <code>month</code> y <code>year</code>:
-                </p>
-                
-                <h4 className="font-semibold mt-2 mb-2">Análisis de un mes específico a lo largo de los años</h4>
-                <p className="mb-2">
-                  Para ver la evolución de un mes específico (por ejemplo, todos los eneros):
-                </p>
-                <pre className="bg-gray-100 p-3 rounded-md overflow-x-auto mb-4">
-                  <code>{`${baseUrl}/api/ipc?month=1&category=GENERAL&region=Nacional`}</code>
-                </pre>
-                
-                <h4 className="font-semibold mt-4 mb-2">Análisis de un año completo</h4>
-                <p className="mb-2">
-                  Para ver todos los datos de un año específico:
-                </p>
-                <pre className="bg-gray-100 p-3 rounded-md overflow-x-auto mb-4">
-                  <code>{`${baseUrl}/api/ipc?year=2023&category=GENERAL&region=Nacional`}</code>
-                </pre>
-                
-                <h4 className="font-semibold mt-4 mb-2">Análisis de un mes específico en un año específico</h4>
-                <p className="mb-2">
-                  Para ver los datos de un mes y año específicos:
-                </p>
-                <pre className="bg-gray-100 p-3 rounded-md overflow-x-auto">
-                  <code>{`${baseUrl}/api/ipc?month=7&year=2023&category=GENERAL&region=Nacional`}</code>
-                </pre>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Variaciones</CardTitle>
-                <CardDescription>Entendiendo las variaciones calculadas</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="mb-4">
-                  La API calcula automáticamente tres tipos de variaciones porcentuales:
-                </p>
-                
-                <ul className="list-disc pl-6 mb-4 space-y-2">
-                  <li>
-                    <strong>monthly_pct_change</strong>: Variación porcentual respecto al mes anterior.
-                  </li>
-                  <li>
-                    <strong>yearly_pct_change</strong>: Variación porcentual interanual (respecto al mismo mes del año anterior).
-                  </li>
-                  <li>
-                    <strong>accumulated_pct_change</strong>: Variación porcentual acumulada desde diciembre del año anterior.
-                  </li>
-                </ul>
-                
-                <p className="mb-2">
-                  Si no necesitas estos cálculos, puedes excluirlos para obtener respuestas más ligeras:
-                </p>
-                <pre className="bg-gray-100 p-3 rounded-md overflow-x-auto">
-                  <code>{`${baseUrl}/api/ipc?include_variations=false&limit=10`}</code>
-                </pre>
-              </CardContent>
-            </Card>
-          </div>
         </TabsContent>
       </Tabs>
     </div>

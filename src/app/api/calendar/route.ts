@@ -76,7 +76,7 @@ const getCachedCalendarData = cache(async (
 
   const dataWithDates = data?.map(item => ({
     ...item,
-    date: item.date + 'T00:00:00'
+    date: item.date + 'T19:00:00'
   }));
   
   // Calcular información de paginación

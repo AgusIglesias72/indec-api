@@ -123,7 +123,7 @@ export default function IPCDualAxisChart({
   return (
     <Card className="border-0 shadow-none bg-transparent h-full">
     <CardHeader className="px-0 pt-0">
-      <CardTitle className="text-xl font-medium text-center">Variación mensual del EMAE (desestacionalizado)</CardTitle>
+      <CardTitle className="text-xl font-medium text-center">Variación del IPC</CardTitle>
       <CardDescription className="text-base text-center">Últimos 12 meses disponibles</CardDescription>
     </CardHeader>
     <CardContent className="p-0">

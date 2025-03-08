@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
     
     // Transformar datos para la respuesta
     const formattedData = queryData?.map((item: any) => ({
-      date: item.date + "T00:00:00",
+      date: item.date,
       economy_sector: item.economy_sector || '',
       economy_sector_code: item.economy_sector_code || '',
       original_value: item.original_value || 0,
