@@ -31,8 +31,8 @@ export function MainNavigation() {
   return (
     <NavigationMenu>
       <NavigationMenuList>
-        <NavigationMenuItem>
-          <NavigationMenuTrigger>Indicadores</NavigationMenuTrigger>
+        <NavigationMenuItem >
+          <NavigationMenuTrigger className="">Indicadores</NavigationMenuTrigger>
           <NavigationMenuContent>
           <ul className="grid gap-3 p-4 md:w-[300px] lg:w-[400px] lg:grid-cols-1">
           {indicators.map((indicator) => (
@@ -96,7 +96,7 @@ const ListItem = React.forwardRef<React.ElementRef<"a">, ListItemProps>(
               {...props}
             >
               <div className="text-sm font-medium leading-none">{title}</div>
-              <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+              <p className="line-clamp-2 text-sm leading-snug text-muted-foreground font-clear-sans font-light">
                 {children}
               </p>
             </a>

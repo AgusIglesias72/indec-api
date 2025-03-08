@@ -9,12 +9,16 @@ export default {
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
+
+    
   ],
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        sans: ["var(--font-clear-sans)", "system-ui", "sans-serif"],
         mono: ["var(--font-mono)", "monospace"],
+        righteous: ["var(--font-righteous)", "cursive"],
+
       },
       colors: {
         // Paleta principal inspirada en INDEC (azules, blancos, grises)

@@ -8,6 +8,11 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { MainNavigation } from "@/components/NavigationMenu"
 import { cn } from "@/lib/utils"
+import Image from "next/image"
+import Logo from "../Logo"
+
+
+
 
 export default function NavBar() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -31,26 +36,38 @@ export default function NavBar() {
     )}>
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
-        <div className="flex items-center">
-          <Link href="/" className="flex items-center gap-2 mr-6">
+        <div className="flex items-center justify-start flex-1">
+            <Link href="/" className="flex items-center gap-2 mr-6">
+            <Logo />
+          </Link>
+           {/*
+
+                     <Link href="/" className="flex items-center gap-2 mr-6">
+           
             <div className="flex h-8 w-8 items-center justify-center rounded bg-indec-blue text-white font-bold">
               E
             </div>
             <span className="font-semibold tracking-tight text-indec-blue transition-colors duration-300">
               EconoVista
             </span>
-          </Link>
-          
-         
+            </Link>
+            <Image 
+                src="/argenstats.png"
+                alt="EconoVista"
+                width={200}
+                height={250}
+            />
+           */}
+
         </div>
 
           {/* Desktop Navigation */}
-            <div className="hidden md:block">
+            <div className="hidden md:block font-clear-sans justify-center font-extrabold flex-1">
                 <MainNavigation />
             </div>
           
         {/* Auth buttons and mobile menu */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-end gap-2 flex-1">
           {/* Auth buttons - desktop */}
           <div className="hidden md:flex md:items-center md:gap-2">
             <Button 
@@ -60,12 +77,13 @@ export default function NavBar() {
             >
               Iniciar sesión
             </Button>
-            <Button 
+            {/*<Button 
               size="sm"
               className="font-medium bg-indec-blue text-white hover:bg-indec-blue-dark"
             >
               Registrarse
             </Button>
+            */}
           </div>
           
           {/* Mobile menu trigger */}

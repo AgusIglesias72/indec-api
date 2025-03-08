@@ -150,32 +150,6 @@
     }
   }
   
-  /**
-   * Obtener datos de desempeño por sector económico
-   */
-  export async function getSectorPerformance(): Promise<SectorPerformance[]> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/emae/sectors`);
-      
-      if (!response.ok) {
-        throw new Error('Error al obtener datos de sectores');
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error en getSectorPerformance:', error);
-      // Fallback a valores por defecto en caso de error
-      return [
-        { sector_name: "Agricultura, ganadería, caza y silvicultura", sector_code: "A", value: 104.8, year_over_year_change: 4.8 },
-        { sector_name: "Explotación de minas y canteras", sector_code: "C", value: 98.8, year_over_year_change: -1.2 },
-        { sector_name: "Industria manufacturera", sector_code: "D", value: 97.5, year_over_year_change: -2.5 },
-        { sector_name: "Construcción", sector_code: "F", value: 92.3, year_over_year_change: -7.7 },
-        { sector_name: "Comercio mayorista y minorista", sector_code: "G", value: 95.6, year_over_year_change: -4.4 },
-        { sector_name: "Intermediación financiera", sector_code: "J", value: 102.7, year_over_year_change: 2.7 },
-        { sector_name: "Transporte y comunicaciones", sector_code: "I", value: 103.1, year_over_year_change: 3.1 }
-      ];
-    }
-  }
 
 
 /**

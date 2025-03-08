@@ -1,7 +1,4 @@
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import { ArrowRight, Code, Github, Sparkles } from 'lucide-react';
 
 interface HeroSectionProps {
     title: string;
@@ -13,6 +10,14 @@ interface HeroSectionProps {
         <section className="relative bg-white text-indec-blue-dark 
         pt-20 pb-0 md:pt-24 md:pb-0 overflow-y-visible overflow-x-clip">
        
+         {/* Patrón de puntos sutiles */}
+         <div 
+          className="absolute inset-0 opacity-[0.85] pointer-events-none"
+          style={{
+            backgroundImage: 'radial-gradient(circle, #d0d0d0 1px, transparent 1px)',
+            backgroundSize: '24px 24px',
+          }}
+        ></div>
         
         <div className="container mx-auto px-4 relative z-10">
           {/* Título principal con estilo de dos líneas */}

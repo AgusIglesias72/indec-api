@@ -6,7 +6,6 @@ import {
   getApiStats, 
   getLatestEmaeData, 
   getLatestIPCData, 
-  getSectorPerformance,
   ApiStats,
   EmaeLatestData,
   IPCLatestData,
@@ -29,7 +28,6 @@ interface DataContextType {
   errorStats: Error | null;
   refetchEmae: () => Promise<void>;
   refetchIPC: () => Promise<void>;
-  refetchSectors: () => Promise<void>;
   refetchStats: () => Promise<void>;
 }
 
@@ -85,19 +83,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const fetchSectors = async () => {
-    try {
-      setLoadingSectors(true);
-      const data = await getSectorPerformance();
-      setSectorData(data);
-      setErrorSectors(null);
-    } catch (err) {
-      setErrorSectors(err instanceof Error ? err : new Error('Error desconocido'));
-      console.error('Error al cargar datos de sectores:', err);
-    } finally {
-      setLoadingSectors(false);
-    }
-  };
+ 
 
   const fetchStats = async () => {
     try {
@@ -121,7 +107,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await Promise.all([
         fetchEmae(),
         fetchIPC(),
-        fetchSectors(),
         fetchStats()
       ]);
     };
@@ -145,7 +130,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     errorStats,
     refetchEmae: fetchEmae,
     refetchIPC: fetchIPC,
-    refetchSectors: fetchSectors,
     refetchStats: fetchStats
   };
 

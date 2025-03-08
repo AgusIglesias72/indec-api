@@ -22,7 +22,7 @@ interface EndpointProps {
   };
   baseUrl: string;
 }
-
+/*
 export default function EndpointCard({ endpoint, baseUrl }: EndpointProps) {
   const [selectedLanguage, setSelectedLanguage] = useState('curl');
   
@@ -167,3 +167,5 @@ print(data)`}
     </Card>
   );
 }
+
+*/

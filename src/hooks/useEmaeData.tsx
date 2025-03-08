@@ -1,3 +1,4 @@
+/*  
 // src/hooks/useEmaeData.ts
 import { useState, useEffect } from 'react';
 
@@ -108,3 +109,4 @@ export function useEmaeSectors() {
 
   return { data, loading, error };
 }
+*/

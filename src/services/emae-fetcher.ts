@@ -1,7 +1,6 @@
 // src/app/services/indec/fetcher.ts
 import axios from 'axios';
 import * as XLSX from 'xlsx';
-import { parse } from 'csv-parse/sync';
 import { EmaeRow, EmaeByActivityInsert, IpcRow } from '../types';
 import { fetchIPCData } from './ipc-fetcher';
 
@@ -369,32 +368,6 @@ async function fetchEmaeByActivityData(): Promise<Omit<EmaeByActivityInsert, 'id
       throw new Error(`Error al obtener datos de EMAE por actividad: ${(error as Error).message}`);
     }
   }
-/**
- * Función para obtener datos históricos desde un archivo CSV
- */
-export async function importHistoricalDataFromCSV(csvContent: string, indicator: string) {
-  try {
-    // Analizar CSV
-    const records = parse(csvContent, {
-      columns: true,
-      skip_empty_lines: true
-    });
-    
-    switch (indicator.toLowerCase()) {
-      case 'emae':
-        return parseEmaeCSV(records);
-      case 'emae_by_activity':
-        return parseEmaeByActivityCSV(records);
-      case 'ipc':
-        return parseIpcCSV(records);
-      default:
-        throw new Error(`Indicador no soportado para importación: ${indicator}`);
-    }
-  } catch (error) {
-    console.error('Error al importar datos históricos:', error);
-    throw new Error(`Error al importar datos históricos: ${(error as Error).message}`);
-  }
-}
 
 /**
  * Procesa registros CSV del EMAE general
