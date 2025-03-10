@@ -63,7 +63,7 @@ export default function Indicators() {
   }
 
   return (
-    <section className="py-20 bg-transparent relative z-10">
+    <section className="py-20 bg-transparent relative z-10" id="indicators">
       {/* Fondo sólido para bloquear los puntitos del fondo */}
       <div className="absolute inset-0 bg-transparent"></div>
       

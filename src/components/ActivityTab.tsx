@@ -1,131 +1,45 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
-import { Info, ChevronDown } from 'lucide-react';
+import React, { useState } from 'react';
+import { Info, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import DataMetric from '@/components/DataMetric';
 import { useAppData } from '@/lib/DataProvider';
 
-// Tipo para los datos de sectores
-interface SectorData {
-  sector_name: string;
-  sector_code: string;
-  year_over_year_change: number;
-  original_value: number;
-  date: string;
-}
-
 export default function ActivitySectorTabContent() {
-  // Estados para manejo de datos y filtros
-  const [sectorData, setSectorData] = useState<SectorData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  // Estado para controlar si mostrar todos los sectores o solo los primeros
   const [showAllSectors, setShowAllSectors] = useState(false);
   
-  const { emaeData, loadingEmae } = useAppData();
+  // Obtener datos del contexto global
+  const { 
+    sectorData, 
+    loadingSectors, 
+    errorSectors, 
+    latestSectorDate,
+    emaeData
+  } = useAppData();
 
-  // Estados para información del último mes disponible
-  const [latestDate, setLatestDate] = useState<string | null>(null);
-  const [latestMonth, setLatestMonth] = useState<number | null>(null);
-  const [latestYear, setLatestYear] = useState<number | null>(null);
+  // Número inicial de sectores a mostrar
+  const initialSectorsCount = 6;
 
-  // Cargar datos de sectores del último mes disponible
-  useEffect(() => {
-    const fetchSectorData = async () => {
-      try {
-        setLoading(true);
-        
-        // Primero obtenemos metadatos para saber cuál es el último mes disponible
-        const metadataResponse = await fetch('/api/emae/metadata');
-        if (!metadataResponse.ok) {
-          throw new Error(`Error ${metadataResponse.status}: ${metadataResponse.statusText}`);
-        }
-        
-        const metadataResult = await metadataResponse.json();
-        const lastDate = metadataResult.date_range?.last_date + "T00:00:00";
-        
-        if (lastDate) {
-          setLatestDate(lastDate);
-          
-          // Extraer mes y año del último dato disponible
-          const dateObj = new Date(lastDate);
-          const month = dateObj.getMonth() + 1; // getMonth() devuelve 0-11
-          const year = dateObj.getFullYear();
-
-          setLatestMonth(month);
-          setLatestYear(year);
-          
-          // Ahora obtenemos los datos de sectores específicamente para ese mes/año
-          const response = await fetch(`/api/emae/sectors?month=${month}&year=${year}&limit=20`);
-          
-          if (!response.ok) {
-            throw new Error(`Error ${response.status}: ${response.statusText}`);
-          }
-          
-          const result = await response.json();
-          
-          if (!result.data || !Array.isArray(result.data)) {
-            throw new Error('Formato de respuesta inesperado');
-          }
-          
-          // Transformar datos
-          const formattedData: SectorData[] = result.data.map((item: any) => ({
-            sector_name: item.economy_sector,
-            sector_code: item.economy_sector_code,
-            year_over_year_change: item.year_over_year_change || 0,
-            original_value: item.original_value || 0,
-            date: item.date
-          }));
-          
-          setSectorData(formattedData);
-          setError(null);
-        } else {
-          throw new Error('No se pudo determinar el último mes disponible');
-        }
-      } catch (err) {
-        console.error('Error fetching sector data:', err);
-        setError(err instanceof Error ? err : new Error('Error desconocido'));
-        
-        // Datos simulados en caso de error
-        const mockData: SectorData[] = [
-          { sector_name: 'Agricultura, ganadería, caza y silvicultura', sector_code: 'A', year_over_year_change: 4.5, original_value: 120.5, date: '2024-02-01' },
-          { sector_name: 'Pesca', sector_code: 'B', year_over_year_change: -2.3, original_value: 95.8, date: '2024-02-01' },
-          { sector_name: 'Explotación de minas y canteras', sector_code: 'C', year_over_year_change: 6.2, original_value: 130.2, date: '2024-02-01' },
-          { sector_name: 'Industria manufacturera', sector_code: 'D', year_over_year_change: -1.5, original_value: 115.3, date: '2024-02-01' },
-          { sector_name: 'Electricidad, gas y agua', sector_code: 'E', year_over_year_change: 3.8, original_value: 125.9, date: '2024-02-01' },
-          { sector_name: 'Construcción', sector_code: 'F', year_over_year_change: -4.7, original_value: 90.4, date: '2024-02-01' },
-          { sector_name: 'Comercio', sector_code: 'G', year_over_year_change: 2.5, original_value: 118.7, date: '2024-02-01' },
-        ];
-        
-        setSectorData(mockData);
-        
-        // En caso de error, establecer una fecha por defecto
-        if (!latestDate) {
-          setLatestDate('2024-02-01');
-          setLatestMonth(2);
-          setLatestYear(2024);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSectorData();
-  }, []);
-
-  // Preparar datos para mostrar
-  const displayData = React.useMemo(() => {
+  // Función para obtener los sectores a mostrar
+  const getDisplayData = () => {
     if (!sectorData || sectorData.length === 0) return [];
     
-    // Ordenar sectores por variación interanual (de mayor a menor)
-    const sortedData = [...sectorData].sort((a, b) => b.year_over_year_change - a.year_over_year_change);
+    // Ordenar los sectores por variación interanual (descendente)
+    const sortedData = [...sectorData].sort((a, b) => 
+      b.year_over_year_change - a.year_over_year_change
+    );
     
-    // Mostrar todos los sectores o solo los primeros 6
-    return showAllSectors ? sortedData : sortedData.slice(0, 6);
-  }, [sectorData, showAllSectors]);
+    // Mostrar todos o solo los primeros según el estado
+    return showAllSectors ? sortedData : sortedData.slice(0, initialSectorsCount);
+  };
+
+  const displayData = getDisplayData();
+  const totalSectors = sectorData?.length || 0;
 
   // Calcular métricas agregadas
   const aggregateMetrics = React.useMemo(() => {
@@ -153,7 +67,7 @@ export default function ActivitySectorTabContent() {
   }, [sectorData]);
 
   // Formatear fecha
-  const formatDate = (dateString: string) => { 
+  const formatDate = (dateString: string | null) => { 
     if (!dateString) return '';
     
     const date = new Date(dateString);
@@ -164,6 +78,19 @@ export default function ActivitySectorTabContent() {
     
     return `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
   };
+
+  // Extraer mes y año de la fecha para formatear fechas comparativas
+  const getMonthYearFromDate = (dateString: string | null) => {
+    if (!dateString) return { month: null, year: null };
+    
+    const date = new Date(dateString);
+    return {
+      month: date.getMonth() + 1,
+      year: date.getFullYear()
+    };
+  };
+
+  const { month: latestMonth, year: latestYear } = getMonthYearFromDate(latestSectorDate);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
@@ -178,7 +105,7 @@ export default function ActivitySectorTabContent() {
           </h3>
           
           <p className="text-indec-gray-dark mb-6 text-center lg:text-left">
-            <span className="font-medium">Último dato disponible:</span> {latestDate ? formatDate(latestDate) : ((!loadingEmae && emaeData) ? formatDate(emaeData.date) : 'Cargando...')}
+            <span className="font-medium">Último dato disponible:</span> {formatDate(latestSectorDate) || (emaeData ? formatDate(emaeData.date) : 'Cargando...')}
           </p>
           
           <p className="text-indec-gray-dark mb-6 text-center lg:text-left">
@@ -189,7 +116,13 @@ export default function ActivitySectorTabContent() {
         </div>
         
         {/* Métricas agregadas */}
-        {aggregateMetrics && (
+        {loadingSectors ? (
+          <div className="grid grid-cols-2 gap-4">
+            {[1, 2, 3, 4].map(i => (
+              <Skeleton key={i} className="h-24 w-full rounded-lg" />
+            ))}
+          </div>
+        ) : aggregateMetrics ? (
           <div className="grid grid-cols-2 gap-4">
             <Card className="border border-indec-gray-medium/30 shadow-sm">
               <CardHeader className="p-3 pb-1">
@@ -208,8 +141,8 @@ export default function ActivitySectorTabContent() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-3 pt-0">
-                <div className="text-xl font-bold text-indec-green font-mono">
-                  {aggregateMetrics.growingSectors} de {sectorData.length}
+                <div className="text-xl font-bold text-indec-green">
+                  {aggregateMetrics.growingSectors} de {sectorData?.length || 0}
                 </div>
               </CardContent>
             </Card>
@@ -231,8 +164,8 @@ export default function ActivitySectorTabContent() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-3 pt-0">
-                <div className="text-xl font-bold text-indec-red font-mono">
-                  {aggregateMetrics.shrinkingSectors} de {sectorData.length}
+                <div className="text-xl font-bold text-indec-red">
+                  {aggregateMetrics.shrinkingSectors} de {sectorData?.length || 0}
                 </div>
               </CardContent>
             </Card>
@@ -275,77 +208,104 @@ export default function ActivitySectorTabContent() {
               </CardContent>
             </Card>
           </div>
-        )}
+        ) : null}
       </div>
       
-      <div className="lg:col-span-3">
+      <div className="lg:col-span-3 table-container">
         <Card>
           <CardHeader>
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center flex-wrap gap-4">
               <div>
                 <CardTitle>Variación interanual por sector</CardTitle>
                 <CardDescription>
                   Comparativa del desempeño sectorial de {latestMonth && latestYear ? (
                     <>
-                      <span className="font-medium">{formatDate(latestDate || '')}</span> respecto al mismo mes del año anterior
+                      <span className="font-medium">{formatDate(latestSectorDate)}</span> respecto a {formatDate(`${latestYear - 1}-${String(latestMonth).padStart(2, '0')}-01T00:00:00`)}
                     </>
                   ) : (
                     'los últimos datos disponibles'
                   )}
                 </CardDescription>
               </div>
+              
+              {/* Etiqueta del período si está disponible */}
+              {latestMonth && latestYear && (
+                <div className="text-sm text-indec-gray-dark bg-indec-blue/10 px-3 py-1 rounded-full">
+                  {formatDate(latestSectorDate)}
+                </div>
+              )}
             </div>
           </CardHeader>
           <CardContent>
-            {/* Eliminados los controles de filtrado */}
-
-            {loading ? (
+            {loadingSectors ? (
               <Skeleton className="h-96 w-full" />
-            ) : error ? (
-              <div className="flex justify-center items-center h-96 bg-gray-50 rounded-md border border-gray-200">
+            ) : errorSectors ? (
+              <div className="flex justify-center items-center h-60 bg-gray-50 rounded-md border border-gray-200">
                 <p className="text-gray-500">No se pudieron cargar los datos. Por favor, intenta nuevamente.</p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-200">
-                <div className="grid grid-cols-12 py-2 font-medium text-sm text-indec-gray-dark">
-                  <div className="col-span-6">Sector</div>
-                  <div className="col-span-3 text-right">Índice</div>
-                  <div className="col-span-3 text-right">Var. i/a</div>
+              <>
+                {/* Tabla de sectores */}
+                <div className="divide-y divide-gray-200">
+                  <div className="grid grid-cols-12 py-2 font-medium text-sm text-indec-gray-dark">
+                    <div className="col-span-6">Sector</div>
+                    <div className="col-span-3 text-right">Índice</div>
+                    <div className="col-span-3 text-right">Var. i/a</div>
+                  </div>
+                  
+                  {displayData.map((sector, index) => (
+                    <div key={index} className="grid grid-cols-12 py-3 text-sm">
+                      <div className="col-span-6">{sector.sector_name}</div>
+                      <div className="col-span-3 text-right font-mono">
+                        {sector.original_value.toFixed(1)}
+                      </div>
+                      <div className={`col-span-3 text-right font-mono font-medium ${
+                        sector.year_over_year_change >= 0 ? 'text-indec-green' : 'text-indec-red'
+                      }`}>
+                        {`${sector.year_over_year_change >= 0 ? '+' : ''}${sector.year_over_year_change.toFixed(1)}%`}
+                      </div>
+                    </div>
+                  ))}
                 </div>
                 
-                {displayData.map((sector, index) => (
-                  <div key={index} className="grid grid-cols-12 py-3 text-sm">
-                    <div className="col-span-6">{sector.sector_name}</div>
-                    <div className="col-span-3 text-right font-mono">
-                      {sector.original_value.toFixed(1)}
-                    </div>
-                    <div className={`col-span-3 text-right font-mono font-medium ${
-                      sector.year_over_year_change >= 0 ? 'text-indec-green' : 'text-indec-red'
-                    }`}>
-                      {`${sector.year_over_year_change >= 0 ? '+' : ''}${sector.year_over_year_change.toFixed(1)}%`}
-                    </div>
+                {/* Botón Ver más/menos */}
+                {totalSectors > initialSectorsCount && (
+                  <div className="mt-4 flex justify-center">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setShowAllSectors(!showAllSectors)
+                        if (showAllSectors) {
+                          // Scroll to the top of the table
+                          const table = document.querySelector('#indicators');
+                          if (table) {
+                            table.scrollIntoView({ behavior: 'smooth' });
+                          }
+                        }
+                      }}
+
+                      className="flex items-center gap-1 text-indec-blue"
+                    >
+                      {showAllSectors ? (
+                        <>
+                          <ChevronUp className="h-4 w-4" />
+                          Mostrar menos
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="h-4 w-4" />
+                          Ver todos los sectores ({totalSectors - initialSectorsCount} más)
+                        </>
+                      )}
+                    </Button>
                   </div>
-                ))}
-              </div>
+                )}
+                
+                <div className="mt-4 text-xs text-gray-500 text-right">
+                  Fuente: Instituto Nacional de Estadística y Censos (INDEC)
+                </div>
+              </>
             )}
-            
-            {/* Botón "Ver más" */}
-            {sectorData.length > 6 && (
-              <div className="flex justify-center mt-6">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowAllSectors(!showAllSectors)}
-                  className="flex items-center gap-2"
-                >
-                  {showAllSectors ? 'Ver menos' : 'Ver más'} 
-                  <ChevronDown className={`h-4 w-4 transition-transform ${showAllSectors ? 'rotate-180' : ''}`} />
-                </Button>
-              </div>
-            )}
-            
-            <div className="mt-4 text-xs text-gray-500 text-right">
-              Fuente: Instituto Nacional de Estadística y Censos (INDEC)
-            </div>
           </CardContent>
         </Card>
       </div>
