@@ -87,7 +87,7 @@ export default function RootLayout({
         <NavBar />
 
           {children}
-      <CtaFooter />
+        <CtaFooter />
           
         </AppWrapper>
       </body>

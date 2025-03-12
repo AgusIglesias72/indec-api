@@ -1,7 +1,8 @@
 "use client"
 
 import React, { useState } from 'react';
-import { Info, ChevronDown, ChevronUp } from 'lucide-react';
+import { Info, ChevronDown, ChevronUp, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
@@ -126,7 +127,7 @@ export default function ActivitySectorTabContent() {
           <div className="grid grid-cols-2 gap-4">
             <Card className="border border-indec-gray-medium/30 shadow-sm">
               <CardHeader className="p-3 pb-1">
-                <CardTitle className="text-xs font-medium text-indec-gray-dark flex items-center gap-1">
+                <CardTitle className="text-xs font-medium text-indec-gray-dark flex items-center gap-1 ">
                   Sectores en crecimiento
                   <TooltipProvider>
                     <Tooltip>
@@ -141,7 +142,7 @@ export default function ActivitySectorTabContent() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-3 pt-0">
-                <div className="text-xl font-bold text-indec-green">
+                <div className="text-xl font-bold text-indec-green font-mono">
                   {aggregateMetrics.growingSectors} de {sectorData?.length || 0}
                 </div>
               </CardContent>
@@ -164,7 +165,7 @@ export default function ActivitySectorTabContent() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-3 pt-0">
-                <div className="text-xl font-bold text-indec-red">
+                <div className="text-xl font-bold text-indec-red font-mono">
                   {aggregateMetrics.shrinkingSectors} de {sectorData?.length || 0}
                 </div>
               </CardContent>
@@ -209,6 +210,12 @@ export default function ActivitySectorTabContent() {
             </Card>
           </div>
         ) : null}
+        
+        <Button asChild className="gap-2 w-full lg:w-auto">
+          <Link href="/indicadores/emae-por-actividad">
+            Ver análisis completo <ArrowRight className="h-4 w-4" />
+          </Link>
+        </Button>
       </div>
       
       <div className="lg:col-span-3 table-container">

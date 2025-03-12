@@ -34,7 +34,7 @@ export default function NavBar() {
         ? "bg-white/95 backdrop-blur-sm border-b border-indec-gray-medium shadow-sm" 
         : "bg-white border-b border-white"
     )}>
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+      <div className="mx-auto flex h-16 items-center justify-between px-4 xl:px-12">
         {/* Logo */}
         <div className="flex items-center justify-start flex-1">
             <Link href="/" className="flex items-center gap-2 mr-6">
@@ -77,13 +77,7 @@ export default function NavBar() {
             >
               Iniciar sesión
             </Button>
-            {/*<Button 
-              size="sm"
-              className="font-medium bg-indec-blue text-white hover:bg-indec-blue-dark"
-            >
-              Registrarse
-            </Button>
-            */}
+          
           </div>
           
           {/* Mobile menu trigger */}

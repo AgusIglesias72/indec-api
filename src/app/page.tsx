@@ -10,7 +10,7 @@ export default function HomePage() {
     <div className="relative">
       {/* Main background pattern for the entire page */}
       <div 
-          className="absolute inset-0 opacity-[0.85] pointer-events-none"
+          className="absolute inset-0 opacity-[0.85] pointer-events-none overflow-y-hidden"
           style={{
             backgroundImage: 'radial-gradient(circle, #d0d0d0 1px, transparent 1px)',
             backgroundSize: '24px 24px',

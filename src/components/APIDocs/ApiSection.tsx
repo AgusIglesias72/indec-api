@@ -47,7 +47,7 @@ export default function ApiSection({ title, description, baseUrl, endpoints }: A
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 z-10 ">
       <div className="my-6">
         <h2 className="text-2xl font-bold mb-2">{title}</h2>
         <p className="text-gray-600">{description}</p>
@@ -58,9 +58,9 @@ export default function ApiSection({ title, description, baseUrl, endpoints }: A
           key={`${endpoint.method}-${endpoint.path}`}
           open={expandedEndpoints[index]}
           onOpenChange={() => toggleEndpoint(index)}
-          className="border rounded-lg overflow-hidden"
+          className="border rounded-lg overflow-hidden "
         >
-          <Card className="border-0 shadow-none">
+          <Card className="border-0 shadow-none z-20">
             <CollapsibleTrigger asChild>
               <CardHeader className="cursor-pointer hover:bg-gray-50 flex flex-row items-center justify-between">
                 <div>
