@@ -133,7 +133,7 @@ export interface ApiParameter {
         { name: "end_date", type: "string", required: false, description: "Fecha de fin (YYYY-MM-DD)" },
         { name: "month", type: "number", required: false, description: "Mes específico (1-12)" },
         { name: "year", type: "number", required: false, description: "Año específico (ej. 2023)" },
-        { name: "sector_code", type: "string", required: false, description: "Código del sector económico (A, B, C, etc.)" },
+        { name: "sector_code", type: "string", required: false, description: "Código o códigos del sector económico (A, B, C, etc.) separados por comas (ej. 'A,B,D')" },
         { name: "limit", type: "number", required: false, description: "Cantidad de registros por página (por defecto 16)" },
         { name: "page", type: "number", required: false, description: "Número de página para paginación (por defecto 1)" },
         { name: "format", type: "string", required: false, description: "Formato de respuesta: 'json' (por defecto) o 'csv'" }
@@ -142,60 +142,62 @@ export interface ApiParameter {
         "Al solicitar formato CSV (format=csv), se omite la paginación y se devuelven hasta 10.000 registros.",
         "Los datos por sector solo incluyen la serie original (sin desestacionalizar).",
         "Los parámetros 'month' y 'year' permiten filtrar los datos para un mes y/o año específico, lo que facilita análisis comparativos.",
+        "Para obtener datos de múltiples sectores a la vez, especifique los códigos separados por comas (ej. sector_code=A,B,D).",
         "Para obtener la lista completa de sectores y sus códigos, consulte el endpoint de metadata."
       ],
       responseExample: `{
-    "data": [
-     {
-      "date": "2023-01-01T00:00:00",
-      "economy_sector": "Agricultura, ganadería, caza y silvicultura",
-      "economy_sector_code": "A",
-      "original_value": 81.4273753163762,
-      "year_over_year_change": 5.2
+      "data": [
+       {
+        "date": "2023-01-01T00:00:00",
+        "economy_sector": "Agricultura, ganadería, caza y silvicultura",
+        "economy_sector_code": "A",
+        "original_value": 81.4273753163762,
+        "year_over_year_change": 5.2
+        },
+        {
+        "date": "2023-01-01T00:00:00",
+        "economy_sector": "Pesca",
+        "economy_sector_code": "B",
+        "original_value": 176.518839342202,
+        "year_over_year_change": -2.8
+        },
+        {
+        "date": "2023-01-01T00:00:00",
+        "economy_sector": "Explotación de minas y canteras",
+        "economy_sector_code": "C",
+        "original_value": 102.883370327119,
+        "year_over_year_change": 3.6
+        },
+        {
+        "date": "2023-01-01T00:00:00",
+        "economy_sector": "Industria manufacturera",
+        "economy_sector_code": "D",
+        "original_value": 113.605761133453,
+        "year_over_year_change": -1.5
+        }
+      ],
+      "metadata": {
+        "count": 4,
+        "total_count": 16,
+        "date_range": {
+          "first_date": "2004-01-01",
+          "last_date": "2023-06-01",
+          "total_months": 234
+        },
+        "filtered_by": {
+          "month": 1,
+          "year": 2023,
+          "sector_code": "A,B,C,D"
+        }
       },
-      {
-      "date": "2023-01-01T00:00:00",
-      "economy_sector": "Pesca",
-      "economy_sector_code": "B",
-      "original_value": 176.518839342202,
-      "year_over_year_change": -2.8
-      },
-      {
-      "date": "2023-01-01T00:00:00",
-      "economy_sector": "Explotación de minas y canteras",
-      "economy_sector_code": "C",
-      "original_value": 102.883370327119,
-      "year_over_year_change": 3.6
-      },
-      {
-      "date": "2023-01-01T00:00:00",
-      "economy_sector": "Industria manufacturera",
-      "economy_sector_code": "D",
-      "original_value": 113.605761133453,
-      "year_over_year_change": -1.5
+      "pagination": {
+        "page": 1,
+        "limit": 16,
+        "total_items": 16,
+        "total_pages": 1,
+        "has_more": false
       }
-    ],
-    "metadata": {
-      "count": 4,
-      "total_count": 16,
-      "date_range": {
-        "first_date": "2004-01-01",
-        "last_date": "2023-06-01",
-        "total_months": 234
-      },
-      "filtered_by": {
-        "month": 1,
-        "year": 2023
-      }
-    },
-    "pagination": {
-      "page": 1,
-      "limit": 16,
-      "total_items": 16,
-      "total_pages": 1,
-      "has_more": false
-    }
-  }`
+    }`
     },
     {
       method: "GET",

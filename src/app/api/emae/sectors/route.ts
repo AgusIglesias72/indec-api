@@ -26,13 +26,13 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('end_date');
     const monthParam = searchParams.get('month');
     const yearParam = searchParams.get('year');
-    const sectorCode = searchParams.get('sector_code');
+    const sectorCodeParam = searchParams.get('sector_code');
     const format = searchParams.get('format')?.toLowerCase() || 'json';
     const includeVariations = searchParams.get('include_variations') !== 'false';
     
     // Parámetros de paginación - si es CSV, usar un límite mucho mayor
     const isCSV = format === 'csv';
-    const defaultLimit = isCSV ? 10000 : 50;
+    const defaultLimit = isCSV ? 10000 : 100;
     const limit = parseInt(searchParams.get('limit') || defaultLimit.toString());
     const page = parseInt(searchParams.get('page') || '1');
     const offset = (page - 1) * limit;
@@ -79,8 +79,17 @@ export async function GET(request: NextRequest) {
       query = query.lte('date', endDate);
     }
     
-    if (sectorCode) {
-      query = query.eq('sector_code', sectorCode);
+    // Manejar múltiples códigos de sector separados por comas
+    if (sectorCodeParam) {
+      const sectorCodes = sectorCodeParam.split(',').map(code => code.trim());
+      
+      if (sectorCodes.length === 1) {
+        // Si solo hay un código, usar eq
+        query = query.eq('sector_code', sectorCodes[0]);
+      } else {
+        // Si hay múltiples códigos, usar in
+        query = query.in('sector_code', sectorCodes);
+      }
     }
     
     // Filtrar directamente por mes y año usando las columnas específicas
@@ -142,7 +151,7 @@ export async function GET(request: NextRequest) {
           ...(endDate && { end_date: endDate }),
           ...(monthParam && { month: parseInt(monthParam) }),
           ...(yearParam && { year: parseInt(yearParam) }),
-          ...(sectorCode && { sector_code: sectorCode })
+          ...(sectorCodeParam && { sector_code: sectorCodeParam })
         }
       },
       pagination: {
