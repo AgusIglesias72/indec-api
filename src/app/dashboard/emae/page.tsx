@@ -1,38 +1,31 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Info, Download, Filter, TrendingUp } from "lucide-react";
+import { Info, Download, TrendingUp } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DashboardHeader from "../components/DashboardHeader";
 import EmaeTimeSeriesChart from "../components/EmaeTimeSeriesChart";
 import EmaeMonthlyBarChart from "@/components/charts/EmaeMonthlyBarChart";
 import SectorActivityChart from "@/components/charts/SectorActivityChart";
 import SectorActivityList from "@/components/charts/SectorActivityList";
-import MonthRangeFilter from "../components/MonthRangeFilter";
+import DateRangeSelector from "../components/DateRangeSelector";
 import { useAppData } from '@/lib/DataProvider';
 import { useHistoricalEmaeData } from '@/hooks/useApiData';
 import DataMetric from '@/components/DataMetric';
 import SectorComparisonChart from "../components/SectorComparisonChart";
 
 export default function EmaeDashboardPage() {
-  // Estado para el filtro de rango de meses (ampliado para mostrar más datos históricos)
-  const [dateRange, setDateRange] = useState({
-    startMonth: 1, // Enero
-    startYear: new Date().getFullYear() - 2, // 2 años atrás para mostrar más datos
-    endMonth: 12, // Diciembre
-    endYear: new Date().getFullYear()
-  });
-
+  // Estado para el filtro de fechas
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  
   // Estado para las series a mostrar
   const [showSeries, setShowSeries] = useState({
     original: true,
-    seasonallyAdjusted: true,
-    trendCycle: false
+    seasonallyAdjusted: true
   });
 
   // Estado para sectores seleccionados para comparación
@@ -54,46 +47,55 @@ export default function EmaeDashboardPage() {
     refetch: refetchHistorical
   } = useHistoricalEmaeData(100); // Aumentamos el límite para obtener más datos históricos
 
-  // Fechas en formato ISO para filtrar los datos
-  const startDate = `${dateRange.startYear}-${String(dateRange.startMonth).padStart(2, '0')}`;
-  const endDate = `${dateRange.endYear}-${String(dateRange.endMonth).padStart(2, '0')}`;
+  console.log(historicalData);
+  
 
-  // Efecto para cargar datos históricos cuando cambia el rango de fechas
+  // Inicializar fechas por defecto
   useEffect(() => {
-    const fetchDataWithRange = async () => {
-      // Implementar una función de fetch con parámetros de fecha
-      try {
-        // Esta función debería implementarse para hacer un fetch con el rango de fechas
-        await refetchHistorical(startDate, endDate, 100);
-      } catch (error) {
-        console.error("Error fetching historical data with date range:", error);
-      }
-    };
-    
-    fetchDataWithRange();
-  }, [startDate, endDate]);
+    if (!startDate && !endDate && historicalData && historicalData.length > 0) {
+      // Ordenar datos por fecha
+      const sortedData = [...historicalData].sort((a, b) => 
+        new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
+      
+      // Establecer fecha inicial (2 años atrás aproximadamente)
+      const endIdx = sortedData.length - 1;
+      const startIdx = Math.max(0, endIdx - 24); // ~24 meses atrás
+      
+      // Convertir fechas string a objetos Date
+      const endDateObj = new Date(sortedData[endIdx].date);
+      const startDateObj = new Date(sortedData[startIdx].date);
+      
+      setStartDate(startDateObj);
+      setEndDate(endDateObj);
+    }
+  }, [historicalData, startDate, endDate]);
+
+  // Efecto para actualizar los datos cuando cambian las fechas
+  useEffect(() => {
+    if (startDate && endDate) {
+      // Formatear fechas como YYYY-MM-DD para la API
+      const formatDateString = (date: Date) => {
+        return date.toISOString().split('T')[0];
+      };
+      
+      const startDateStr = formatDateString(startDate);
+      const endDateStr = formatDateString(endDate);
+      
+      // Recargar datos con el nuevo rango de fechas
+      refetchHistorical(startDateStr, endDateStr, 100);
+    }
+  }, [startDate, endDate, refetchHistorical]);
 
   // Filtrar datos históricos por el rango de fechas seleccionado
   const filteredData = React.useMemo(() => {
-    if (!historicalData) return [];
+    if (!historicalData || !startDate || !endDate) return [];
     
     return historicalData.filter(item => {
       const itemDate = new Date(item.date);
-      const itemYear = itemDate.getFullYear();
-      const itemMonth = itemDate.getMonth() + 1;
-      
-      // Verificar si la fecha está dentro del rango seleccionado
-      if (dateRange.startYear > itemYear || (dateRange.startYear === itemYear && dateRange.startMonth > itemMonth)) {
-        return false;
-      }
-      
-      if (dateRange.endYear < itemYear || (dateRange.endYear === itemYear && dateRange.endMonth < itemMonth)) {
-        return false;
-      }
-      
-      return true;
+      return itemDate >= startDate && itemDate <= endDate;
     });
-  }, [historicalData, dateRange]);
+  }, [historicalData, startDate, endDate]);
 
   // Generar opciones de sectores para el selector
   const sectorOptions = React.useMemo(() => {
@@ -113,8 +115,8 @@ export default function EmaeDashboardPage() {
     return uniqueSectors.sort((a, b) => a.name.localeCompare(b.name));
   }, [sectorData]);
 
-  // Función para formatear fechas
-  const formatDate = (dateString: string | undefined) => {
+  // Función para formatear fechas en formato legible
+  const formatDateDisplay = (dateString: string | undefined) => {
     if (!dateString) return "";
     
     const date = new Date(dateString);
@@ -123,21 +125,11 @@ export default function EmaeDashboardPage() {
       "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
     ];
     
-    return `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
-  };
-
-  // Función para manejar cambios en el filtro de rango de fechas
-  const handleDateRangeChange = (newRange: {
-    startMonth: number;
-    startYear: number;
-    endMonth: number;
-    endYear: number;
-  }) => {
-    setDateRange(newRange);
+    return `${date.getDate()} de ${monthNames[date.getMonth()]} de ${date.getFullYear()}`;
   };
 
   // Función para alternar la visibilidad de las series
-  const toggleSeries = (series: 'original' | 'seasonallyAdjusted' | 'trendCycle') => {
+  const toggleSeries = (series: 'original' | 'seasonallyAdjusted') => {
     setShowSeries(prev => ({
       ...prev,
       [series]: !prev[series]
@@ -167,14 +159,13 @@ export default function EmaeDashboardPage() {
     if (!filteredData || filteredData.length === 0) return;
     
     // Crear encabezados
-    const headers = ["fecha", "valor_original", "valor_desestacionalizado", "tendencia_ciclo", "var_mensual", "var_interanual"];
+    const headers = ["fecha", "valor_original", "valor_desestacionalizado", "var_mensual", "var_interanual"];
     
     // Convertir datos a formato CSV
     const csvData = filteredData.map(item => [
       item.date,
       item.original_value.toFixed(2),
       item.seasonally_adjusted_value.toFixed(2),
-      item.cycle_trend_value ? item.cycle_trend_value.toFixed(2) : "",
       item.monthly_pct_change ? item.monthly_pct_change.toFixed(2) : "",
       item.yearly_pct_change ? item.yearly_pct_change.toFixed(2) : ""
     ].join(","));
@@ -187,7 +178,7 @@ export default function EmaeDashboardPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `emae_datos_${startDate}_a_${endDate}.csv`);
+    link.setAttribute("download", `emae_datos.csv`);
     link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
@@ -206,10 +197,15 @@ export default function EmaeDashboardPage() {
       <div className="mb-8 bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h3 className="text-lg font-medium mb-2">Filtros y Controles</h3>
-            <MonthRangeFilter 
-              dateRange={dateRange}
-              onChange={handleDateRangeChange}
+            <h3 className="text-lg font-medium mb-2">Período de análisis</h3>
+            <DateRangeSelector 
+              startDate={startDate}
+              endDate={endDate}
+              onStartDateChange={setStartDate}
+              onEndDateChange={setEndDate}
+              onExportData={handleDownloadData}
+              fromYear={2004}
+              toYear={new Date().getFullYear()}
             />
           </div>
           
@@ -232,26 +228,7 @@ export default function EmaeDashboardPage() {
                 />
                 <span className="ml-2 text-sm">Serie Desestacionalizada</span>
               </label>
-              
-              <label className="inline-flex items-center">
-                <Checkbox 
-                  checked={showSeries.trendCycle} 
-                  onCheckedChange={() => toggleSeries('trendCycle')}
-                  className="text-indec-blue"
-                />
-                <span className="ml-2 text-sm">Tendencia-Ciclo</span>
-              </label>
             </div>
-            
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="flex items-center gap-1"
-              onClick={handleDownloadData}
-            >
-              <Download className="h-4 w-4" />
-              <span>Exportar datos</span>
-            </Button>
           </div>
         </div>
       </div>
@@ -361,7 +338,7 @@ export default function EmaeDashboardPage() {
                 <div className="h-9 w-40 bg-gray-200 animate-pulse rounded"></div>
               ) : (
                 <div className="text-lg font-medium text-indec-blue-dark">
-                  {formatDate(emaeData?.date ? emaeData.date + 'T00:00:00' : undefined)}
+                  {formatDateDisplay(emaeData?.date || '')}
                 </div>
               )}
             </CardContent>
@@ -374,7 +351,11 @@ export default function EmaeDashboardPage() {
             <CardHeader>
               <CardTitle>Evolución del EMAE</CardTitle>
               <CardDescription>
-                Series original, desestacionalizada{showSeries.trendCycle && ' y tendencia-ciclo'} | {formatDate(startDate + 'T00:00:00')} - {formatDate(endDate + 'T00:00:00')}
+                {startDate && endDate ? (
+                  <>Series de tiempo para el período {startDate.toLocaleString('es', { month: 'long', year: 'numeric' })} - {endDate.toLocaleString('es', { month: 'long', year: 'numeric' })}</>
+                ) : (
+                  'Seleccione un rango de fechas para visualizar los datos'
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -383,7 +364,10 @@ export default function EmaeDashboardPage() {
                   data={filteredData}
                   loading={loadingHistorical}
                   error={errorHistorical}
-                  showSeries={showSeries}
+                  showSeries={{
+                    ...showSeries,
+                    trendCycle: false // Desactivamos esta serie por completo
+                  }}
                 />
               </div>
             </CardContent>
@@ -391,7 +375,7 @@ export default function EmaeDashboardPage() {
         </div>
       </div>
 
-      {/* Segunda fila: Nuevo gráfico de comparación de sectores */}
+      {/* Segunda fila: Gráfico de comparación de sectores */}
       <div className="mb-8">
         <Card>
           <CardHeader>
@@ -404,22 +388,14 @@ export default function EmaeDashboardPage() {
               </div>
               
               <div className="flex flex-wrap gap-2 items-center">
-                <Select onValueChange={(value) => handleSectorSelection(value)}>
-                  <SelectTrigger className="w-[220px]">
-                    <SelectValue placeholder="Seleccionar sector" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sectorOptions.map((sector) => (
-                      <SelectItem 
-                        key={sector.code} 
-                        value={sector.code}
-                        disabled={selectedSectors.includes(sector.code) && selectedSectors.length >= 5}
-                      >
-                        {sector.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Button 
+                  variant="outline"
+                  className="bg-indec-blue text-white hover:bg-indec-blue-dark"
+                  onClick={() => handleSectorSelection(sectorOptions[0]?.code || '')}
+                  disabled={selectedSectors.length >= 5 || !sectorOptions.length}
+                >
+                  Añadir sector
+                </Button>
                 
                 <span className="text-sm text-gray-500">
                   {selectedSectors.length}/5 sectores seleccionados
@@ -453,13 +429,15 @@ export default function EmaeDashboardPage() {
           <CardContent>
             <div className="h-[300px]">
               <SectorComparisonChart 
-                dateRange={{
-                  startDate,
-                  endDate
-                }}
-                selectedSectors={selectedSectors}
+                allSectors={sectorOptions}
                 loading={loadingSectors || loadingHistorical}
-                error={errorHistorical}
+                startDate={startDate ? startDate.toISOString().split('T')[0] : undefined}
+                endDate={endDate ? endDate.toISOString().split('T')[0] : undefined}
+                onFetch={(sectors) => {
+                  // Función para obtener datos de sectores específicos
+                  // Implementación simplificada
+                  return Promise.resolve([]);
+                }}
               />
             </div>
             {selectedSectors.length === 0 && (
@@ -521,7 +499,7 @@ export default function EmaeDashboardPage() {
           <CardHeader>
             <CardTitle>Detalle por sectores económicos</CardTitle>
             <CardDescription>
-              Variación interanual por sector - Último período disponible: {formatDate(emaeData?.date ? emaeData.date + 'T00:00:00' : undefined)}
+              Variación interanual por sector - Último período disponible: {formatDateDisplay(emaeData?.date + 'T00:00:00')}
             </CardDescription>
           </CardHeader>
           <CardContent>

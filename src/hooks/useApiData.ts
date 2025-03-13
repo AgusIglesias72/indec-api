@@ -15,25 +15,28 @@ export function useHistoricalEmaeData(limit = 24) {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<any>(null);
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        setLoading(true);
-        const emaeData = await fetchHistoricalEmaeData(limit);
-        setData(emaeData);
-        setError(null);
-      } catch (err) {
-        console.error("Error en useHistoricalEmaeData:", err);
-        setError(err);
-      } finally {
-        setLoading(false);
-      }
+  // Función para obtener datos con parámetros opcionales
+  const refetch = async (startDate?: string, endDate?: string, customLimit?: number) => {
+    try {
+      setLoading(true);
+      const emaeData = await fetchHistoricalEmaeData(customLimit || limit, startDate, endDate);
+      setData(emaeData);
+      setError(null);
+      return emaeData;
+    } catch (err) {
+      console.error("Error en useHistoricalEmaeData:", err);
+      setError(err);
+      throw err;
+    } finally {
+      setLoading(false);
     }
+  };
 
-    fetchData();
+  useEffect(() => {
+    refetch();
   }, [limit]);
 
-  return { data, loading, error };
+  return { data, loading, error, refetch };
 }
 
 /**

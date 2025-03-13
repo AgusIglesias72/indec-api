@@ -18,7 +18,6 @@ interface EmaeChartData {
   date: string;
   original_value: number;
   seasonally_adjusted_value: number;
-  cycle_trend_value?: number;
   monthly_pct_change?: number;
   yearly_pct_change?: number;
 }
@@ -40,7 +39,6 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     // Encontrar los items para cada serie
     const originalItem = payload.find((p: any) => p.dataKey === 'original_value');
     const seasonallyAdjustedItem = payload.find((p: any) => p.dataKey === 'seasonally_adjusted_value');
-    const trendCycleItem = payload.find((p: any) => p.dataKey === 'cycle_trend_value');
     
     // Extraer las variaciones de los datos
     const originalData = originalItem?.payload;
@@ -83,16 +81,6 @@ const CustomTooltip = ({ active, payload, label }: any) => {
                 </span>
               </div>
             )}
-          </div>
-        )}
-        
-        {trendCycleItem && (
-          <div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: trendCycleItem.color }}></div>
-              <span className="font-medium">Tendencia-Ciclo:</span>
-              <span className="font-mono">{trendCycleItem.value?.toFixed(1)}</span>
-            </div>
           </div>
         )}
       </div>
@@ -141,8 +129,7 @@ export default function EmaeTimeSeriesChart({ data, loading, error, showSeries }
   const maxValue = Math.max(...sortedData.map(d => d.original_value));
 
   // Ajustar el dominio para que muestren un 5% arriba y abajo
-  const domain = [minValue * 0.99, maxValue * 1];
-
+  const domain = [minValue * 0.99, maxValue * 1.01];
 
   return (
     <ResponsiveContainer width="100%" height="100%">
@@ -183,18 +170,6 @@ export default function EmaeTimeSeriesChart({ data, loading, error, showSeries }
             dataKey="seasonally_adjusted_value" 
             name="Serie Desestacionalizada" 
             stroke="#FF9F1C" 
-            strokeWidth={2}
-            dot={false}
-            activeDot={{ r: 6 }}
-          />
-        )}
-        
-        {showSeries.trendCycle && (
-          <Line 
-            type="monotone" 
-            dataKey="cycle_trend_value" 
-            name="Tendencia-Ciclo" 
-            stroke="#10893E" 
             strokeWidth={2}
             dot={false}
             activeDot={{ r: 6 }}
