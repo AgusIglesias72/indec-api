@@ -30,33 +30,18 @@ export async function GET(request: NextRequest) {
     const format = searchParams.get('format')?.toLowerCase() || 'json';
     const includeVariations = searchParams.get('include_variations') !== 'false';
     
-    // Parámetros de paginación - si es CSV, usar un límite mucho mayor
-    const isCSV = format === 'csv';
-    const defaultLimit = isCSV ? 10000 : 100;
-    const limit = parseInt(searchParams.get('limit') || defaultLimit.toString());
-    const page = parseInt(searchParams.get('page') || '1');
-    const offset = (page - 1) * limit;
-    
     // Obtener información base de fechas (primera y última fecha disponible)
-    const { data: firstDateData, error: firstDateError } = await supabase
+    const { data: firstDateData } = await supabase
       .from('emae_by_activity_with_variations')
       .select('date')
       .order('date', { ascending: true })
       .limit(1);
     
-    if (firstDateError) {
-      throw new Error(`Error fetching first date: ${firstDateError.message}`);
-    }
-    
-    const { data: lastDateData, error: lastDateError } = await supabase
+    const { data: lastDateData } = await supabase
       .from('emae_by_activity_with_variations')
       .select('date')
       .order('date', { ascending: false })
       .limit(1);
-    
-    if (lastDateError) {
-      throw new Error(`Error fetching last date: ${lastDateError.message}`);
-    }
     
     const firstDate = firstDateData && firstDateData.length > 0 ? firstDateData[0].date : null;
     const lastDate = lastDateData && lastDateData.length > 0 ? lastDateData[0].date : null;
@@ -70,7 +55,7 @@ export async function GET(request: NextRequest) {
       .from('emae_by_activity_with_variations')
       .select('*');
     
-    // Aplicar filtros de base de datos
+    // Aplicar filtros directamente en la base de datos
     if (startDate) {
       query = query.gte('date', startDate);
     }
@@ -106,12 +91,8 @@ export async function GET(request: NextRequest) {
     // Ordenar resultados
     query = query.order('date', { ascending: false });
     
-    // Si no es CSV, aplicar paginación
-    if (!isCSV) {
-      query = query.range(offset, offset + limit - 1);
-    }
-    // Ejecutar consulta
-    const { data: queryData, error: queryError, count } = await query;
+    // Ejecutar consulta sin paginación
+    const { data: queryData, error: queryError } = await query;
     
     if (queryError) {
       throw new Error(`Error fetching EMAE sectors data: ${queryError.message}`);
@@ -120,27 +101,22 @@ export async function GET(request: NextRequest) {
     // Transformar datos para la respuesta
     const formattedData = queryData?.map((item: any) => ({
       date: item.date,
-      economy_sector: item.economy_sector || '',
-      economy_sector_code: item.economy_sector_code || '',
+      economy_sector: item.sector || '',
+      economy_sector_code: item.sector_code || '',
       original_value: item.original_value || 0,
       year_over_year_change: includeVariations ? (item.yearly_pct_change || 0) : undefined
     })) || [];
     
     // Si se solicita formato CSV, responder con CSV
-    if (isCSV) {
+    if (format === 'csv') {
       return respondWithCSV(formattedData, 'emae_sectors_data.csv');
     }
-    
-    // Calcular total de páginas
-    const totalCount = count || 0;
-    const totalPages = Math.ceil(totalCount / limit);
     
     // Construir respuesta JSON
     const response = {
       data: formattedData,
       metadata: {
         count: formattedData.length,
-        total_count: totalCount,
         date_range: {
           first_date: firstDate,
           last_date: lastDate,
@@ -153,13 +129,6 @@ export async function GET(request: NextRequest) {
           ...(yearParam && { year: parseInt(yearParam) }),
           ...(sectorCodeParam && { sector_code: sectorCodeParam })
         }
-      },
-      pagination: {
-        page,
-        limit,
-        total_items: totalCount,
-        total_pages: totalPages,
-        has_more: page < totalPages
       }
     };
     

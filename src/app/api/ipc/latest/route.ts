@@ -18,8 +18,6 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient<Database>(supabaseUrl, supabaseKey);
 
-// Función en caché para obtener los datos más recientes del IPC
-
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -27,9 +25,16 @@ export async function GET(request: NextRequest) {
     // Obtener parámetros de consulta
     const region = searchParams.get('region')?.toLowerCase() || 'nacional';
     const componentCode = (searchParams.get('category') || 'GENERAL').toUpperCase();
+
+    // Normalizar región (primera letra mayúscula, resto minúsculas) 
+    // Excepto GBA, eso va todo en mayúsculas
+    let normalizedRegion;
+    if (region === 'gba') {
+      normalizedRegion = 'GBA';
+    } else {
+      normalizedRegion = region.charAt(0).toUpperCase() + region.slice(1).toLowerCase();
+    }
     
-    // Normalizar región (primera letra mayúscula, resto minúsculas)
-    const normalizedRegion = region.charAt(0).toUpperCase() + region.slice(1).toLowerCase();
     
     // Obtener el último dato del IPC
     const { data: latestData, error: latestError } = await supabase
@@ -52,7 +57,7 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    // Obtener el dato del mes anterior para calcular la variación del cambio mensual
+    // Calcular la fecha del mes anterior para obtener la variación del cambio mensual
     const currentDate = new Date(latestData.date || '');
     currentDate.setMonth(currentDate.getMonth() - 1);
     
@@ -61,28 +66,13 @@ export async function GET(request: NextRequest) {
     const prevMonth = (currentDate.getMonth() + 1).toString().padStart(2, '0');
     const prevDateStr = `${prevYear}-${prevMonth}-01`;
     
-    // Obtener el dato del mes anterior
+    // Obtener el dato del mes anterior directamente desde la base de datos
     const { data: prevMonthData } = await supabase
       .from('ipc_with_variations')
-      .select('*')
+      .select('monthly_pct_change')
       .eq('component_code', componentCode)
       .eq('region', normalizedRegion)
       .eq('date', prevDateStr)
-      .limit(1)
-      .single();
-    
-    // Obtener el dato de dos meses atrás para calcular la variación del cambio mensual
-    currentDate.setMonth(currentDate.getMonth() - 1);
-    const prevPrevYear = currentDate.getFullYear();
-    const prevPrevMonth = (currentDate.getMonth() + 1).toString().padStart(2, '0');
-    const prevPrevDateStr = `${prevPrevYear}-${prevPrevMonth}-01`;
-    
-    const { data: prevPrevMonthData } = await supabase
-      .from('ipc_with_variations')
-      .select('*')
-      .eq('component_code', componentCode)
-      .eq('region', normalizedRegion)
-      .eq('date', prevPrevDateStr)
       .limit(1)
       .single();
     
@@ -100,12 +90,10 @@ export async function GET(request: NextRequest) {
       monthly_change_variation: 0
     };
     
-    // Calcular la variación del cambio mensual si tenemos datos de los meses anteriores
+    // Calcular la variación del cambio mensual si tenemos el dato del mes anterior
     if (
       prevMonthData?.monthly_pct_change !== null && 
-      prevMonthData?.monthly_pct_change !== undefined &&
-      prevPrevMonthData?.monthly_pct_change !== null &&
-      prevPrevMonthData?.monthly_pct_change !== undefined
+      prevMonthData?.monthly_pct_change !== undefined
     ) {
       // Calcular la variación del cambio mensual actual respecto al anterior
       const currentMonthlyChange = latestData.monthly_pct_change || 0;
@@ -113,7 +101,6 @@ export async function GET(request: NextRequest) {
       
       // La variación es la diferencia entre los cambios mensuales
       result.monthly_change_variation = currentMonthlyChange - prevMonthlyChange;
-
     }
     
     // Configurar caché para 1 hora
@@ -153,7 +140,6 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
 
 // Revalidación programada cada hora
 export const revalidate = 3600; // 1 hora
