@@ -156,10 +156,12 @@ export type Database = {
         Row: {
           date: string | null
           id: string | null
+          month: number | null
           monthly_pct_change: number | null
           original_value: number | null
           sector: string | null
           sector_code: string | null
+          year: number | null
           yearly_pct_change: number | null
         }
         Relationships: []
@@ -169,11 +171,13 @@ export type Database = {
           cycle_trend_value: number | null
           date: string | null
           id: string | null
+          month: number | null
           monthly_pct_change: number | null
           original_value: number | null
           seasonally_adjusted_value: number | null
           sector: string | null
           sector_code: string | null
+          year: number | null
           yearly_pct_change: number | null
         }
         Relationships: []
@@ -316,8 +320,10 @@ export type Database = {
           date: string | null
           id: string | null
           index_value: number | null
+          month: number | null
           monthly_pct_change: number | null
           region: string | null
+          year: number | null
           yearly_pct_change: number | null
         }
         Relationships: []
