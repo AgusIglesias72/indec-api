@@ -68,8 +68,14 @@ export async function GET(request: NextRequest) {
     
     // Si es el EMAE general, incluir series desestacionalizada y tendencia-ciclo
     if (viewName === 'emae_with_variations') {
-      result.seasonally_adjusted_value = item.seasonally_adjusted_value || 0;
-      result.trend_cycle_value = item.cycle_trend_value || 0;
+      // Usar verificación de existencia de propiedades
+      if ('seasonally_adjusted_value' in item) {
+        result.seasonally_adjusted_value = item.seasonally_adjusted_value || 0;
+      }
+      
+      if ('cycle_trend_value' in item) {
+        result.trend_cycle_value = item.cycle_trend_value || 0;
+      }
     }
     
     // Configurar caché para 1 hora
