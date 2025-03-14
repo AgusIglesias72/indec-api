@@ -3,13 +3,11 @@
 // src/lib/DataProvider.tsx
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { 
-  getApiStats, 
   getLatestEmaeData, 
   getLatestIPCData, 
   ApiStats,
   EmaeLatestData,
   IPCLatestData,
-  SectorPerformance
 } from '@/services/api';
 
 // Interfaz para los datos de sectores
@@ -39,7 +37,6 @@ interface DataContextType {
   refetchEmae: () => Promise<void>;
   refetchIPC: () => Promise<void>;
   refetchSectors: () => Promise<void>;
-  refetchStats: () => Promise<void>;
 }
 
 // Crear el contexto
@@ -173,19 +170,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const fetchStats = async () => {
-    try {
-      setLoadingStats(true);
-      const data = await getApiStats();
-      setStatsData(data);
-      setErrorStats(null);
-    } catch (err) {
-      setErrorStats(err instanceof Error ? err : new Error('Error desconocido'));
-      console.error('Error al cargar estadísticas:', err);
-    } finally {
-      setLoadingStats(false);
-    }
-  };
 
   // Cargar todos los datos en la inicialización
   useEffect(() => {
@@ -196,7 +180,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         fetchEmae(),
         fetchIPC(),
         fetchSectors(),
-        fetchStats()
       ]);
     };
 
@@ -221,7 +204,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     refetchEmae: fetchEmae,
     refetchIPC: fetchIPC,
     refetchSectors: fetchSectors,
-    refetchStats: fetchStats
   };
 
   return (
