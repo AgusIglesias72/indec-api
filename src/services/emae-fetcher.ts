@@ -132,7 +132,8 @@ async function fetchEmaeData(): Promise<Omit<EmaeRow, 'id'>[]> {
       }
       
       // Crear fecha ISO
-      const date = `${currentYear}-${monthMap[monthStr]}-01`;
+      const lastDayOfMonth = new Date(currentYear, parseInt(monthMap[monthStr]) - 1, 0);
+      const date = lastDayOfMonth.toISOString().split('T')[0];
       
       // Agregar registro procesado
       processedData.push({

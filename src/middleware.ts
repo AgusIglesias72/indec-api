@@ -10,8 +10,6 @@ export function middleware(request: NextRequest) {
     '/api/emae',
     '/api/emae/latest',
     '/api/emae/metadata',
-    '/api/emae/by-activity',
-    '/api/emae-by-activity',
     '/api/emae/sectors',
     '/api/calendar',
     '/api/not-found',
