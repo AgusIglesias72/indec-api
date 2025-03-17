@@ -195,7 +195,6 @@ async function updateEmaeData() {
     lastRecord: data && data.length > 0 ? data[data.length - 1] : null
   };
 }
-
 /**
  * Actualiza los datos del EMAE por actividad
  * Utilizando la implementación probada en el endpoint de test

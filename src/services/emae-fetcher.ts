@@ -310,7 +310,8 @@ async function fetchEmaeByActivityData(): Promise<Omit<EmaeByActivityInsert, 'id
         if (currentYear === null) continue;
         
         // Crear fecha ISO
-        const date = `${currentYear}-${monthMap[monthStr]}-01`;
+        const lastDayOfMonth = new Date(currentYear, parseInt(monthMap[monthStr]) - 1, 0);
+        const date = lastDayOfMonth.toISOString().split('T')[0];
         
         // Procesar cada sector para esta fecha
         for (const sector of sectors) {

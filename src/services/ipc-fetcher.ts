@@ -45,10 +45,8 @@ function generateCodeFromName(name: string): string {
 function extractDateFromValue(value: any): string | null {
   // Caso 1: Es un objeto Date
   if (value instanceof Date) {
-    return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(
-      2,
-      "0"
-    )}-01`;
+    const lastDayOfMonth = new Date(value.getFullYear(), value.getMonth(), 0);
+    return lastDayOfMonth.toISOString().split('T')[0];
   }
 
   // Caso 2: Es un número (posiblemente número de serie de Excel)
@@ -57,7 +55,8 @@ function extractDateFromValue(value: any): string | null {
       // Intentar convertir número a fecha según el formato de Excel
       const dateObj = XLSX.SSF.parse_date_code(value);
       if (dateObj && dateObj.y && dateObj.m) {
-        return `${dateObj.y}-${String(dateObj.m).padStart(2, "0")}-01`;
+        const lastDayOfMonth = new Date(dateObj.y, dateObj.m, 0);
+        return lastDayOfMonth.toISOString().split('T')[0];
       }
 
       // Si no funciona, podría ser una fecha en formato timestamp
@@ -65,10 +64,8 @@ function extractDateFromValue(value: any): string | null {
         // Evitar confundir con otros números pequeños
         const date = new Date(value);
         if (!isNaN(date.getTime())) {
-          return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-            2,
-            "0"
-          )}-01`;
+          const lastDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 0);
+          return lastDayOfMonth.toISOString().split('T')[0];
         }
       }
     } catch (e) {
@@ -83,14 +80,17 @@ function extractDateFromValue(value: any): string | null {
   // Caso 3: Es una cadena de texto
   if (typeof value === "string") {
     const dateStr = value.trim();
-
+      
     // Intentar varios formatos comunes
 
     // Formato YYYY-MM o YYYY-MM-DD
     if (dateStr.match(/^\d{4}-\d{2}(?:-\d{2})?$/)) {
       // Si ya tiene formato YYYY-MM, añadir día
       if (dateStr.length === 7) {
-        return `${dateStr}-01`;
+        const year = parseInt(dateStr.substring(0, 4));
+        const month = parseInt(dateStr.substring(5, 7));
+        const lastDayOfMonth = new Date(year, month, 0);
+        return lastDayOfMonth.toISOString().split('T')[0];
       }
       // Si ya es YYYY-MM-DD, devolver directamente
       return dateStr;
@@ -109,7 +109,8 @@ function extractDateFromValue(value: any): string | null {
           year = `20${year}`;
         }
 
-        return `${year}-${month}-01`;
+        const lastDayOfMonth = new Date(parseInt(year), parseInt(month), 0);
+        return lastDayOfMonth.toISOString().split('T')[0];
       }
     }
 
@@ -119,7 +120,8 @@ function extractDateFromValue(value: any): string | null {
     if (ddmmyyyyMatch) {
       const month = ddmmyyyyMatch[2].padStart(2, "0");
       const year = ddmmyyyyMatch[3];
-      return `${year}-${month}-01`; // Usamos siempre día 1 para consistencia
+      const lastDayOfMonth = new Date(parseInt(year), parseInt(month), 0);
+      return lastDayOfMonth.toISOString().split('T')[0];
     }
 
     // Formato MM.YYYY o MM.YY
@@ -134,7 +136,8 @@ function extractDateFromValue(value: any): string | null {
           year = `20${year}`;
         }
 
-        return `${year}-${month}-01`;
+        const lastDayOfMonth = new Date(parseInt(year), parseInt(month), 0);
+        return lastDayOfMonth.toISOString().split('T')[0];
       }
     }
 
@@ -186,16 +189,16 @@ function extractDateFromValue(value: any): string | null {
     }
 
     if (foundMonth !== -1 && foundYear) {
-      return `${foundYear}-${String(foundMonth + 1).padStart(2, "0")}-01`;
+      const lastDayOfMonth = new Date(parseInt(foundYear), foundMonth, 0);
+      return lastDayOfMonth.toISOString().split('T')[0];
     }
 
     // Último intento: usar Date.parse
     try {
       const parsedDate = new Date(dateStr);
       if (!isNaN(parsedDate.getTime())) {
-        return `${parsedDate.getFullYear()}-${String(
-          parsedDate.getMonth() + 1
-        ).padStart(2, "0")}-01`;
+        const lastDayOfMonth = new Date(parsedDate.getFullYear(), parsedDate.getMonth(), 0);
+        return lastDayOfMonth.toISOString().split('T')[0];
       }
     } catch (e) {
       // Ignorar errores de parseo
@@ -482,10 +485,8 @@ export async function fetchIPCData(): Promise<Omit<IpcRow, "id">[]> {
           }
 
           // Crear fecha ISO
-          const date = `${targetYear}-${String(targetMonth + 1).padStart(
-            2,
-            "0"
-          )}-01`;
+          const lastDayOfMonth = new Date(targetYear, targetMonth, 0);
+          const date = lastDayOfMonth.toISOString().split('T')[0];
           dates.unshift(date); // Añadir al inicio para mantener orden cronológico
         }
       }
