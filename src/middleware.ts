@@ -16,7 +16,8 @@ export function middleware(request: NextRequest) {
     '/api/calendar',
     '/api/not-found',
     '/api-docs',
-    '/api/stats'
+    '/api/stats',
+    '/api/cron/update-indec-data'
   ];
   
   // Verificar si la ruta comienza con /api pero no es una ruta conocida

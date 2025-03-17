@@ -81,14 +81,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={`${clearSans.variable} ${jetbrainsMono.variable} ${righteous.variable}`}>
-      <body>    
+      <body>
         <AppWrapper>
-     
-        <NavBar />
-
+          <NavBar />
           {children}
-        <CtaFooter />
-          
+          <CtaFooter />
         </AppWrapper>
       </body>
     </html>

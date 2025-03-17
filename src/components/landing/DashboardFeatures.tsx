@@ -3,7 +3,6 @@
 import { motion } from "framer-motion"
 import { LineChart, ArrowRight } from "lucide-react"
 import Link from "next/link"
-
 import { Button } from "@/components/ui/button"
 import DashboardPreview from "@/components/DashboardPreview"
 
