@@ -33,6 +33,33 @@ export type Database = {
         }
         Relationships: []
       }
+      dollar_rates: {
+        Row: {
+          buy_price: number
+          created_at: string | null
+          date: string
+          dollar_type: string
+          id: string
+          sell_price: number
+        }
+        Insert: {
+          buy_price: number
+          created_at?: string | null
+          date: string
+          dollar_type: string
+          id?: string
+          sell_price: number
+        }
+        Update: {
+          buy_price?: number
+          created_at?: string | null
+          date?: string
+          dollar_type?: string
+          id?: string
+          sell_price?: number
+        }
+        Relationships: []
+      }
       economic_calendar: {
         Row: {
           date: string

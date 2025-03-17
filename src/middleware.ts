@@ -11,11 +11,15 @@ export function middleware(request: NextRequest) {
     '/api/emae/latest',
     '/api/emae/metadata',
     '/api/emae/sectors',
+    '/api/dollar',
+    '/api/dollar/latest',
+    '/api/dollar/metadata',
     '/api/calendar',
     '/api/not-found',
     '/api-docs',
     '/api/stats',
-    '/api/cron/update-indec-data'
+    '/api/cron/update-indec-data',
+    '/api/cron/update-dollar-data'
   ];
   
   // Verificar si la ruta comienza con /api pero no es una ruta conocida

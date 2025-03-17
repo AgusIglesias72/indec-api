@@ -440,6 +440,149 @@ export const ipcEndpoints: ApiEndpoint[] = [
   }
 ];
 
+export const dollarEndpoints: ApiEndpoint[] = [
+  {
+    method: "GET",
+    path: "/api/dollar",
+    description: "Obtiene datos históricos de cotizaciones de dólar",
+    parameters: [
+      { name: "start_date", type: "string", required: false, description: "Fecha de inicio (YYYY-MM-DD)" },
+      { name: "end_date", type: "string", required: false, description: "Fecha de fin (YYYY-MM-DD)" },
+      { name: "type", type: "string", required: false, description: "Tipo de dólar (CCL, MEP, BLUE, OFICIAL, MAYORISTA, CRYPTO, TARJETA) o múltiples tipos separados por comas" },
+      { name: "format", type: "string", required: false, description: "Formato de respuesta: 'json' (por defecto) o 'csv'" }
+    ],
+    notes: [
+      "Los datos se ordenan por fecha descendente (más recientes primero).",
+      "Al solicitar formato CSV (format=csv), los datos se devuelven en formato UTF-8 con BOM.",
+      "Si no se especifica un tipo de dólar, se devuelven datos para todos los tipos disponibles.",
+      "Se pueden solicitar múltiples tipos de dólar separados por comas (ej. type=BLUE,OFICIAL).",
+      "Los filtros de fecha permiten obtener datos para un período específico."
+    ],
+    responseExample: `{
+  "data": [
+    {
+      "date": "2025-03-15",
+      "dollar_type": "BLUE",
+      "buy_price": 1235.00,
+      "sell_price": 1255.00,
+      "variation_buy": null,
+      "variation_sell": null,
+      "last_updated": "2025-03-15T18:30:45.123Z"
+    },
+    {
+      "date": "2025-03-15",
+      "dollar_type": "OFICIAL",
+      "buy_price": 1065.50,
+      "sell_price": 1085.50,
+      "variation_buy": null,
+      "variation_sell": null,
+      "last_updated": "2025-03-15T18:30:45.123Z"
+    }
+  ],
+  "metadata": {
+    "count": 2,
+    "filtered_by": {
+      "start_date": "2025-03-15",
+      "end_date": "2025-03-15",
+      "dollar_type": "BLUE,OFICIAL"
+    }
+  }
+}`
+  },
+  {
+    method: "GET",
+    path: "/api/dollar/latest",
+    description: "Obtiene las últimas cotizaciones de dólar disponibles",
+    parameters: [
+      { name: "type", type: "string", required: false, description: "Tipo específico de dólar (CCL, MEP, BLUE, OFICIAL, MAYORISTA, CRYPTO, TARJETA)" }
+    ],
+    notes: [
+      "Si no se especifica un tipo, devuelve las últimas cotizaciones de todos los tipos de dólar.",
+      "Si se especifica un tipo, devuelve solo la última cotización de ese tipo.",
+      "Incluye el spread (diferencia porcentual) entre precio de compra y venta.",
+      "La respuesta se cachea por 5 minutos para garantizar datos actualizados."
+    ],
+    responseExample: `{
+  "data": [
+    {
+      "date": "2025-03-15",
+      "dollar_type": "BLUE",
+      "buy_price": 1235.00,
+      "sell_price": 1255.00,
+      "spread": 1.62,
+      "last_updated": "2025-03-15T18:30:45.123Z"
+    },
+    {
+      "date": "2025-03-15",
+      "dollar_type": "OFICIAL",
+      "buy_price": 1065.50,
+      "sell_price": 1085.50,
+      "spread": 1.88,
+      "last_updated": "2025-03-15T18:30:45.123Z"
+    }
+  ],
+  "metadata": {
+    "count": 7,
+    "last_updated": "2025-03-15T18:30:45.123Z",
+    "dollar_type": "ALL"
+  }
+}`
+  },
+  {
+    method: "GET",
+    path: "/api/dollar/metadata",
+    description: "Obtiene metadatos sobre las cotizaciones de dólar disponibles",
+    parameters: [],
+    notes: [
+      "Proporciona información sobre los tipos de dólar disponibles con sus nombres descriptivos.",
+      "Incluye el rango de fechas disponibles y la cantidad de días con datos.",
+      "Detalla la frecuencia de actualización y los formatos disponibles."
+    ],
+    responseExample: `{
+  "dollar_types": [
+    {
+      "code": "BLUE",
+      "name": "Dólar Blue (informal)",
+      "count": 220
+    },
+    {
+      "code": "CCL",
+      "name": "Contado con Liquidación",
+      "count": 220
+    },
+    {
+      "code": "MEP",
+      "name": "Mercado Electrónico de Pagos (Bolsa)",
+      "count": 220
+    },
+    {
+      "code": "OFICIAL",
+      "name": "Dólar Oficial",
+      "count": 220
+    }
+  ],
+  "date_range": {
+    "first_date": "2024-09-01",
+    "last_date": "2025-03-15",
+    "days_count": 196
+  },
+  "metadata": {
+    "data_source": "Argentina Datos API",
+    "last_updated": "2025-03-15T18:30:45.123Z",
+    "available_formats": ["json", "csv"],
+    "endpoints": {
+      "main": "/api/dollar",
+      "latest": "/api/dollar/latest",
+      "metadata": "/api/dollar/metadata"
+    },
+    "refresh_frequency": {
+      "data_update": "Daily (Business days)",
+      "api_cache": "15 minutes"
+    }
+  }
+}`
+  }
+];
 // Configuración de las pestañas con los grupos de endpoints
 export const apiGroups: ApiGroup[] = [
   {
@@ -459,5 +602,11 @@ export const apiGroups: ApiGroup[] = [
     title: "API de IPC",
     description: "Índice de Precios al Consumidor - Datos generales y por categorías",
     endpoints: ipcEndpoints
+  },
+  {
+    id: "dollar",
+    title: "API de Cotizaciones",
+    description: "Cotizaciones de dólar y otras divisas - Datos históricos y actuales",
+    endpoints: dollarEndpoints
   }
 ];

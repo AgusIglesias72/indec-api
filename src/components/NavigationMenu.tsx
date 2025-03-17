@@ -48,14 +48,15 @@ export function MainNavigation() {
           </NavigationMenuContent>
         </NavigationMenuItem>
 
-          <NavigationMenuItem>
-            <Link href="/api-docs" legacyBehavior passHref>
+        <NavigationMenuItem>
+            <Link href="/cotizaciones" legacyBehavior passHref>
               <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                API Docs
+                Cotizaciones
               </NavigationMenuLink>
             </Link>
           </NavigationMenuItem>
 
+       
         <NavigationMenuItem>
           <Link href="/calendario" legacyBehavior passHref>
             <NavigationMenuLink className={navigationMenuTriggerStyle()}>
@@ -63,14 +64,15 @@ export function MainNavigation() {
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>
-
         <NavigationMenuItem>
-          <Link href="/acerca-de" legacyBehavior passHref>
-            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-              Acerca de
-            </NavigationMenuLink>
-          </Link>
-        </NavigationMenuItem>
+            <Link href="/api-docs" legacyBehavior passHref>
+              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                API Docs
+              </NavigationMenuLink>
+            </Link>
+          </NavigationMenuItem>
+
+       
       </NavigationMenuList>
     </NavigationMenu>
   )
