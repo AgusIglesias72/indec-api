@@ -131,9 +131,9 @@ async function fetchEmaeData(): Promise<Omit<EmaeRow, 'id'>[]> {
         }
       }
       
-      // Crear fecha ISO
-      const lastDayOfMonth = new Date(currentYear, parseInt(monthMap[monthStr]) - 1, 0);
-      const date = lastDayOfMonth.toISOString().split('T')[0];
+// Crear fecha ISO
+const lastDayOfMonth = new Date(currentYear, parseInt(monthMap[monthStr]), 0);
+const date = lastDayOfMonth.toISOString().split('T')[0];
       
       // Agregar registro procesado
       processedData.push({
@@ -309,9 +309,9 @@ async function fetchEmaeByActivityData(): Promise<Omit<EmaeByActivityInsert, 'id
         // Si no tenemos un año válido, no podemos procesar esta fila
         if (currentYear === null) continue;
         
-        // Crear fecha ISO
-        const lastDayOfMonth = new Date(currentYear, parseInt(monthMap[monthStr]) - 1, 0);
-        const date = lastDayOfMonth.toISOString().split('T')[0];
+// Crear fecha ISO
+const lastDayOfMonth = new Date(currentYear, parseInt(monthMap[monthStr]), 0);
+const date = lastDayOfMonth.toISOString().split('T')[0];
         
         // Procesar cada sector para esta fecha
         for (const sector of sectors) {

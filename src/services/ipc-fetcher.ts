@@ -43,10 +43,19 @@ function generateCodeFromName(name: string): string {
  * @returns Fecha en formato ISO o null si no se pudo extraer
  */
 function extractDateFromValue(value: any): string | null {
+  // Función auxiliar para obtener el último día de un mes específico
+  function getLastDayOfMonth(year: number, month: number): string {
+    // month es 1-12, crear una fecha para el primer día del siguiente mes
+    // y restar 1 día para obtener el último día del mes actual
+    const lastDay = new Date(year, month, 0);
+    return `${year}-${String(month).padStart(2, "0")}-${String(lastDay.getDate()).padStart(2, "0")}`;
+  }
+
   // Caso 1: Es un objeto Date
   if (value instanceof Date) {
-    const lastDayOfMonth = new Date(value.getFullYear(), value.getMonth(), 0);
-    return lastDayOfMonth.toISOString().split('T')[0];
+    const year = value.getFullYear();
+    const month = value.getMonth() + 1; // getMonth() devuelve 0-11
+    return getLastDayOfMonth(year, month);
   }
 
   // Caso 2: Es un número (posiblemente número de serie de Excel)
@@ -55,8 +64,7 @@ function extractDateFromValue(value: any): string | null {
       // Intentar convertir número a fecha según el formato de Excel
       const dateObj = XLSX.SSF.parse_date_code(value);
       if (dateObj && dateObj.y && dateObj.m) {
-        const lastDayOfMonth = new Date(dateObj.y, dateObj.m, 0);
-        return lastDayOfMonth.toISOString().split('T')[0];
+        return getLastDayOfMonth(dateObj.y, dateObj.m);
       }
 
       // Si no funciona, podría ser una fecha en formato timestamp
@@ -64,8 +72,9 @@ function extractDateFromValue(value: any): string | null {
         // Evitar confundir con otros números pequeños
         const date = new Date(value);
         if (!isNaN(date.getTime())) {
-          const lastDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 0);
-          return lastDayOfMonth.toISOString().split('T')[0];
+          const year = date.getFullYear();
+          const month = date.getMonth() + 1;
+          return getLastDayOfMonth(year, month);
         }
       }
     } catch (e) {
@@ -85,12 +94,11 @@ function extractDateFromValue(value: any): string | null {
 
     // Formato YYYY-MM o YYYY-MM-DD
     if (dateStr.match(/^\d{4}-\d{2}(?:-\d{2})?$/)) {
-      // Si ya tiene formato YYYY-MM, añadir día
+      // Si ya tiene formato YYYY-MM, añadir el último día del mes
       if (dateStr.length === 7) {
         const year = parseInt(dateStr.substring(0, 4));
         const month = parseInt(dateStr.substring(5, 7));
-        const lastDayOfMonth = new Date(year, month, 0);
-        return lastDayOfMonth.toISOString().split('T')[0];
+        return getLastDayOfMonth(year, month);
       }
       // Si ya es YYYY-MM-DD, devolver directamente
       return dateStr;
@@ -101,16 +109,15 @@ function extractDateFromValue(value: any): string | null {
       const parts = dateStr.split("/");
       if (parts.length === 2) {
         // Asumimos que el primer número es el mes y el segundo el año
-        const month = parts[0].padStart(2, "0");
-        let year = parts[1];
+        const month = parseInt(parts[0]);
+        let year = parseInt(parts[1]);
 
         // Si el año tiene 2 dígitos, asumir 2000+
-        if (year.length === 2) {
-          year = `20${year}`;
+        if (parts[1].length === 2) {
+          year = 2000 + year;
         }
 
-        const lastDayOfMonth = new Date(parseInt(year), parseInt(month), 0);
-        return lastDayOfMonth.toISOString().split('T')[0];
+        return getLastDayOfMonth(year, month);
       }
     }
 
@@ -118,55 +125,32 @@ function extractDateFromValue(value: any): string | null {
     const ddmmyyyyRegex = /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/;
     const ddmmyyyyMatch = dateStr.match(ddmmyyyyRegex);
     if (ddmmyyyyMatch) {
-      const month = ddmmyyyyMatch[2].padStart(2, "0");
-      const year = ddmmyyyyMatch[3];
-      const lastDayOfMonth = new Date(parseInt(year), parseInt(month), 0);
-      return lastDayOfMonth.toISOString().split('T')[0];
+      const month = parseInt(ddmmyyyyMatch[2]);
+      const year = parseInt(ddmmyyyyMatch[3]);
+      return getLastDayOfMonth(year, month);
     }
 
     // Formato MM.YYYY o MM.YY
     if (dateStr.includes(".")) {
       const parts = dateStr.split(".");
       if (parts.length === 2) {
-        const month = parts[0].padStart(2, "0");
-        let year = parts[1];
+        const month = parseInt(parts[0]);
+        let year = parseInt(parts[1]);
 
         // Si el año tiene 2 dígitos, asumir 2000+
-        if (year.length === 2) {
-          year = `20${year}`;
+        if (parts[1].length === 2) {
+          year = 2000 + year;
         }
 
-        const lastDayOfMonth = new Date(parseInt(year), parseInt(month), 0);
-        return lastDayOfMonth.toISOString().split('T')[0];
+        return getLastDayOfMonth(year, month);
       }
     }
 
     // Si tiene nombre del mes, intentar parsearlo
     const monthNames = [
-      "enero",
-      "febrero",
-      "marzo",
-      "abril",
-      "mayo",
-      "junio",
-      "julio",
-      "agosto",
-      "septiembre",
-      "octubre",
-      "noviembre",
-      "diciembre",
-      "ene",
-      "feb",
-      "mar",
-      "abr",
-      "may",
-      "jun",
-      "jul",
-      "ago",
-      "sep",
-      "oct",
-      "nov",
-      "dic",
+      "enero", "febrero", "marzo", "abril", "mayo", "junio",
+      "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+      "ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic",
     ];
 
     const lowerDateStr = dateStr.toLowerCase();
@@ -189,16 +173,16 @@ function extractDateFromValue(value: any): string | null {
     }
 
     if (foundMonth !== -1 && foundYear) {
-      const lastDayOfMonth = new Date(parseInt(foundYear), foundMonth, 0);
-      return lastDayOfMonth.toISOString().split('T')[0];
+      return getLastDayOfMonth(parseInt(foundYear), foundMonth + 1);
     }
 
     // Último intento: usar Date.parse
     try {
       const parsedDate = new Date(dateStr);
       if (!isNaN(parsedDate.getTime())) {
-        const lastDayOfMonth = new Date(parsedDate.getFullYear(), parsedDate.getMonth(), 0);
-        return lastDayOfMonth.toISOString().split('T')[0];
+        const year = parsedDate.getFullYear();
+        const month = parsedDate.getMonth() + 1;
+        return getLastDayOfMonth(year, month);
       }
     } catch (e) {
       // Ignorar errores de parseo

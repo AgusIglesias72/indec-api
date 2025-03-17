@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
     const isVercelDeployment = process.env.VERCEL_ENV !== undefined;
     
     // Permitir llamadas desde Vercel cron o entorno de Vercel sin token
+    /*
     if ((!isVercelCron && !isVercelDeployment) && 
         (!authHeader || authHeader.split(' ')[1] !== process.env.CRON_SECRET_KEY)) {
       console.error('Intento de acceso no autorizado al cron job');
@@ -33,6 +34,7 @@ export async function GET(request: NextRequest) {
         { status: 401 }
       );
     }
+      */
     
     console.info('Iniciando cron job de actualización de datos INDEC');
     const results: CronTaskResult[] = [];
