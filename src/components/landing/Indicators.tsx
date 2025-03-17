@@ -12,8 +12,8 @@ import {
   useHistoricalEmaeData,
   useHistoricalIPCData 
 } from "@/hooks/useApiData"
-import EmaeMonthlyBarChart from "@/components/charts/EmaeMonthlyBarChart"
-import IPCDualAxisChart from "@/components/charts/IPCDualAxisChart"
+import EmaeEnhancedChart from "@/components/charts/EmaeEnhancedChart"
+import IPCEnhancedChart from "@/components/charts/IPCEnhancedChart"
 import { useAppData } from '@/lib/DataProvider';
 import ActivitySectorTabContent from "@/components/ActivityTab"
 
@@ -95,135 +95,135 @@ export default function Indicators() {
             </div>
             
             <TabsContent value="emae">
-              <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-center">
-                <div className="lg:col-span-2">
-                  <h3 className="text-2xl font-bold text-indec-blue-dark mb-4 text-center lg:text-left">
-                    EMAE 
-                    <br />
-                    <span className="text-indec-gray-dark text-base font-normal">
-                    Estimador Mensual de Actividad Económica
-                    </span>
-                  </h3>
+  <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-center">
+    <div className="lg:col-span-2">
+      <h3 className="text-2xl font-bold text-indec-blue-dark mb-4 text-center lg:text-left">
+        EMAE 
+        <br />
+        <span className="text-indec-gray-dark text-base font-normal">
+        Estimador Mensual de Actividad Económica
+        </span>
+      </h3>
 
-                  {emaeLoading ? (
-                    <Skeleton className="h-5 w-48 mb-6" />
-                  ) : (
-                    <p className="text-indec-gray-dark mb-6 text-center lg:text-left">
-                      <span className="font-medium">Último dato disponible:</span> {formatDate(emaeData?.date)}
-                    </p>
-                  )}
-                  
-                  <p className="text-indec-gray-dark mb-6 text-center lg:text-left">
-                    El EMAE refleja la evolución mensual de la actividad económica de los sectores productivos a nivel nacional, permitiendo anticipar las tasas de variación del PIB.
-                  </p>
-                  
-                  <div className="grid grid-cols-3 gap-4 mb-6">
-                    {emaeLoading ? (
-                      <>
-                        <Skeleton className="h-24 w-full rounded-lg" />
-                        <Skeleton className="h-24 w-full rounded-lg" />
-                        <Skeleton className="h-24 w-full rounded-lg" />
-                      </>
-                    ) : (
-                      <>
-                        <Card className="border border-indec-gray-medium/30 shadow-sm">
-                          <CardHeader className="p-3 pb-1">
-                            <CardTitle className="text-xs font-medium text-indec-gray-dark flex items-center gap-1">
-                              Último valor
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Info className="h-3 w-3 text-indec-gray-dark/70" />
-                                  </TooltipTrigger>
-                                  <TooltipContent className="max-w-sm">
-                                    <p>Valor del índice en la serie original.</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="p-3 pt-0">
-                            <DataMetric 
-                              label="" 
-                              value={`${emaeError ? "N/A" : emaeData?.original_value?.toFixed(1) || "N/A"}`} 
-                              trend={emaeData && emaeData.original_value > 0 ? "up" : "down"} 
-                              className="text-xl font-bold"
-                            
-                            />
-                          </CardContent>
-                        </Card>
-                        
-                        <Card className="border border-indec-gray-medium/30 shadow-sm">
-                          <CardHeader className="p-3 pb-1">
-                            <CardTitle className="text-xs font-medium text-indec-gray-dark flex items-center gap-1">
-                              Var. m/m (desest.)
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Info className="h-3 w-3 text-indec-gray-dark/70" />
-                                  </TooltipTrigger>
-                                  <TooltipContent className="max-w-sm">
-                                    <p>Variación respecto al mes anterior (serie desestacionalizada).</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="p-3 pt-0">
-                            <DataMetric 
-                              label="" 
-                              value={`${emaeError ? "N/A" : (emaeData?.monthly_pct_change?.toFixed(1) || "N/A")}%`} 
-                              trend={emaeData && emaeData.monthly_pct_change > 0 ? "up" : "down"} 
-                              className="text-xl font-bold"
-                            />
-                          </CardContent>
-                        </Card>
-                        
-                        <Card className="border border-indec-gray-medium/30 shadow-sm">
-                          <CardHeader className="p-3 pb-1">
-                            <CardTitle className="text-xs font-medium text-indec-gray-dark flex items-center gap-1">
-                              Var. i/a
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Info className="h-3 w-3 text-indec-gray-dark/70" />
-                                  </TooltipTrigger>
-                                  <TooltipContent className="max-w-sm">
-                                    <p>Variación respecto al mismo mes del año anterior.</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="p-3 pt-0">
-                            <DataMetric 
-                              label="" 
-                              value={`${emaeError ? "N/A" : (emaeData?.yearly_pct_change?.toFixed(1) || "N/A")}%`} 
-                              trend={emaeData && emaeData.yearly_pct_change > 0 ? "up" : "down"}
-                              className="text-xl font-bold" 
-                            />
-                          </CardContent>
-                        </Card>
-                      </>
-                    )}
-                  </div>
-                  <Button asChild className="gap-2 w-full lg:w-auto">
-                    <Link href="/indicadores/emae">
-                      Ver análisis completo <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                </div>
-                <div className="lg:col-span-3 bg-white shadow-md  border border-indec-gray-medium/30 rounded-lg p-4 h-auto">
-                  {/* Usar el nuevo gráfico de variaciones mensuales con altura personalizada */}
-                  <EmaeMonthlyBarChart 
-                    data={emaeHistorical} 
-                    loading={emaeHistoricalLoading} 
-                    error={emaeHistoricalError}
-                    height={220} 
-                  />
-                </div>
-              </div>
-            </TabsContent>
+      {emaeLoading ? (
+        <Skeleton className="h-5 w-48 mb-6" />
+      ) : (
+        <p className="text-indec-gray-dark mb-6 text-center lg:text-left">
+          <span className="font-medium">Último dato disponible:</span> {formatDate(emaeData?.date)}
+        </p>
+      )}
+      
+      <p className="text-indec-gray-dark mb-6 text-center lg:text-left">
+        El EMAE refleja la evolución mensual de la actividad económica de los sectores productivos a nivel nacional, permitiendo anticipar las tasas de variación del PIB.
+      </p>
+      
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        {emaeLoading ? (
+          <>
+            <Skeleton className="h-24 w-full rounded-lg" />
+            <Skeleton className="h-24 w-full rounded-lg" />
+            <Skeleton className="h-24 w-full rounded-lg" />
+          </>
+        ) : (
+          <>
+            <Card className="border border-indec-gray-medium/30 shadow-sm">
+              <CardHeader className="p-3 pb-1">
+                <CardTitle className="text-xs font-medium text-indec-gray-dark flex items-center gap-1">
+                  Último valor
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-3 w-3 text-indec-gray-dark/70" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-sm">
+                        <p>Valor del índice en la serie original.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-3 pt-0">
+                <DataMetric 
+                  label="" 
+                  value={`${emaeError ? "N/A" : emaeData?.original_value?.toFixed(1) || "N/A"}`} 
+                  trend={emaeData && emaeData.original_value > 0 ? "up" : "down"} 
+                  className="text-xl font-bold"
+                
+                />
+              </CardContent>
+            </Card>
+            
+            <Card className="border border-indec-gray-medium/30 shadow-sm">
+              <CardHeader className="p-3 pb-1">
+                <CardTitle className="text-xs font-medium text-indec-gray-dark flex items-center gap-1">
+                  Var. m/m (desest.)
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-3 w-3 text-indec-gray-dark/70" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-sm">
+                        <p>Variación respecto al mes anterior (serie desestacionalizada).</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-3 pt-0">
+                <DataMetric 
+                  label="" 
+                  value={`${emaeError ? "N/A" : (emaeData?.monthly_pct_change?.toFixed(1) || "N/A")}%`} 
+                  trend={emaeData && emaeData.monthly_pct_change > 0 ? "up" : "down"} 
+                  className="text-xl font-bold"
+                />
+              </CardContent>
+            </Card>
+            
+            <Card className="border border-indec-gray-medium/30 shadow-sm">
+              <CardHeader className="p-3 pb-1">
+                <CardTitle className="text-xs font-medium text-indec-gray-dark flex items-center gap-1">
+                  Var. i/a
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-3 w-3 text-indec-gray-dark/70" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-sm">
+                        <p>Variación respecto al mismo mes del año anterior.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-3 pt-0">
+                <DataMetric 
+                  label="" 
+                  value={`${emaeError ? "N/A" : (emaeData?.yearly_pct_change?.toFixed(1) || "N/A")}%`} 
+                  trend={emaeData && emaeData.yearly_pct_change > 0 ? "up" : "down"}
+                  className="text-xl font-bold" 
+                />
+              </CardContent>
+            </Card>
+          </>
+        )}
+      </div>
+      <Button asChild className="gap-2 w-full lg:w-auto">
+        <Link href="/indicadores/emae">
+          Ver análisis completo <ArrowRight className="h-4 w-4" />
+        </Link>
+      </Button>
+    </div>
+    <div className="lg:col-span-3 bg-white shadow-md border border-indec-gray-medium/30 rounded-lg p-4 h-auto">
+      {/* Reemplazar EmaeMonthlyBarChart por el nuevo EmaeEnhancedChart */}
+      <EmaeEnhancedChart 
+        data={emaeHistorical} 
+        loading={emaeHistoricalLoading} 
+        error={emaeHistoricalError}
+        height={220} 
+      />
+    </div>
+  </div>
+</TabsContent>
             
             <TabsContent value="ipc">
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-center">
@@ -342,9 +342,9 @@ export default function Indicators() {
                     </Link>
                   </Button>
                 </div>
-                <div className="lg:col-span-3 bg-white shadow-md  border border-indec-gray-medium/30 rounded-lg p-4 h-auto">
-                  {/* Gráfico del IPC */}
-                  <IPCDualAxisChart 
+                <div className="lg:col-span-3 bg-white shadow-md border border-indec-gray-medium/30 rounded-lg p-4 h-auto">
+                  {/* Reemplazar IPCDualAxisChart por el nuevo IPCEnhancedChart */}
+                  <IPCEnhancedChart 
                     data={ipcHistorical} 
                     loading={ipcHistoricalLoading} 
                     error={ipcHistoricalError} 
