@@ -17,7 +17,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, ChevronDown } from "lucide-react";
 
 // Interfaces
 interface IPCEnhancedChartProps {
@@ -33,7 +33,8 @@ interface TimeRange {
   years: number;
 }
 
-interface RubroOption {
+interface ComponentOption {
+  type: string;
   code: string;
   name: string;
   color: string;
@@ -69,21 +70,24 @@ export default function IPCEnhancedChart({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [timeRange, setTimeRange] = useState<string>("1");
   const [variationType, setVariationType] = useState<'monthly' | 'yearly'>('monthly');
-  const [selectedRubro, setSelectedRubro] = useState<string>("GENERAL");
+  const [selectedComponent, setSelectedComponent] = useState<string>("GENERAL");
   const [selectedRegion, setSelectedRegion] = useState<string>("Nacional");
 
-  // Rangos de tiempo disponibles
+  // Rangos de tiempo disponibles (actualizados a 1, 3, 5 y 10 años)
   const timeRanges: TimeRange[] = [
     { id: "1", label: "1 año", years: 1 },
     { id: "3", label: "3 años", years: 3 },
-    { id: "6", label: "6 años", years: 6 }
+    { id: "5", label: "5 años", years: 5 },
+    { id: "10", label: "10 años", years: 10 }
   ];
 
-  // Opciones de rubros con colores y gradientes
-  const rubroOptions: RubroOption[] = [
+  // Componentes del IPC con colores y gradientes
+  const componentOptions: ComponentOption[] = [
+    // Nivel General
     {
+      type: "GENERAL",
       code: "GENERAL",
-      name: "Nivel General",
+      name: "Nivel general",
       color: "#3b82f6",
       gradient: {
         id: "generalGradient",
@@ -93,9 +97,78 @@ export default function IPCEnhancedChart({
         ]
       }
     },
+    // Bienes y Servicios
     {
+      type: "BYS",
+      code: "BYS_BIENES",
+      name: "Bienes",
+      color: "#22c55e",
+      gradient: {
+        id: "bienesGradient",
+        colors: [
+          { offset: "0%", color: "#22c55e", opacity: "0.7" },
+          { offset: "95%", color: "#22c55e", opacity: "0.05" }
+        ]
+      }
+    },
+    {
+      type: "BYS",
+      code: "BYS_SERVICIOS",
+      name: "Servicios",
+      color: "#f59e0b",
+      gradient: {
+        id: "serviciosGradient",
+        colors: [
+          { offset: "0%", color: "#f59e0b", opacity: "0.7" },
+          { offset: "95%", color: "#f59e0b", opacity: "0.05" }
+        ]
+      }
+    },
+    // Categorías
+    {
+      type: "CATEGORIA",
+      code: "CAT_ESTACIONAL",
+      name: "Estacional",
+      color: "#a855f7",
+      gradient: {
+        id: "estacionalGradient",
+        colors: [
+          { offset: "0%", color: "#a855f7", opacity: "0.7" },
+          { offset: "95%", color: "#a855f7", opacity: "0.05" }
+        ]
+      }
+    },
+    {
+      type: "CATEGORIA",
+      code: "CAT_NUCLEO",
+      name: "Núcleo",
+      color: "#ec4899",
+      gradient: {
+        id: "nucleoGradient",
+        colors: [
+          { offset: "0%", color: "#ec4899", opacity: "0.7" },
+          { offset: "95%", color: "#ec4899", opacity: "0.05" }
+        ]
+      }
+    },
+    {
+      type: "CATEGORIA",
+      code: "CAT_REGULADOS",
+      name: "Regulados",
+      color: "#6366f1",
+      gradient: {
+        id: "reguladosGradient",
+        colors: [
+          { offset: "0%", color: "#6366f1", opacity: "0.7" },
+          { offset: "95%", color: "#6366f1", opacity: "0.05" }
+        ]
+      }
+    },
+    // Rubros
+    {
+      type: "RUBRO",
       code: "RUBRO_ALIMENTOS",
-      name: "Alimentos y bebidas",
+      name: "Alimentos y bebidas no alcohólicas",
       color: "#10b981",
       gradient: {
         id: "alimentosGradient",
@@ -106,8 +179,22 @@ export default function IPCEnhancedChart({
       }
     },
     {
-      code: "RUBRO_INDUMENTARIA",
-      name: "Indumentaria",
+      type: "RUBRO",
+      code: "RUBRO_BEB_ALC_Y_TAB",
+      name: "Bebidas alcohólicas y tabaco",
+      color: "#f43f5e",
+      gradient: {
+        id: "alcoholGradient",
+        colors: [
+          { offset: "0%", color: "#f43f5e", opacity: "0.7" },
+          { offset: "95%", color: "#f43f5e", opacity: "0.05" }
+        ]
+      }
+    },
+    {
+      type: "RUBRO",
+      code: "RUBRO_PRE_DE_VES_Y_CAL",
+      name: "Prendas de vestir y calzado",
       color: "#f97316",
       gradient: {
         id: "indumentariaGradient",
@@ -118,8 +205,9 @@ export default function IPCEnhancedChart({
       }
     },
     {
+      type: "RUBRO",
       code: "RUBRO_VIVIENDA",
-      name: "Vivienda",
+      name: "Vivienda, agua, electricidad, gas y otros combustibles",
       color: "#8b5cf6",
       gradient: {
         id: "viviendaGradient",
@@ -130,8 +218,9 @@ export default function IPCEnhancedChart({
       }
     },
     {
+      type: "RUBRO",
       code: "RUBRO_EQUIPAMIENTO",
-      name: "Equipamiento del hogar",
+      name: "Equipamiento y mantenimiento del hogar",
       color: "#ec4899",
       gradient: {
         id: "equipamientoGradient",
@@ -142,6 +231,7 @@ export default function IPCEnhancedChart({
       }
     },
     {
+      type: "RUBRO",
       code: "RUBRO_SALUD",
       name: "Salud",
       color: "#ef4444",
@@ -154,6 +244,7 @@ export default function IPCEnhancedChart({
       }
     },
     {
+      type: "RUBRO",
       code: "RUBRO_TRANSPORTE",
       name: "Transporte",
       color: "#64748b",
@@ -166,6 +257,33 @@ export default function IPCEnhancedChart({
       }
     },
     {
+      type: "RUBRO",
+      code: "RUBRO_COMUNICACION",
+      name: "Comunicación",
+      color: "#06b6d4",
+      gradient: {
+        id: "comunicacionGradient",
+        colors: [
+          { offset: "0%", color: "#06b6d4", opacity: "0.7" },
+          { offset: "95%", color: "#06b6d4", opacity: "0.05" }
+        ]
+      }
+    },
+    {
+      type: "RUBRO",
+      code: "RUBRO_RECREACION_Y_CULTURA",
+      name: "Recreación y cultura",
+      color: "#0ea5e9",
+      gradient: {
+        id: "recreacionGradient",
+        colors: [
+          { offset: "0%", color: "#0ea5e9", opacity: "0.7" },
+          { offset: "95%", color: "#0ea5e9", opacity: "0.05" }
+        ]
+      }
+    },
+    {
+      type: "RUBRO",
       code: "RUBRO_EDUCACION",
       name: "Educación",
       color: "#0ea5e9",
@@ -174,6 +292,32 @@ export default function IPCEnhancedChart({
         colors: [
           { offset: "0%", color: "#0ea5e9", opacity: "0.7" },
           { offset: "95%", color: "#0ea5e9", opacity: "0.05" }
+        ]
+      }
+    },
+    {
+      type: "RUBRO",
+      code: "RUBRO_RESTAURANTES",
+      name: "Restaurantes y hoteles",
+      color: "#14b8a6",
+      gradient: {
+        id: "restaurantesGradient",
+        colors: [
+          { offset: "0%", color: "#14b8a6", opacity: "0.7" },
+          { offset: "95%", color: "#14b8a6", opacity: "0.05" }
+        ]
+      }
+    },
+    {
+      type: "RUBRO",
+      code: "RUBRO_BIE_Y_SER_VAR",
+      name: "Bienes y servicios varios",
+      color: "#84cc16",
+      gradient: {
+        id: "bienesServiciosGradient",
+        colors: [
+          { offset: "0%", color: "#84cc16", opacity: "0.7" },
+          { offset: "95%", color: "#84cc16", opacity: "0.05" }
         ]
       }
     }
@@ -190,6 +334,22 @@ export default function IPCEnhancedChart({
     { code: "Patagonia", name: "Patagonia" }
   ];
 
+  // Obtener componentes agrupados por tipo
+  const getGroupedComponents = () => {
+    const grouped: Record<string, ComponentOption[]> = {};
+    
+    componentOptions.forEach(comp => {
+      if (!grouped[comp.type]) {
+        grouped[comp.type] = [];
+      }
+      grouped[comp.type].push(comp);
+    });
+    
+    return grouped;
+  };
+
+  const groupedComponents = getGroupedComponents();
+
   // Cargar datos según filtros seleccionados
   const fetchData = async () => {
     try {
@@ -204,7 +364,7 @@ export default function IPCEnhancedChart({
       const startDateStr = startDate.toISOString().split('T')[0];
       
       // Obtener datos del IPC desde la API
-      const url = `/api/ipc?start_date=${startDateStr}&end_date=${endDate}&category=${selectedRubro}&region=${selectedRegion}`;
+      const url = `/api/ipc?start_date=${startDateStr}&end_date=${endDate}&category=${selectedComponent}&region=${selectedRegion}`;
       
       const response = await fetch(url);
       
@@ -228,14 +388,17 @@ export default function IPCEnhancedChart({
             "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
           ];
           const month = monthNames[date.getMonth()];
-          const year = date.getFullYear();
+          const year = date.getFullYear().toString().substring(2); // Solo los últimos 2 dígitos
+          
+          // Formato de fecha simplificado "Mar 24"
+          const formattedDate = `${month} ${year}`;
           
           return {
             date: item.date,
-            formattedDate: `${date.getDate()} ${month} ${year.toString().substring(2)}`,
+            formattedDate: formattedDate,
             monthlyChange: monthlyChange,
             yearlyChange: yearlyChange,
-            rubro: selectedRubro,
+            component: selectedComponent,
             region: selectedRegion
           };
         });
@@ -260,13 +423,19 @@ export default function IPCEnhancedChart({
   // Cargar datos iniciales
   useEffect(() => {
     fetchData();
-  }, [timeRange, selectedRubro, selectedRegion, variationType]);
+  }, [timeRange, selectedComponent, selectedRegion, variationType]);
 
   // Componente personalizado para el tooltip
   const CustomTooltip = ({ active, payload, label, variationType }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
       const item = payload[0].payload;
+      
+      // Determinar qué valor mostrar según el tipo de variación
       const value = variationType === 'monthly' ? item.monthlyChange : item.yearlyChange;
+      const valueLabel = variationType === 'monthly' ? 'Variación mensual' : 'Variación interanual';
+      
+      // Formatear el valor
+      const formattedValue = `${value.toFixed(1)}%`;
       
       return (
         <div className="bg-white p-3 border rounded-md shadow-md">
@@ -275,13 +444,11 @@ export default function IPCEnhancedChart({
             <div 
               className="w-3 h-3 rounded-full"
               style={{ 
-                backgroundColor: rubroOptions.find(r => r.code === selectedRubro)?.color || '#3b82f6'
+                backgroundColor: componentOptions.find(c => c.code === selectedComponent)?.color || '#3b82f6'
               }}
             />
-            <span className="text-sm text-gray-700">
-              {variationType === 'monthly' ? 'Var. mensual' : 'Var. interanual'}:
-            </span>
-            <span className="text-sm font-medium">{value.toFixed(1)}%</span>
+            <span className="text-sm text-gray-700">{valueLabel}:</span>
+            <span className="text-sm font-medium">{formattedValue}</span>
           </div>
         </div>
       );
@@ -289,7 +456,7 @@ export default function IPCEnhancedChart({
     return null;
   };
 
-  // Formatear fechas para el eje X
+  // Formatear fechas para el eje X (Nuevo formato: "Mar 24")
   const formatXAxis = (dateStr: string) => {
     const date = new Date(dateStr);
     
@@ -299,18 +466,26 @@ export default function IPCEnhancedChart({
       "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
     ];
     
-    // Formato: "19 Mar"
-    return `${date.getDate()} ${monthNames[date.getMonth()]}`;
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear().toString().substring(2); // Últimos 2 dígitos
+    
+    // Formato simplificado: "Mar 24"
+    return `${month} ${year}`;
   };
 
-  // Obtener el color del rubro seleccionado
-  const getSelectedRubroColor = () => {
-    return rubroOptions.find(r => r.code === selectedRubro)?.color || '#3b82f6';
+  // Obtener el color del componente seleccionado
+  const getSelectedComponentColor = () => {
+    return componentOptions.find(c => c.code === selectedComponent)?.color || '#3b82f6';
   };
 
-  // Obtener el ID del gradiente para el rubro seleccionado
-  const getSelectedRubroGradientId = () => {
-    return rubroOptions.find(r => r.code === selectedRubro)?.gradient.id || 'generalGradient';
+  // Obtener el ID del gradiente para el componente seleccionado
+  const getSelectedComponentGradientId = () => {
+    return componentOptions.find(c => c.code === selectedComponent)?.gradient.id || 'generalGradient';
+  };
+
+  // Obtener el nombre del componente seleccionado para mostrar en la leyenda
+  const getSelectedComponentName = () => {
+    return componentOptions.find(c => c.code === selectedComponent)?.name || 'Nivel general';
   };
 
   // Renderizar componente
@@ -323,15 +498,31 @@ export default function IPCEnhancedChart({
           
           <div className="flex flex-col md:flex-row justify-between gap-4 mt-2">
             <div className="flex flex-col sm:flex-row gap-2">
-              <Select value={selectedRubro} onValueChange={setSelectedRubro}>
-                <SelectTrigger className="w-full sm:w-[200px]">
-                  <SelectValue placeholder="Seleccionar rubro" />
+              <Select value={selectedComponent} onValueChange={setSelectedComponent}>
+                <SelectTrigger className="w-full sm:w-[240px]">
+                  <SelectValue placeholder="Seleccionar componente" />
                 </SelectTrigger>
-                <SelectContent>
-                  {rubroOptions.map(rubro => (
-                    <SelectItem key={rubro.code} value={rubro.code}>
-                      {rubro.name}
-                    </SelectItem>
+                <SelectContent className="max-h-96">
+                  {/* Agrupar componentes por tipo */}
+                  {Object.keys(groupedComponents).map(type => (
+                    <div key={type}>
+                      <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 bg-gray-50">
+                        {type === "GENERAL" ? "General" : 
+                         type === "BYS" ? "Bienes y Servicios" : 
+                         type === "CATEGORIA" ? "Categorías" : "Rubros"}
+                      </div>
+                      {groupedComponents[type].map(component => (
+                        <SelectItem key={component.code} value={component.code}>
+                          <div className="flex items-center">
+                            <div 
+                              className="w-2 h-2 rounded-full mr-2" 
+                              style={{ backgroundColor: component.color }}
+                            />
+                            {component.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </div>
                   ))}
                 </SelectContent>
               </Select>
@@ -396,13 +587,13 @@ export default function IPCEnhancedChart({
               >
                 {/* Definir gradientes para las áreas */}
                 <defs>
-                  {rubroOptions.map(rubro => (
+                  {componentOptions.map(component => (
                     <linearGradient 
-                      key={rubro.gradient.id} 
-                      id={rubro.gradient.id} 
+                      key={component.gradient.id} 
+                      id={component.gradient.id} 
                       x1="0" y1="0" x2="0" y2="1"
                     >
-                      {rubro.gradient.colors.map((color, index) => (
+                      {component.gradient.colors.map((color, index) => (
                         <stop 
                           key={index}
                           offset={color.offset} 
@@ -437,11 +628,11 @@ export default function IPCEnhancedChart({
                 <Area 
                   type="monotone" 
                   dataKey={variationType === 'monthly' ? 'monthlyChange' : 'yearlyChange'}
-                  name={variationType === 'monthly' ? 'Variación mensual' : 'Variación interanual'}
-                  stroke={getSelectedRubroColor()}
+                  name={`${getSelectedComponentName()} - ${variationType === 'monthly' ? 'Var. Mensual' : 'Var. Interanual'}`}
+                  stroke={getSelectedComponentColor()}
                   strokeWidth={2}
                   fillOpacity={1}
-                  fill={`url(#${getSelectedRubroGradientId()})`}
+                  fill={`url(#${getSelectedComponentGradientId()})`}
                   activeDot={{ r: 6, strokeWidth: 1, stroke: '#fff' }}
                 />
               </AreaChart>

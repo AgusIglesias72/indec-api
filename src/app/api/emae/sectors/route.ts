@@ -104,7 +104,8 @@ export async function GET(request: NextRequest) {
       economy_sector: item.sector || '',
       economy_sector_code: item.sector_code || '',
       original_value: item.original_value || 0,
-      year_over_year_change: includeVariations ? (item.yearly_pct_change || 0) : undefined
+      year_over_year_change: includeVariations ? (item.yearly_pct_change || 0) : undefined,
+
     })) || [];
     
     // Si se solicita formato CSV, responder con CSV

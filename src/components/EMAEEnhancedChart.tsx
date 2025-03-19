@@ -71,11 +71,12 @@ export default function EMAEEnhancedChart({
   const [viewType, setViewType] = useState<string>("index");
   const [selectedSector, setSelectedSector] = useState<string>("GENERAL");
 
-  // Rangos de tiempo disponibles
+  // Rangos de tiempo disponibles (actualizados a 1, 3, 5 y 10 años)
   const timeRanges: TimeRange[] = [
     { id: "1", label: "1 año", years: 1 },
     { id: "3", label: "3 años", years: 3 },
-    { id: "6", label: "6 años", years: 6 }
+    { id: "5", label: "5 años", years: 5 },
+    { id: "10", label: "10 años", years: 10 }
   ];
 
   // Tipos de visualización disponibles
@@ -101,7 +102,7 @@ export default function EMAEEnhancedChart({
     },
     {
       code: "A",
-      name: "Agricultura y ganadería",
+      name: "Agricultura, ganadería, caza y silvicultura",
       color: "#10b981",
       gradient: {
         id: "agriculturaGradient",
@@ -125,7 +126,7 @@ export default function EMAEEnhancedChart({
     },
     {
       code: "C",
-      name: "Minería",
+      name: "Explotación de minas y canteras",
       color: "#f97316",
       gradient: {
         id: "mineriaGradient",
@@ -173,13 +174,121 @@ export default function EMAEEnhancedChart({
     },
     {
       code: "G",
-      name: "Comercio",
+      name: "Comercio mayorista, minorista y reparaciones",
       color: "#64748b",
       gradient: {
         id: "comercioGradient",
         colors: [
           { offset: "0%", color: "#64748b", opacity: "0.7" },
           { offset: "95%", color: "#64748b", opacity: "0.05" }
+        ]
+      }
+    },
+    {
+      code: "H",
+      name: "Hoteles y restaurantes",
+      color: "#0ea5e9",
+      gradient: {
+        id: "hotelesGradient",
+        colors: [
+          { offset: "0%", color: "#0ea5e9", opacity: "0.7" },
+          { offset: "95%", color: "#0ea5e9", opacity: "0.05" }
+        ]
+      }
+    },
+    {
+      code: "I",
+      name: "Transporte y comunicaciones",
+      color: "#22c55e",
+      gradient: {
+        id: "transporteGradient",
+        colors: [
+          { offset: "0%", color: "#22c55e", opacity: "0.7" },
+          { offset: "95%", color: "#22c55e", opacity: "0.05" }
+        ]
+      }
+    },
+    {
+      code: "J",
+      name: "Intermediación financiera",
+      color: "#a855f7",
+      gradient: {
+        id: "financieraGradient",
+        colors: [
+          { offset: "0%", color: "#a855f7", opacity: "0.7" },
+          { offset: "95%", color: "#a855f7", opacity: "0.05" }
+        ]
+      }
+    },
+    {
+      code: "K",
+      name: "Actividades inmobiliarias, empresariales y de alquiler",
+      color: "#f59e0b",
+      gradient: {
+        id: "inmobiliariasGradient",
+        colors: [
+          { offset: "0%", color: "#f59e0b", opacity: "0.7" },
+          { offset: "95%", color: "#f59e0b", opacity: "0.05" }
+        ]
+      }
+    },
+    {
+      code: "L",
+      name: "Administración pública y defensa",
+      color: "#0284c7",
+      gradient: {
+        id: "administracionGradient",
+        colors: [
+          { offset: "0%", color: "#0284c7", opacity: "0.7" },
+          { offset: "95%", color: "#0284c7", opacity: "0.05" }
+        ]
+      }
+    },
+    {
+      code: "M",
+      name: "Enseñanza",
+      color: "#6366f1",
+      gradient: {
+        id: "ensenanzaGradient",
+        colors: [
+          { offset: "0%", color: "#6366f1", opacity: "0.7" },
+          { offset: "95%", color: "#6366f1", opacity: "0.05" }
+        ]
+      }
+    },
+    {
+      code: "N",
+      name: "Servicios sociales y de salud",
+      color: "#14b8a6",
+      gradient: {
+        id: "saludGradient",
+        colors: [
+          { offset: "0%", color: "#14b8a6", opacity: "0.7" },
+          { offset: "95%", color: "#14b8a6", opacity: "0.05" }
+        ]
+      }
+    },
+    {
+      code: "O",
+      name: "Otras actividades de servicios",
+      color: "#d946ef",
+      gradient: {
+        id: "otrosServiciosGradient",
+        colors: [
+          { offset: "0%", color: "#d946ef", opacity: "0.7" },
+          { offset: "95%", color: "#d946ef", opacity: "0.05" }
+        ]
+      }
+    },
+    {
+      code: "P",
+      name: "Impuestos netos de subsidios",
+      color: "#78716c",
+      gradient: {
+        id: "impuestosGradient",
+        colors: [
+          { offset: "0%", color: "#78716c", opacity: "0.7" },
+          { offset: "95%", color: "#78716c", opacity: "0.05" }
         ]
       }
     }
@@ -235,11 +344,14 @@ export default function EMAEEnhancedChart({
             "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
           ];
           const month = monthNames[date.getMonth()];
-          const year = date.getFullYear();
+          const year = date.getFullYear().toString().substring(2); // Sólo los últimos 2 dígitos
+          
+          // Crear formato de fecha simplificado para mostrar (por ejemplo, "Mar 24")
+          const formattedDate = `${month} ${year}`;
           
           return {
             date: item.date,
-            formattedDate: `${date.getDate()} ${month} ${year.toString().substring(2)}`,
+            formattedDate: formattedDate,
             indexValue: indexValue,
             monthlyChange: monthlyChange,
             yearlyChange: yearlyChange,
@@ -312,7 +424,7 @@ export default function EMAEEnhancedChart({
     return null;
   };
 
-  // Formatear fechas para el eje X
+  // Formatear fechas para el eje X (Nuevo formato: "Mar 24")
   const formatXAxis = (dateStr: string) => {
     const date = new Date(dateStr);
     
@@ -322,8 +434,11 @@ export default function EMAEEnhancedChart({
       "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
     ];
     
-    // Formato: "19 Mar"
-    return `${date.getDate()} ${monthNames[date.getMonth()]}`;
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear().toString().substring(2); // Últimos 2 dígitos
+    
+    // Formato simplificado: "Mar 24"
+    return `${month} ${year}`;
   };
 
   // Obtener el color del sector seleccionado
