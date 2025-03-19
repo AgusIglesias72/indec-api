@@ -139,7 +139,12 @@ export default function DollarRatesCard({
         <CardTitle className="text-center">{title}</CardTitle>
         <CardDescription className="text-center">{description}</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1">
+      <div className="text-xs text-indec-gray-dark grid grid-cols-3 px-3 mb-2 ">
+            <div></div>
+            <div className="text-right">Compra</div>
+            <div className="text-right">Venta</div>
+          </div>
         <div className="space-y-4">
           {dollarRates.map((rate, index) => (
             <motion.div
@@ -160,27 +165,13 @@ export default function DollarRatesCard({
           ))}
 
           {/* Leyenda */}
-          <div className="text-xs text-indec-gray-dark grid grid-cols-3 px-3 mt-2">
-            <div></div>
-            <div className="text-right">Compra</div>
-            <div className="text-right">Venta</div>
-          </div>
+         
         </div>
       </CardContent>
       <CardFooter className="flex justify-between">
         <div className="text-xs text-indec-gray-dark">
           {lastUpdated ? `Actualizado: ${lastUpdated}` : 'Datos actualizados diariamente'}
-        </div>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="flex items-center gap-1"
-          onClick={fetchData}
-          disabled={isRefreshing}
-        >
-          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          <span className="hidden md:inline">Actualizar</span>
-        </Button>
+        </div>  
       </CardFooter>
     </Card>
   );

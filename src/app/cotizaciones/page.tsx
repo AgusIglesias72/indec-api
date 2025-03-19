@@ -3,10 +3,7 @@
 import React from 'react';
 import HeroSection from '@/components/HeroSection';
 import DollarRatesCard from '@/components/DollarRatesCard';
-import DollarRatesChart from '@/components/charts/DollarRatesChart';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DollarType } from '@/types/dollar';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import EnhancedDollarChart from '@/components/EnhancedDollarChart';
 
 export default function CotizacionesPage() {
   return (
@@ -15,8 +12,18 @@ export default function CotizacionesPage() {
         title="Cotizaciones de Dólar" 
         subtitle="Seguimiento de los principales tipos de cambio en Argentina"
       />
+
+             
+         {/* Patrón de puntos sutiles */}
+         <div 
+          className="absolute inset-0 opacity-[0.85] pointer-events-none"
+          style={{
+            backgroundImage: 'radial-gradient(circle, #d0d0d0 1px, transparent 1px)',
+            backgroundSize: '24px 24px',
+          }}
+        ></div>
       
-      <div className="container mx-auto px-4 py-8 relative z-10">
+      <div className="container mx-auto px-4 py-8 relative z-10 max-w-6xl">
         {/* Sección: Cotizaciones actuales */}
         <div className="mb-10">
           <h2 className="text-2xl font-bold text-indec-blue-dark mb-6">Cotizaciones actuales</h2>
@@ -25,7 +32,7 @@ export default function CotizacionesPage() {
               title="Dólares Financieros"
               description="Cotizaciones actualizadas de dólares financieros"
               showTypes={['MEP', 'CCL', 'CRYPTO']}
-
+              className="flex flex-col justify-between"
             />
             
             <DollarRatesCard 
@@ -36,174 +43,19 @@ export default function CotizacionesPage() {
           </div>
         </div>
         
-        {/* Sección: Análisis histórico */}
-        <div>
+        {/* Sección: Análisis histórico con gráfico interactivo */}
+        <div className="mb-16">
           <h2 className="text-2xl font-bold text-indec-blue-dark mb-6">Análisis histórico</h2>
-          
-          <Tabs defaultValue="comparativa" className="w-full">
-            <TabsList className="grid grid-cols-3 w-full md:w-auto md:max-w-md mb-6">
-              <TabsTrigger value="comparativa">Comparativa</TabsTrigger>
-              <TabsTrigger value="financieros">Financieros</TabsTrigger>
-              <TabsTrigger value="referencia">Referencia</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="comparativa">
-              <div className="space-y-8">
-                <DollarRatesChart 
-                  title="Comparativa de Dólares"
-                  description="Evolución de las principales cotizaciones"
-                  types={['BLUE', 'OFICIAL', 'CCL', 'MEP']}
-                  days={60}
-                  showBuy={false}
-                  showSell={true}
-                />
-                
-                <div className="grid md:grid-cols-2 gap-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Brecha cambiaria</CardTitle>
-                      <CardDescription>Diferencia porcentual entre dólar blue y oficial</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <DollarRatesChart 
-                        title=""
-                        description=""
-                        types={['BLUE', 'OFICIAL']}
-                        days={120}
-                        height={250}
-                        showBuy={false}
-                        showSell={true}
-                      />
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Dólar Oficial</CardTitle>
-                      <CardDescription>Evolución de la cotización oficial</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <DollarRatesChart 
-                        title=""
-                        description=""
-                        types={['OFICIAL']}
-                        days={180}
-                        height={250}
-                        showBuy={true}
-                        showSell={true}
-                      />
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="financieros">
-              <div className="space-y-8">
-                <DollarRatesChart 
-                  title="Dólares Financieros"
-                  description="Evolución de las cotizaciones financieras"
-                  types={['MEP', 'CCL', 'CRYPTO']}
-                  days={90}
-                  showBuy={false}
-                  showSell={true}
-                />
-                
-                <div className="grid md:grid-cols-2 gap-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Dólar MEP</CardTitle>
-                      <CardDescription>Mercado Electrónico de Pagos</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <DollarRatesChart 
-                        title=""
-                        description=""
-                        types={['MEP']}
-                        days={180}
-                        height={250}
-                        showBuy={true}
-                        showSell={true}
-                      />
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Dólar CCL</CardTitle>
-                      <CardDescription>Contado con Liquidación</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <DollarRatesChart 
-                        title=""
-                        description=""
-                        types={['CCL']}
-                        days={180}
-                        height={250}
-                        showBuy={true}
-                        showSell={true}
-                      />
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="referencia">
-              <div className="space-y-8">
-                <DollarRatesChart 
-                  title="Dólares de Referencia"
-                  description="Evolución de las cotizaciones de referencia"
-                  types={['BLUE', 'OFICIAL', 'MAYORISTA', 'TARJETA']}
-                  days={90}
-                  showBuy={false}
-                  showSell={true}
-                />
-                
-                <div className="grid md:grid-cols-2 gap-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Dólar Blue</CardTitle>
-                      <CardDescription>Cotización informal</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <DollarRatesChart 
-                        title=""
-                        description=""
-                        types={['BLUE']}
-                        days={180}
-                        height={250}
-                        showBuy={true}
-                        showSell={true}
-                      />
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Dólar Tarjeta</CardTitle>
-                      <CardDescription>Para compras con tarjeta en el exterior</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <DollarRatesChart 
-                        title=""
-                        description=""
-                        types={['TARJETA']}
-                        days={180}
-                        height={250}
-                        showBuy={false}
-                        showSell={true}
-                      />
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
+          <EnhancedDollarChart 
+            title="Evolución de cotizaciones"
+            description="Selecciona el rango de tiempo y los tipos de dólar para visualizar"
+            height={450}
+            darkMode={false}
+          />
         </div>
         
         {/* Sección: Información adicional */}
-        <div className="mt-12 mb-8">
+        <div className="mb-8">
           <h2 className="text-2xl font-bold text-indec-blue-dark mb-6">Información sobre los tipos de dólar</h2>
           
           <div className="grid md:grid-cols-2 gap-8">
