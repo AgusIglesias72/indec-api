@@ -5,7 +5,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import AppWrapper from "@/lib/AppWrapper";
 import NavBar from "@/components/landing/Navbar"
-import CtaFooter from "@/components/landing/CTAFooter";
+import Footer from "@/components/landing/CTAFooter";
 
 const clearSans = localFont({
   src: [
@@ -85,7 +85,7 @@ export default function RootLayout({
         <AppWrapper>
           <NavBar />
           {children}
-          <CtaFooter />
+          <Footer />
         </AppWrapper>
       </body>
     </html>

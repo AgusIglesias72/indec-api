@@ -36,6 +36,7 @@ interface TimeRange {
 interface ViewType {
   id: string;
   label: string;
+  onlyGeneral?: boolean;
 }
 
 interface SectorOption {
@@ -74,15 +75,17 @@ export default function EMAEEnhancedChart({
   // Rangos de tiempo disponibles (actualizados a 1, 3, 5 y 10 años)
   const timeRanges: TimeRange[] = [
     { id: "1", label: "1 año", years: 1 },
-    { id: "3", label: "3 años", years: 3 },
     { id: "5", label: "5 años", years: 5 },
-    { id: "10", label: "10 años", years: 10 }
+    { id: "10", label: "10 años", years: 10 },
+    { id: "20", label: "20 años", years: 20 }
+
+
   ];
 
   // Tipos de visualización disponibles
   const viewTypes: ViewType[] = [
     { id: "index", label: "Índice" },
-    { id: "monthly", label: "Var. Mensual" },
+    { id: "monthly", label: "Var. Mensual", onlyGeneral: true },
     { id: "yearly", label: "Var. Interanual" }
   ];
 
@@ -294,7 +297,22 @@ export default function EMAEEnhancedChart({
     }
   ];
 
-  // Cargar datos según filtros seleccionados
+  // Cambiar automáticamente la visualización si se selecciona un sector que no soporta variación mensual
+  useEffect(() => {
+    // Si se selecciona un sector que no es GENERAL y la visualización es mensual,
+    // cambiar automáticamente a visualización de índice
+    if (selectedSector !== 'GENERAL' && viewType === 'monthly') {
+      console.log('Cambiando automáticamente a visualización de índice');
+      setViewType('index');
+    }
+  }, [selectedSector, viewType]);
+
+  // Cargar datos iniciales
+  useEffect(() => {
+    fetchData();
+  }, [timeRange, selectedSector, viewType]);
+
+  // Obtener datos según filtros seleccionados
   const fetchData = async () => {
     try {
       setIsRefreshing(true);
@@ -306,6 +324,16 @@ export default function EMAEEnhancedChart({
       const startDate = new Date();
       startDate.setFullYear(startDate.getFullYear() - years);
       const startDateStr = startDate.toISOString().split('T')[0];
+      
+      // Verificar si estamos intentando obtener variación mensual para un sector que no es GENERAL
+      if (viewType === 'monthly' && selectedSector !== 'GENERAL') {
+        // Solo mostrar error pero continuar con la solicitud para el nivel general
+        console.log('Intentando visualizar variación mensual para sector no general, redirigiendo...');
+        setTimeout(() => {
+          setViewType('index');
+        }, 0);
+        setError('Las variaciones mensuales solo están disponibles para el Nivel General');
+      }
       
       // Determinar si necesitamos datos generales o por sector
       let url = '';
@@ -375,11 +403,6 @@ export default function EMAEEnhancedChart({
       setIsRefreshing(false);
     }
   };
-
-  // Cargar datos iniciales
-  useEffect(() => {
-    fetchData();
-  }, [timeRange, selectedSector, viewType]);
 
   // Componente personalizado para el tooltip
   const CustomTooltip = ({ active, payload, label, viewType }: CustomTooltipProps) => {
@@ -484,6 +507,9 @@ export default function EMAEEnhancedChart({
       (value: number) => `${value}%`;
   };
 
+  // Verificar si el sector actual es GENERAL para habilitar la pestaña mensual
+  const showMonthlyTab = selectedSector === 'GENERAL';
+
   // Renderizar componente
   return (
     <Card className={className}>
@@ -492,28 +518,57 @@ export default function EMAEEnhancedChart({
           <CardTitle>{title}</CardTitle>
           <CardDescription>{description}</CardDescription>
           
+          {!showMonthlyTab && viewType === 'monthly' && (
+            <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-3 py-2 rounded-md mb-2 text-sm">
+              Las variaciones mensuales solo están disponibles para el Nivel General.
+            </div>
+          )}
+          
           <div className="flex flex-col md:flex-row justify-between gap-4 mt-2">
             <div className="flex flex-col sm:flex-row gap-2">
               <Select value={selectedSector} onValueChange={setSelectedSector}>
                 <SelectTrigger className="w-full sm:w-[200px]">
                   <SelectValue placeholder="Seleccionar sector" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-96">
                   {sectorOptions.map(sector => (
                     <SelectItem key={sector.code} value={sector.code}>
-                      {sector.name}
+                      <div className="flex items-center">
+                        <div 
+                          className="w-2 h-2 rounded-full mr-2" 
+                          style={{ backgroundColor: sector.color }}
+                        />
+                        {sector.name}
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               
-              <Tabs value={viewType} onValueChange={setViewType}>
+              <Tabs value={viewType} onValueChange={(value) => {
+                // Verificar si se está intentando seleccionar la variación mensual en un sector que no es GENERAL
+                if (value === 'monthly' && selectedSector !== 'GENERAL') {
+                  // Mostrar mensaje de error pero no cambiar
+                  setError('Las variaciones mensuales solo están disponibles para el Nivel General');
+                  return;
+                }
+                setViewType(value);
+                setError(null);
+              }}>
                 <TabsList>
-                  {viewTypes.map(type => (
-                    <TabsTrigger key={type.id} value={type.id} className="text-xs md:text-sm">
-                      {type.label}
-                    </TabsTrigger>
-                  ))}
+                  {viewTypes
+                    .filter(type => !type.onlyGeneral || selectedSector === 'GENERAL')
+                    .map(type => (
+                      <TabsTrigger 
+                        key={type.id} 
+                        value={type.id} 
+                        className="text-xs md:text-sm"
+                        disabled={type.onlyGeneral && selectedSector !== 'GENERAL'}
+                      >
+                        {type.label}
+                      </TabsTrigger>
+                    ))
+                  }
                 </TabsList>
               </Tabs>
             </div>
@@ -609,16 +664,7 @@ export default function EMAEEnhancedChart({
         <div className="text-xs text-gray-500">
           Fuente: INDEC
         </div>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="h-8"
-          onClick={fetchData}
-          disabled={isRefreshing}
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Actualizar
-        </Button>
+
       </CardFooter>
     </Card>
   );
