@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
         category_type: item.component_type || '',
         index_value: item.index_value || 0,
         region: item.region || '',
-        monthly_change_variation: 0
+        monthly_change_variation: item.monthly_pct_change || 0,
       };
       
       // Añadir variaciones solo si se solicitan

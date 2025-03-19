@@ -78,7 +78,7 @@ export default function IPCEnhancedChart({
     { id: "1", label: "1 año", years: 1 },
     { id: "3", label: "3 años", years: 3 },
     { id: "5", label: "5 años", years: 5 },
-    { id: "10", label: "10 años", years: 10 }
+    { id: "7", label: "7 años", years: 7 }
   ];
 
   // Componentes del IPC con colores y gradientes
