@@ -91,7 +91,7 @@ const CustomTooltip = ({ active, payload, label, viewType = 'variations' }: Cust
 
 // Componente de loading mejorado
 const ChartSkeleton = ({ height }: { height: number }) => (
-  <div className="w-full h-full flex flex-col justify-center items-center" style={{ height }}>
+  <div className="w-full h-full flex flex-col justify-bot items-center" style={{ height }}>
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -230,7 +230,7 @@ export default function EmaeEnhancedChart({
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={chartData}
-                  margin={{ top: 20, right: 20, left: 10, bottom: 20 }}
+                  margin={{ top: 20, right: 10, left: 10, bottom: 0 }}
                 >
                   <CartesianGrid 
                     vertical={false} 
@@ -283,7 +283,7 @@ export default function EmaeEnhancedChart({
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={chartData}
-                  margin={{ top: 20, right: 20, left: 10, bottom: 20 }}
+                  margin={{ top: 20, right: 10, left: 10, bottom: 0 }}
                 >
                   <defs>
                     <linearGradient id="blueGradient" x1="0" y1="0" x2="0" y2="1">
