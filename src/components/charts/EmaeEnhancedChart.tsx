@@ -4,22 +4,23 @@ import { useState, useMemo } from "react"
 import { 
   ResponsiveContainer, 
   LineChart,
-  BarChart, 
+  BarChart,
+  AreaChart,
+  Area,
   Bar, 
   Line, 
   XAxis, 
   YAxis, 
   CartesianGrid,
   Tooltip,
-  Legend,
-  LabelList,
   ReferenceLine,
   Cell
 } from "recharts"
+import { motion } from "framer-motion"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
-import { ChartTooltip } from "../ui/chart"
+import { TrendingUp, TrendingDown, BarChart3, Activity } from "lucide-react"
 
 interface EmaeEnhancedChartProps {
   data: any[] | null;
@@ -28,7 +29,7 @@ interface EmaeEnhancedChartProps {
   height?: number;
 }
 
-// Componente personalizado para el tooltip
+// Componente personalizado para el tooltip mejorado
 interface CustomTooltipProps {
   active?: boolean;
   payload?: any[];
@@ -38,7 +39,6 @@ interface CustomTooltipProps {
 
 const CustomTooltip = ({ active, payload, label, viewType = 'variations' }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
-    // Formato diferente según el tipo de vista
     if (viewType === 'variations') {
       const value = payload[0].value;
       const formattedValue = value !== undefined && value !== null 
@@ -46,30 +46,42 @@ const CustomTooltip = ({ active, payload, label, viewType = 'variations' }: Cust
         : '0.0%';
       
       return (
-        <div className="bg-white p-3 border rounded-md shadow-md">
-          <p className="text-sm text-gray-600">{label}</p>
-          <p className="font-medium">
-            <span className="text-gray-700">Var. m/m: </span>
-            <span className={value >= 0 ? "text-green-600" : "text-red-600"}>
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white p-4 border border-gray-200 rounded-xl shadow-lg backdrop-blur-sm"
+        >
+          <p className="text-sm text-gray-500 mb-1">{label}</p>
+          <div className="flex items-center gap-2">
+            {value >= 0 ? 
+              <TrendingUp className="h-4 w-4 text-green-600" /> : 
+              <TrendingDown className="h-4 w-4 text-red-600" />
+            }
+            <span className="font-semibold text-gray-700">Var. m/m:</span>
+            <span className={`font-bold ${value >= 0 ? "text-green-600" : "text-red-600"}`}>
               {formattedValue}
             </span>
-          </p>
-        </div>
+          </div>
+        </motion.div>
       );
     } else {
-      // Para la serie desestacionalizada
       return (
-        <div className="bg-white p-3 border rounded-md shadow-md">
-          <p className="text-sm text-gray-600">{label}</p>
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white p-4 border border-gray-200 rounded-xl shadow-lg backdrop-blur-sm"
+        >
+          <p className="text-sm text-gray-500 mb-2">{label}</p>
           {payload.map((entry, index) => (
-            <p key={index} className="font-medium">
-              <span className="text-gray-700">{entry.name}: </span>
-              <span style={{ color: entry.color }}>
+            <div key={index} className="flex items-center gap-2 mb-1">
+              <Activity className="h-4 w-4" style={{ color: entry.color }} />
+              <span className="font-semibold text-gray-700">{entry.name}:</span>
+              <span className="font-bold" style={{ color: entry.color }}>
                 {entry.value.toFixed(1)}
               </span>
-            </p>
+            </div>
           ))}
-        </div>
+        </motion.div>
       );
     }
   }
@@ -77,165 +89,255 @@ const CustomTooltip = ({ active, payload, label, viewType = 'variations' }: Cust
   return null;
 };
 
+// Componente de loading mejorado
+const ChartSkeleton = ({ height }: { height: number }) => (
+  <div className="w-full h-full flex flex-col justify-center items-center" style={{ height }}>
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="flex flex-col items-center gap-4"
+    >
+      <BarChart3 className="h-8 w-8 text-blue-300 animate-pulse" />
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-3 w-24" />
+      </div>
+      <div className="grid grid-cols-12 gap-1 w-full max-w-md">
+        {Array.from({ length: 12 }).map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{ height: 0 }}
+            animate={{ height: Math.random() * 60 + 20 }}
+            transition={{ delay: i * 0.1, duration: 0.5 }}
+            className="bg-blue-200 rounded-sm"
+          />
+        ))}
+      </div>
+    </motion.div>
+  </div>
+);
+
 export default function EmaeEnhancedChart({ 
   data, 
   loading, 
   error,
-  height = 280 
+  height = 320 
 }: EmaeEnhancedChartProps) {
-  // Estado para controlar el tipo de visualización
   const [viewType, setViewType] = useState<'series' | 'variations'>('variations');
 
   // Procesamos los datos para ambos tipos de visualización
   const chartData = useMemo(() => {
     if (!data || data.length === 0) return [];
 
-    // Ordenar datos por fecha
     const sortedData = [...data]
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      .slice(-12); // Últimos 12 meses
+      .slice(-12);
       
     return sortedData.map(item => {
-      // Extraer el mes y año de la fecha
       const date = new Date(item.date);
       const monthNames = [
         "Ene", "Feb", "Mar", "Abr", "May", "Jun",
         "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
       ];
       const month = monthNames[date.getMonth()];
-      const year = date.getFullYear().toString().slice(2); // Solo los últimos 2 dígitos del año
+      const year = date.getFullYear().toString().slice(2);
       
       return {
         month: `${month} ${year}`,
-        value: item.monthly_pct_change || 0, // Variación mensual
-        originalValue: item.original_value || 0, // Valor original
-        seriesValue: item.seasonally_adjusted_value || 0, // Serie desestacionalizada
+        value: item.monthly_pct_change || 0,
+        originalValue: item.original_value || 0,
+        seriesValue: item.seasonally_adjusted_value || 0,
         date: item.date
       };
     });
   }, [data]);
 
+  // Estados de loading y error mejorados
   if (loading) {
-    return (
-      <div className="w-full h-full flex items-center justify-center">
-        <Skeleton className="h-[350px] w-full" />
-      </div>
-    );
+    return <ChartSkeleton height={height} />;
   }
 
   if (error || !data || data.length === 0) {
     return (
-      <div className="w-full h-full flex items-center justify-center text-indec-gray-dark">
-        No se pudieron cargar los datos del EMAE
-      </div>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="w-full h-full flex flex-col items-center justify-center text-gray-500"
+        style={{ height }}
+      >
+        <BarChart3 className="h-12 w-12 text-gray-300 mb-3" />
+        <p className="text-center text-sm">
+          No se pudieron cargar los datos del EMAE
+        </p>
+        <p className="text-center text-xs text-gray-400 mt-1">
+          Verifica tu conexión e inténtalo nuevamente
+        </p>
+      </motion.div>
     );
   }
 
   return (
-    <Card className="border-0 shadow-none bg-transparent h-full">
-      <CardHeader className="px-0 pt-0">
-        <div className="flex justify-between items-center">
-          <div>
-            <CardTitle className="text-xl font-medium">EMAE (desestacionalizado)</CardTitle>
-            <CardDescription className="text-base">Últimos 12 meses disponibles</CardDescription>
-          </div>
-          <Tabs 
-            defaultValue="variations" 
-            className="w-auto"
-            onValueChange={(value) => setViewType(value as 'series' | 'variations')}
-          >
-            <TabsList className="bg-indec-gray-light">
-              <TabsTrigger value="variations" className="text-xs px-3">Variaciones</TabsTrigger>
-              <TabsTrigger value="series" className="text-xs px-3">Serie</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-      </CardHeader>
-      <CardContent className="p-0">
-        <div style={{ height: height }}>
-          {viewType === 'variations' ? (
-            // Gráfico de barras para las variaciones mensuales
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={chartData}
-                margin={{ top: 20, right: 5, left: 5, bottom: 5 }}
-              >
-                <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.2} />
-                <XAxis
-                  dataKey="month"
-                  tickLine={false}
-                  tickMargin={10}
-                  axisLine={true}
-                  fontSize={12}
-                />
-                <YAxis 
-                  tickLine={false}
-                  axisLine={true}
-                  fontSize={12}
-                  tickFormatter={(value) => `${value}%`}
-                  width={40}
-                />
-                {/* Línea de referencia en el valor 0 */}
-                <ReferenceLine y={0} stroke="#000" strokeWidth={1} />
-                {/* Usar el tooltip personalizado */}
-                <Tooltip content={<CustomTooltip viewType="variations" />} />
-                <Bar 
-                  dataKey="value" 
-                  name="Variación Mensual"
-                  fill="#22c55e" // Color base para las barras
-                  radius={[4, 4, 0, 0]}
-                  maxBarSize={30}
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="h-full"
+    >
+      <Card className="border-0 shadow-none bg-transparent h-full">
+        <CardHeader className="px-0 pt-0 pb-4">
+          <div className="flex justify-between items-start">
+            <div className="space-y-1">
+              <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-blue-600" />
+                EMAE (desestacionalizado)
+              </CardTitle>
+              <CardDescription className="text-sm text-gray-600">
+                Últimos 12 meses disponibles
+              </CardDescription>
+            </div>
+            <Tabs 
+              defaultValue="variations" 
+              className="w-auto"
+              onValueChange={(value) => setViewType(value as 'series' | 'variations')}
+            >
+              <TabsList className="bg-gray-100 border border-gray-200">
+                <TabsTrigger 
+                  value="variations" 
+                  className="text-xs px-3 py-1.5 data-[state=active]:bg-white data-[state=active]:shadow-sm"
                 >
-                  {/* Usar Cell para colorear cada barra individualmente */}
-                  {chartData.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={entry.value >= 0 ? "#22c55e" : "#ef4444"} 
-                    />
-                  ))}
-                 
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            // Gráfico de líneas para la serie desestacionalizada
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={chartData}
-                margin={{ top: 20, right: 5, left: 5, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis
-                  dataKey="month"
-                  tickLine={false}
-                  tickMargin={10}
-                  axisLine={true}
-
-                  fontSize={12}
-                />
-                <YAxis 
-                  tickLine={false}
-                  axisLine={true}
-                  fontSize={12}
-                  tickFormatter={(value) => `${value}`}
-                  width={40}
-                  domain={['auto', 'auto']}
-                />
-                <Tooltip content={<CustomTooltip viewType="series" />} />
-                <Line
-                  type="monotone"
-                  dataKey="seriesValue"
-                  name="Serie Desestacionalizada"
-                  stroke="#3b82f6"
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                  activeDot={{ r: 5 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+                  Variaciones
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="series" 
+                  className="text-xs px-3 py-1.5 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                >
+                  Serie
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="p-0">
+          <motion.div 
+            key={viewType}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+            style={{ height: height - 80 }}
+          >
+            {viewType === 'variations' ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={chartData}
+                  margin={{ top: 20, right: 20, left: 10, bottom: 20 }}
+                >
+                  <CartesianGrid 
+                    vertical={false} 
+                    strokeDasharray="3 3" 
+                    stroke="#e5e7eb" 
+                    opacity={0.6} 
+                  />
+                  <XAxis
+                    dataKey="month"
+                    tickLine={false}
+                    tickMargin={10}
+                    axisLine={{ stroke: "#d1d5db", strokeWidth: 1 }}
+                    tick={{ fontSize: 11, fill: "#6b7280" }}
+                    height={60}
+                  />
+                  <YAxis 
+                    tickLine={false}
+                    axisLine={{ stroke: "#d1d5db", strokeWidth: 1 }}
+                    tick={{ fontSize: 11, fill: "#6b7280" }}
+                    tickFormatter={(value) => `${value}%`}
+                    width={45}
+                  />
+                  <ReferenceLine 
+                    y={0} 
+                    stroke="#374151" 
+                    strokeWidth={1.5} 
+                    strokeDasharray="2 2"
+                    opacity={0.7}
+                  />
+                  <Tooltip 
+                    content={<CustomTooltip viewType="variations" />}
+                    cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
+                  />
+                  <Bar 
+                    dataKey="value" 
+                    name="Variación Mensual"
+                    radius={[3, 3, 0, 0]}
+                    maxBarSize={28}
+                  >
+                    {chartData.map((entry, index) => (
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={entry.value >= 0 ? "#10b981" : "#ef4444"} 
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={chartData}
+                  margin={{ top: 20, right: 20, left: 10, bottom: 20 }}
+                >
+                  <defs>
+                    <linearGradient id="blueGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                      <stop offset="50%" stopColor="#3b82f6" stopOpacity={0.4}/>
+                      <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid 
+                    strokeDasharray="3 3" 
+                    stroke="#e5e7eb" 
+                    opacity={0.6} 
+                  />
+                  <XAxis
+                    dataKey="month"
+                    tickLine={false}
+                    tickMargin={10}
+                    axisLine={{ stroke: "#d1d5db", strokeWidth: 1 }}
+                    tick={{ fontSize: 11, fill: "#6b7280" }}
+                    height={60}
+                  />
+                  <YAxis 
+                    tickLine={false}
+                    axisLine={{ stroke: "#d1d5db", strokeWidth: 1 }}
+                    tick={{ fontSize: 11, fill: "#6b7280" }}
+                    tickFormatter={(value) => value.toFixed(0)}
+                    width={45}
+                    domain={['dataMin - 2', 'dataMax + 2']}
+                  />
+                  <Tooltip 
+                    content={<CustomTooltip viewType="series" />}
+                    cursor={{ stroke: 'rgba(59, 130, 246, 0.3)', strokeWidth: 1 }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="seriesValue"
+                    stroke="#3b82f6"
+                    strokeWidth={3}
+                    fill="url(#blueGradient)"
+                    dot={{ r: 4, fill: "#3b82f6", strokeWidth: 2, stroke: "#ffffff" }}
+                    activeDot={{ 
+                      r: 6, 
+                      fill: "#3b82f6", 
+                      strokeWidth: 3, 
+                      stroke: "#ffffff",
+                      filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))"
+                    }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
+          </motion.div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
