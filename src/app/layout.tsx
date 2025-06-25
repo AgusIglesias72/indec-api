@@ -4,8 +4,9 @@ import { JetBrains_Mono, Righteous } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import AppWrapper from "@/lib/AppWrapper";
-import NavBar from "@/components/landing/Navbar"
+import NavBar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/CTAFooter";
+import { defaultMetadata } from "@/lib/metadata";
 
 const clearSans = localFont({
   src: [
@@ -54,10 +55,8 @@ const clearSans = localFont({
   display: 'swap',
 });
 
-export const metadata: Metadata = {
-  title: "EconoVista - Indicadores Económicos INDEC",
-  description: "Visualiza y accede a indicadores económicos oficiales de Argentina a través de una interfaz moderna y una API potente",
-};
+export const metadata: Metadata = defaultMetadata;
+
 
 // Mantener JetBrains_Mono para código
 const jetbrainsMono = JetBrains_Mono({

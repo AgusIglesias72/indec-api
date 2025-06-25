@@ -5,6 +5,10 @@ import CalendarView from '@/components/CalendarView';
 import MonthSelector from '@/components/MonthSelector';
 import HeroSection from '@/components/HeroSection';
 import { CalendarEvent } from '@/types/calendar';
+import { Metadata } from 'next';
+import { calendarMetadata } from '@/lib/metadata';
+
+export const metadata: Metadata = calendarMetadata;
 
 export default function CalendarPage() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);

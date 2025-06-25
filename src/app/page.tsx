@@ -1,9 +1,13 @@
-import HeaderHero from "@/components/landing/HeaderHero"
-import Stats from "@/components/landing/Stats"
-import Indicators from "@/components/landing/Indicators"
-import DashboardFeature from "@/components/landing/DashboardFeatures"
-import APISection from "@/components/landing/ApiSection"
-import Features from "@/components/landing/FeatureCards"
+// src/app/page.tsx (Home Page)
+import { Metadata } from 'next';
+import { homeMetadata } from '@/lib/metadata';
+import HeaderHero from "@/components/landing/HeaderHero";
+import Stats from "@/components/landing/Stats";
+import Indicators from "@/components/landing/Indicators";
+import DashboardFeature from "@/components/landing/DashboardFeatures";
+import APISection from "@/components/landing/ApiSection";
+
+export const metadata: Metadata = homeMetadata;
 
 export default function HomePage() {
   return (

@@ -5,13 +5,14 @@ import HeroSection from '@/components/HeroSection';
 import EMAEEnhancedChart from '@/components/EMAEEnhancedChart';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Info } from "lucide-react";
+import { Info } from "lucide-react";
 import DataMetric from "@/components/DataMetric";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import Link from 'next/link';
 import EMAESectorsTable from '@/components/EMAESectorsTable';
+import { Metadata } from 'next';
+import { emaeMetadata } from '@/lib/metadata';
 
+export const metadata: Metadata = emaeMetadata;
 export default function EMAEPage() {
   const [emaeData, setEmaeData] = useState<any>(null);
   const [sectorData, setSectorData] = useState<any[]>([]);

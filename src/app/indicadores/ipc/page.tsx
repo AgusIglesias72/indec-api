@@ -9,6 +9,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import DataMetric from "@/components/DataMetric";
 import { Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Metadata } from 'next';
+import { ipcMetadata } from '@/lib/metadata';
+
+export const metadata: Metadata = ipcMetadata;
 
 export default function IPCPage() {
   const [ipcData, setIpcData] = useState<any>(null);

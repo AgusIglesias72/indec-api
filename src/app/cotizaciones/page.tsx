@@ -4,6 +4,10 @@ import React from 'react';
 import HeroSection from '@/components/HeroSection';
 import DollarRatesCard from '@/components/DollarRatesCard';
 import EnhancedDollarChart from '@/components/EnhancedDollarChart';
+import { Metadata } from 'next';
+import { dollarMetadata } from '@/lib/metadata';
+
+export const metadata: Metadata = dollarMetadata;
 
 export default function CotizacionesPage() {
   return (

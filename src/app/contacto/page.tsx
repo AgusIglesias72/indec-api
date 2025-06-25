@@ -8,6 +8,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import HeroSection from '@/components/HeroSection';
+import { Metadata } from 'next';
+import { contactMetadata } from '@/lib/metadata';
+
+export const metadata: Metadata = contactMetadata;
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
