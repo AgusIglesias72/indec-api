@@ -5,10 +5,6 @@ import { apiGroups } from '@/data/api-endpoints';
 import PageHeader from '@/components/APIDocs/PageHeader';
 import ApiGeneralInfo from '@/components/APIDocs/ApiGeneralInfo';
 import ApiTabs from '@/components/APIDocs/ApiTabs';
-import { Metadata } from 'next';
-import { apiDocsMetadata } from '@/lib/metadata';
-
-export const metadata: Metadata = apiDocsMetadata;
 
 export default function ApiDocsPage() {
   const [baseUrl, setBaseUrl] = useState(process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.econovista.gov.ar/v1');

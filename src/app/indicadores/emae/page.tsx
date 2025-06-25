@@ -9,10 +9,7 @@ import { Info } from "lucide-react";
 import DataMetric from "@/components/DataMetric";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import EMAESectorsTable from '@/components/EMAESectorsTable';
-import { Metadata } from 'next';
-import { emaeMetadata } from '@/lib/metadata';
 
-export const metadata: Metadata = emaeMetadata;
 export default function EMAEPage() {
   const [emaeData, setEmaeData] = useState<any>(null);
   const [sectorData, setSectorData] = useState<any[]>([]);

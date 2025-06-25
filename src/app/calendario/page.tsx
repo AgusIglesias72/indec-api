@@ -5,10 +5,6 @@ import CalendarView from '@/components/CalendarView';
 import MonthSelector from '@/components/MonthSelector';
 import HeroSection from '@/components/HeroSection';
 import { CalendarEvent } from '@/types/calendar';
-import { Metadata } from 'next';
-import { calendarMetadata } from '@/lib/metadata';
-
-export const metadata: Metadata = calendarMetadata;
 
 export default function CalendarPage() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -53,8 +49,6 @@ export default function CalendarPage() {
   
   return (
     <div className="relative min-h-screen ">
-     
-      
       <HeroSection 
         title="Calendario INDEC" 
         subtitle="Mantente al día con los principales indicadores y publicaciones económicas"
