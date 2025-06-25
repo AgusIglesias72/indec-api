@@ -6,6 +6,7 @@ import Stats from "@/components/landing/Stats";
 import Indicators from "@/components/landing/Indicators";
 import DashboardFeature from "@/components/landing/DashboardFeatures";
 import APISection from "@/components/landing/ApiSection";
+import EconomicMetricsSection from '@/components/KPI';
 
 export const metadata: Metadata = homeMetadata;
 
@@ -21,7 +22,8 @@ export default function HomePage() {
           }}
         ></div>
       
-      <HeaderHero />
+      {/* <HeaderHero /> */}
+      <EconomicMetricsSection />
       <DashboardFeature />
       <Stats />
       <APISection />

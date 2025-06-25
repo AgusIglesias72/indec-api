@@ -113,8 +113,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const dateObj = new Date(lastDate);
         const month = dateObj.getMonth() + 1; // getMonth() devuelve 0-11
         const year = dateObj.getFullYear();
-        console.log(month, year);
-        console.log(lastDate);
 
         // Ahora obtenemos los datos de sectores específicamente para ese mes/año
         const response = await fetch(`/api/emae/sectors?month=${month}&year=${year}&limit=20&include_variations=true`);
@@ -124,7 +122,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         
         const result = await response.json();
-        console.log(result);
         
         if (!result.data || !Array.isArray(result.data)) {
           throw new Error('Formato de respuesta inesperado');
@@ -169,6 +166,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoadingSectors(false);
     }
   };
+
+  
 
 
   // Cargar todos los datos en la inicialización
