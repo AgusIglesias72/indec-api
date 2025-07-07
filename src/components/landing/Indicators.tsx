@@ -403,9 +403,9 @@ export default function ImprovedIndicators() {
                       )}
                       
                       {/* Descripción */}
-                      <p className="text-indec-gray-dark mb-6 text-sm leading-relaxed flex-grow">
+                      <p className="text-indec-gray-dark mb-6 text-sm leading-relaxed flex-grow font-sans">
                         El IPC mide la variación promedio de los precios de los bienes y servicios que consumen los hogares, siendo el principal indicador de inflación en Argentina.
-                      </p>
+                      </p>  
                       
                       {/* Métricas destacadas */}
                       <div className="grid grid-cols-3 gap-3 mb-6">
@@ -428,7 +428,7 @@ export default function ImprovedIndicators() {
                                 <DataMetric 
                                   label="" 
                                   value={`${ipcError ? "N/A" : (ipcData?.monthly_change?.toFixed(1) || "N/A")}%`} 
-                                  className="text-lg font-bold text-purple-700"
+                                  className="text-lg font-bold text-purple-700 "
                                 />
                               </CardContent>
                             </Card>
