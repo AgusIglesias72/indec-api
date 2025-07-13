@@ -149,6 +149,33 @@ export type Database = {
         }
         Relationships: []
       }
+      embi_risk: {
+        Row: {
+          created_at: string
+          date: string
+          external_id: string
+          id: string
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          external_id: string
+          id?: string
+          updated_at?: string
+          value: number
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          external_id?: string
+          id?: string
+          updated_at?: string
+          value?: number
+        }
+        Relationships: []
+      }
       ipc: {
         Row: {
           component: string
@@ -187,15 +214,18 @@ export type Database = {
           activity_rate: number | null
           age_group: string | null
           created_at: string | null
+          data_type: string
           date: string
+          demographic_segment: string | null
           economically_active_population: number | null
           employed_population: number | null
           employment_rate: number | null
           gender: string | null
-          id: number
+          id: string
           inactive_population: number | null
           period: string
           region: string
+          source_file: string | null
           total_population: number | null
           unemployed_population: number | null
           unemployment_rate: number | null
@@ -205,15 +235,18 @@ export type Database = {
           activity_rate?: number | null
           age_group?: string | null
           created_at?: string | null
+          data_type: string
           date: string
+          demographic_segment?: string | null
           economically_active_population?: number | null
           employed_population?: number | null
           employment_rate?: number | null
           gender?: string | null
-          id?: number
+          id?: string
           inactive_population?: number | null
           period: string
           region: string
+          source_file?: string | null
           total_population?: number | null
           unemployed_population?: number | null
           unemployment_rate?: number | null
@@ -223,15 +256,18 @@ export type Database = {
           activity_rate?: number | null
           age_group?: string | null
           created_at?: string | null
+          data_type?: string
           date?: string
+          demographic_segment?: string | null
           economically_active_population?: number | null
           employed_population?: number | null
           employment_rate?: number | null
           gender?: string | null
-          id?: number
+          id?: string
           inactive_population?: number | null
           period?: string
           region?: string
+          source_file?: string | null
           total_population?: number | null
           unemployed_population?: number | null
           unemployment_rate?: number | null
@@ -417,29 +453,42 @@ export type Database = {
         }
         Relationships: []
       }
-      labor_market_latest: {
+      v_embi_daily_closing: {
         Row: {
-          activity_rate: number | null
-          age_group: string | null
-          created_at: string | null
-          date: string | null
-          economically_active_population: number | null
-          employed_population: number | null
-          employment_rate: number | null
-          gender: string | null
-          inactive_population: number | null
-          period: string | null
-          region: string | null
-          total_population: number | null
-          unemployed_population: number | null
-          unemployment_rate: number | null
-          updated_at: string | null
+          change_percentage: number | null
+          change_value: number | null
+          closing_date: string | null
+          closing_value: number | null
+          latest_timestamp: string | null
+          previous_date: string | null
+          previous_day_value: number | null
         }
         Relationships: []
       }
     }
     Functions: {
-      [_ in never]: never
+      get_embi_history: {
+        Args: { days_count?: number }
+        Returns: {
+          closing_date: string
+          closing_value: number
+          change_value: number
+          change_percentage: number
+          trend: string
+          risk_level: string
+        }[]
+      }
+      get_latest_embi_closing: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          latest_date: string
+          latest_value: number
+          change_value: number
+          change_percentage: number
+          trend: string
+          risk_level: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

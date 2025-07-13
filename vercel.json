@@ -1,12 +1,16 @@
 {
   "crons": [
     {
-      "path": "/api/cron/update-indec-data",
-      "schedule": "0 8 * * *"
+      "path": "/api/cron/update-embi",
+      "schedule": "*/20 * * * *"
     },
     {
       "path": "/api/cron/update-dollar-data",
-      "schedule": "0 16 * * *"
+      "schedule": "*/20 * * * *"
+    },
+    {
+      "path": "/api/cron/update-indec-data",
+      "schedule": "1 16 * * *"
     }
   ],
   "headers": [

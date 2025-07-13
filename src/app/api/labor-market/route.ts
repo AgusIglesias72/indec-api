@@ -92,21 +92,8 @@ export async function GET(request: NextRequest) {
       return respondWithCSV(data || [], 'labor_market_data.csv');
     }
 
-    // Procesar datos para incluir solo el indicador solicitado si se especifica
+    // Procesar datos - devolver todos los campos siempre
     let processedData = data || [];
-    
-    if (indicator) {
-      processedData = processedData.map(item => ({
-        date: item.date,
-        period: item.period,
-        region: item.region,
-        age_group: item.age_group,
-        gender: item.gender,
-        [indicator]: item[indicator],
-        created_at: item.created_at,
-        updated_at: item.updated_at
-      }));
-    }
 
     // Obtener rango de períodos para metadata
     let periodRange = null;

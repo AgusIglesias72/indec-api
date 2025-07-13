@@ -14,12 +14,19 @@ export function middleware(request: NextRequest) {
     '/api/dollar',
     '/api/dollar/latest',
     '/api/dollar/metadata',
+    '/api/labor-market',
+    '/api/labor-market/latest',
+    '/api/labor-market/metadata',
     '/api/calendar',
     '/api/not-found',
     '/api-docs',
     '/api/stats',
     '/api/cron/update-indec-data',
-    '/api/cron/update-dollar-data'
+    '/api/cron/update-dollar-data',
+    '/api/cron/update-labor-market',
+    '/api/cron/update-embi',
+    '/api/riesgo-pais'
+
   ];
   
   // Verificar si la ruta comienza con /api pero no es una ruta conocida
@@ -39,4 +46,4 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: ['/api/:path*']
-}; 
+};
