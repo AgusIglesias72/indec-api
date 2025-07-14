@@ -265,7 +265,7 @@ export default function NewsletterSignupSection() {
   };
 
   return (
-    <section className="relative bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800 py-24 overflow-hidden">
+    <section className="relative bg-gradient-to-br from-slate-900 via-blue-900 to-blue-800 py-24 overflow-hidden ">
       <div 
         className="absolute inset-0 opacity-15"
         style={{
@@ -274,7 +274,7 @@ export default function NewsletterSignupSection() {
         }}
       />
       
-      <div className="container mx-auto px-4 relative z-10">
+      <div className="container mx-auto px-4 relative z-10 max-w-7xl">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           
           <motion.div

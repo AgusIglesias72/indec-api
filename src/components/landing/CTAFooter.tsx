@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 export default function Footer() {
   return (
     <footer className="bg-gradient-to-br from-blue-900 via-blue-800 to-blue-800 ">
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-16 max-w-7xl">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-5">
           {/* Logo y descripción */}
           <div className="lg:col-span-2">
