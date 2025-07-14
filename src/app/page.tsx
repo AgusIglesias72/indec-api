@@ -30,6 +30,8 @@ export default function HomePage() {
       {/* <DashboardFeature /> */}
       <APISection />
       <Indicators />
+      <Stats />
+
       <NetworkGraph />
 
        {/* <Features /> */}
