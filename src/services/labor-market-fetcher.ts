@@ -509,9 +509,23 @@ function extractNationalData(workbook: XLSX.WorkBook, periods: PeriodMapping[]):
 }
 
 /**
- * Extrae períodos específicos del Cuadro 1.3 (datos demográficos)
- * El Cuadro 1.3 tiene una estructura diferente que comienza desde T1 2017
+ * FUNCIÓN CORREGIDA PARA ESTRUCTURA REAL: extractDemographicPeriods
+ * 
+ * PROBLEMA IDENTIFICADO:
+ * - La función anterior buscaba años en formato "2017" pero el Excel usa "Año 2017"
+ * - No encontraba marcadores de año, resultando en 0 períodos demográficos
+ * 
+ * ESTRUCTURA REAL DEL CUADRO 1.3:
+ * - Fila 4 (índice 3): "Año 2017", "Año 2018", etc. en columnas específicas (1, 6, 11, 16, 21, 26, 31, 36, 41)
+ * - Fila 5 (índice 4): "1° trimestre", "2° trimestre", etc. en las columnas correspondientes
+ * - Los años marcan el inicio de cada período de 4-5 trimestres
+ * 
+ * SOLUCIÓN:
+ * - Buscar años con patrón "Año XXXX" en lugar de solo "XXXX"
+ * - Mapear trimestres al año más cercano hacia atrás
+ * - Manejar correctamente la progresión cronológica
  */
+
 function extractDemographicPeriods(workbook: XLSX.WorkBook): PeriodMapping[] {
   const sheet = workbook.Sheets['Cuadro 1.3'];
   if (!sheet) throw new Error('No se encontró Cuadro 1.3');
@@ -521,115 +535,174 @@ function extractDemographicPeriods(workbook: XLSX.WorkBook): PeriodMapping[] {
   const range = XLSX.utils.decode_range(ref);
   const periods: PeriodMapping[] = [];
   
-  // En el Cuadro 1.3, buscar en las filas 4 y 5 para los encabezados de períodos
-  // Fila 4: años (ej: "2017", "2018", etc.)
-  // Fila 5: trimestres (ej: "1° trimestre", "2°", "3°", "4°")
+  console.info(`📐 Cuadro 1.3 dimensiones: ${range.e.c + 1} columnas x ${range.e.r + 1} filas`);
   
-  let currentYear = '';
+  // PASO 1: Extraer marcadores de año de la fila 4 (índice 3)
+  // Buscar patrón "Año XXXX" en lugar de solo "XXXX"
+  const yearMarkers: Array<{col: number, year: number, originalText: string}> = [];
   
-  for (let col = 1; col <= range.e.c; col++) { // Comenzar desde columna B (índice 1)
-    // Buscar año en la fila 4 (puede estar en columnas específicas)
+  for (let col = 0; col <= range.e.c; col++) {
     const yearCell = sheet[XLSX.utils.encode_cell({r: 3, c: col})]; // Fila 4 (índice 3)
-    const quarterCell = sheet[XLSX.utils.encode_cell({r: 4, c: col})]; // Fila 5 (índice 4)
-    
     const yearValue = yearCell ? (yearCell.v || yearCell.w || '') : '';
+    
+    if (yearValue && yearValue.toString().includes('Año')) {
+      const yearMatch = yearValue.toString().match(/Año\s*(\d{4})/);
+      if (yearMatch) {
+        yearMarkers.push({
+          col: col,
+          year: parseInt(yearMatch[1]),
+          originalText: yearValue.toString()
+        });
+      }
+    }
+  }
+  
+  console.info(`📅 Marcadores de año encontrados: ${yearMarkers.length}`);
+  if (yearMarkers.length > 0) {
+    console.info(`📅 Primer año: ${yearMarkers[0].year} en columna ${yearMarkers[0].col}`);
+    console.info(`📅 Último año: ${yearMarkers[yearMarkers.length - 1].year} en columna ${yearMarkers[yearMarkers.length - 1].col}`);
+  }
+  
+  // PASO 2: Extraer trimestres de la fila 5 (índice 4)
+  const quarterData: Array<{col: number, quarter: number, originalText: string}> = [];
+  
+  for (let col = 0; col <= range.e.c; col++) {
+    const quarterCell = sheet[XLSX.utils.encode_cell({r: 4, c: col})]; // Fila 5 (índice 4)
     const quarterValue = quarterCell ? (quarterCell.v || quarterCell.w || '') : '';
     
-    // Detectar año
-    if (yearValue && yearValue.toString().match(/^\d{4}$/)) {
-      currentYear = yearValue.toString();
-    }
-    
-    // Si no hay año explícito, inferir desde 2017 (año base del Cuadro 1.3)
-    if (!currentYear && col === 1) {
-      currentYear = '2017';
-    }
-    
-    // Detectar trimestre
-    if (quarterValue) {
-      const quarterStr = quarterValue.toString().toLowerCase();
-      let quarter = '';
+    if (quarterValue && quarterValue.toString().includes('trimestre')) {
+      const quarterStr = quarterValue.toString();
+      const quarterMatch = quarterStr.match(/(\d+)[°º]/);
       
-      // Mapear diferentes formatos de trimestre
-      if (quarterStr.includes('1°') || quarterStr.includes('primer') || quarterStr === '1') {
-        quarter = '1';
-      } else if (quarterStr.includes('2°') || quarterStr.includes('segundo') || quarterStr === '2') {
-        quarter = '2';
-      } else if (quarterStr.includes('3°') || quarterStr.includes('tercer') || quarterStr === '3') {
-        quarter = '3';
-      } else if (quarterStr.includes('4°') || quarterStr.includes('cuarto') || quarterStr === '4') {
-        quarter = '4';
-      }
-      
-      if (quarter && currentYear) {
-        const monthEnd = parseInt(quarter) * 3;
-        const dayEnd = monthEnd === 3 ? 31 : monthEnd === 6 ? 30 : monthEnd === 9 ? 30 : 31;
-        const date = `${currentYear}-${String(monthEnd).padStart(2, '0')}-${String(dayEnd).padStart(2, '0')}`;
-        
-        periods.push({
-          colIndex: col,
-          year: currentYear,
-          quarter,
-          period: `T${quarter} ${currentYear}`,
-          date
+      if (quarterMatch) {
+        quarterData.push({
+          col: col,
+          quarter: parseInt(quarterMatch[1]),
+          originalText: quarterStr
         });
-        
-        // Avanzar al siguiente trimestre/año automáticamente
-        const currentQuarter = parseInt(quarter);
-        if (currentQuarter === 4) {
-          // Si es T4, el siguiente será T1 del año siguiente
-          currentYear = (parseInt(currentYear) + 1).toString();
-        }
       }
     }
   }
   
-  // Si no se encontraron períodos con la lógica anterior, usar un enfoque más simple
-  // basado en la posición de las columnas (comenzando desde T1 2017)
-  if (periods.length === 0) {
-    console.warn('No se encontraron períodos en Cuadro 1.3, generando automáticamente desde T1 2017');
+  console.info(`📊 Trimestres encontrados: ${quarterData.length}`);
+  
+  // PASO 3: Verificar que tenemos datos para procesar
+  if (yearMarkers.length === 0) {
+    console.warn('⚠️ No se encontraron marcadores de año en el formato esperado ("Año XXXX")');
+    return periods;
+  }
+  
+  if (quarterData.length === 0) {
+    console.warn('⚠️ No se encontraron trimestres en el formato esperado');
+    return periods;
+  }
+  
+  // PASO 4: Mapear cada trimestre al año correcto
+  console.info('🎯 Iniciando mapeo de trimestres a años...');
+  
+  quarterData.forEach((qData, index) => {
+    const colIndex = qData.col;
+    const quarter = qData.quarter;
     
-    const startYear = 2017;
-    const startQuarter = 1;
+    // Encontrar el año más cercano hacia atrás (última columna de año <= columna actual)
+    let assignedYear: number | null = null;
     
-    for (let col = 1; col <= Math.min(50, range.e.c); col++) { // Máximo 50 columnas
-      // Calcular año y trimestre basado en la posición
-      const totalQuarters = col - 1; // col 1 = T1 2017 (totalQuarters = 0)
-      const year = startYear + Math.floor(totalQuarters / 4);
-      const quarter = ((totalQuarters % 4) + startQuarter - 1) % 4 + 1;
-      
+    for (let i = yearMarkers.length - 1; i >= 0; i--) {
+      if (yearMarkers[i].col <= colIndex) {
+        assignedYear = yearMarkers[i].year;
+        
+        // Calcular cuántos trimestres hay desde este marcador de año hasta el trimestre actual
+        const quartersBetween = quarterData.filter(q => 
+          q.col >= yearMarkers[i].col && q.col <= colIndex
+        ).length;
+        
+        // Si hay más de 4 trimestres desde el marcador, avanzar años
+        // Cada 4 trimestres = 1 año adicional
+        if (quartersBetween > 4) {
+          const additionalYears = Math.floor((quartersBetween - 1) / 4);
+          assignedYear += additionalYears;
+        }
+        
+        break;
+      }
+    }
+    
+    // Si no encontramos año hacia atrás, usar el primer año disponible
+    if (assignedYear === null && yearMarkers.length > 0) {
+      assignedYear = yearMarkers[0].year;
+      console.warn(`⚠️ Trimestre en columna ${colIndex} sin año de referencia, usando ${assignedYear}`);
+    }
+    
+    if (assignedYear !== null) {
+      // Crear el período
       const monthEnd = quarter * 3;
       const dayEnd = monthEnd === 3 ? 31 : monthEnd === 6 ? 30 : monthEnd === 9 ? 30 : 31;
-      const date = `${year}-${String(monthEnd).padStart(2, '0')}-${String(dayEnd).padStart(2, '0')}`;
+      const date = `${assignedYear}-${String(monthEnd).padStart(2, '0')}-${String(dayEnd).padStart(2, '0')}`;
+      
+      const period = `T${quarter} ${assignedYear}`;
       
       periods.push({
-        colIndex: col,
-        year: year.toString(),
+        colIndex: colIndex,
+        year: assignedYear.toString(),
         quarter: quarter.toString(),
-        period: `T${quarter} ${year}`,
-        date
+        period: period,
+        date: date
       });
       
-      // Verificar si hay datos en esta columna antes de continuar
-      const testCell = sheet[XLSX.utils.encode_cell({r: 25, c: col})]; // Probar en una fila con datos
-      if (!testCell || testCell.v === null || testCell.v === undefined) {
-        break; // No hay más datos, terminar
-      }
+      console.info(`📊 Col ${colIndex}: ${qData.originalText} -> ${period}`);
+    } else {
+      console.warn(`⚠️ No se pudo asignar año al trimestre en columna ${colIndex}`);
     }
+  });
+  
+  // PASO 5: Validar resultado y eliminar duplicados si los hay
+  const periodStrings = periods.map(p => p.period);
+  const uniquePeriods = [...new Set(periodStrings)];
+  
+  if (uniquePeriods.length !== periodStrings.length) {
+    console.warn(`⚠️ Se detectaron ${periodStrings.length - uniquePeriods.length} períodos duplicados`);
+    
+    // Remover duplicados manteniendo el primer período de cada tipo
+    const seenPeriods = new Set<string>();
+    const uniquePeriodsArray = periods.filter(p => {
+      if (seenPeriods.has(p.period)) {
+        console.warn(`🗑️ Removiendo duplicado: ${p.period} (columna ${p.colIndex})`);
+        return false;
+      }
+      seenPeriods.add(p.period);
+      return true;
+    });
+    
+    console.info(`✅ Períodos únicos después de deduplicación: ${uniquePeriodsArray.length}`);
+    
+    if (uniquePeriodsArray.length > 0) {
+      console.info(`📅 Primer período: ${uniquePeriodsArray[0].period} (${uniquePeriodsArray[0].date})`);
+      console.info(`📅 Último período: ${uniquePeriodsArray[uniquePeriodsArray.length - 1].period} (${uniquePeriodsArray[uniquePeriodsArray.length - 1].date})`);
+    }
+    
+    return uniquePeriodsArray;
   }
   
-  console.info(`📅 Períodos demográficos encontrados: ${periods.length}`);
+  console.info(`✅ Períodos demográficos procesados exitosamente: ${periods.length}`);
   if (periods.length > 0) {
-    console.info(`📅 Primer período demográfico: ${periods[0].period} (${periods[0].date})`);
-    console.info(`📅 Último período demográfico: ${periods[periods.length - 1].period} (${periods[periods.length - 1].date})`);
+    console.info(`📅 Primer período: ${periods[0].period} (${periods[0].date})`);
+    console.info(`📅 Último período: ${periods[periods.length - 1].period} (${periods[periods.length - 1].date})`);
   }
   
   return periods;
 }
 
 /**
- * Extrae datos demográficos del Cuadro 1.3 usando períodos específicos del cuadro
+ * FUNCIÓN LIMPIA: extractDemographicData
+ * 
+ * EXCLUYE EXPLÍCITAMENTE:
+ * - Fila 27 Excel = "Tasa de la población de 14 años y más" (valor general que NO quieres)
+ * 
+ * INCLUYE SOLO:
+ * - 7 segmentos específicos por cada indicador (21 filas total)
+ * - Empezando desde fila 28 Excel = "Mujeres"
  */
+
 function extractDemographicData(workbook: XLSX.WorkBook): Omit<LaborMarketData, "id">[] {
   const sheet = workbook.Sheets['Cuadro 1.3'];
   if (!sheet) {
@@ -653,38 +726,47 @@ function extractDemographicData(workbook: XLSX.WorkBook): Omit<LaborMarketData, 
   
   const data: Omit<LaborMarketData, "id">[] = [];
   
-  // Mapeo de segmentos demográficos (sin el total para evitar duplicados)
+  // MAPEO LIMPIO: Solo los 7 segmentos que SÍ quieres (21 filas total)
+  // EXCLUYE: Fila 27 Excel = "Tasa de la población de 14 años y más"
   const demographicSegments = [
-    // Población activa general
-    { row: 24, gender: 'Total', age_group: '14+ años', segment: 'Total', indicator: 'activity_rate' },
-    { row: 25, gender: 'Mujeres', age_group: 'Total', segment: 'Total', indicator: 'activity_rate' },
-    { row: 26, gender: 'Varones', age_group: 'Total', segment: 'Total', indicator: 'activity_rate' },
-    { row: 27, gender: 'Total', age_group: 'Total', segment: 'Jefes de hogar', indicator: 'activity_rate' },
-    { row: 28, gender: 'Mujeres', age_group: '14-29 años', segment: 'Total', indicator: 'activity_rate' },
-    { row: 29, gender: 'Mujeres', age_group: '30-64 años', segment: 'Total', indicator: 'activity_rate' },
-    { row: 30, gender: 'Varones', age_group: '14-29 años', segment: 'Total', indicator: 'activity_rate' },
-    { row: 31, gender: 'Varones', age_group: '30-64 años', segment: 'Total', indicator: 'activity_rate' },
+    // === ACTIVIDAD === (desde fila 28 Excel)
+    { row: 27, gender: 'Mujeres', age_group: 'Total', segment: 'Total', indicator: 'activity_rate', excelRow: 28 },
+    { row: 28, gender: 'Varones', age_group: 'Total', segment: 'Total', indicator: 'activity_rate', excelRow: 29 },
+    { row: 29, gender: 'Total', age_group: 'Total', segment: 'Jefes de hogar', indicator: 'activity_rate', excelRow: 30 },
+    { row: 30, gender: 'Mujeres', age_group: '14-29 años', segment: 'Total', indicator: 'activity_rate', excelRow: 31 },
+    { row: 31, gender: 'Mujeres', age_group: '30-64 años', segment: 'Total', indicator: 'activity_rate', excelRow: 32 },
+    { row: 32, gender: 'Varones', age_group: '14-29 años', segment: 'Total', indicator: 'activity_rate', excelRow: 33 },
+    { row: 33, gender: 'Varones', age_group: '30-64 años', segment: 'Total', indicator: 'activity_rate', excelRow: 34 },
     
-    // Empleo
-    { row: 36, gender: 'Total', age_group: '14+ años', segment: 'Total', indicator: 'employment_rate' },
-    { row: 37, gender: 'Mujeres', age_group: 'Total', segment: 'Total', indicator: 'employment_rate' },
-    { row: 38, gender: 'Varones', age_group: 'Total', segment: 'Total', indicator: 'employment_rate' },
-    { row: 39, gender: 'Total', age_group: 'Total', segment: 'Jefes de hogar', indicator: 'employment_rate' },
-    { row: 40, gender: 'Mujeres', age_group: '14-29 años', segment: 'Total', indicator: 'employment_rate' },
-    { row: 41, gender: 'Mujeres', age_group: '30-64 años', segment: 'Total', indicator: 'employment_rate' },
-    { row: 42, gender: 'Varones', age_group: '14-29 años', segment: 'Total', indicator: 'employment_rate' },
-    { row: 43, gender: 'Varones', age_group: '30-64 años', segment: 'Total', indicator: 'employment_rate' },
+    // === EMPLEO === (desde fila 40 Excel)
+    { row: 39, gender: 'Mujeres', age_group: 'Total', segment: 'Total', indicator: 'employment_rate', excelRow: 40 },
+    { row: 40, gender: 'Varones', age_group: 'Total', segment: 'Total', indicator: 'employment_rate', excelRow: 41 },
+    { row: 41, gender: 'Total', age_group: 'Total', segment: 'Jefes de hogar', indicator: 'employment_rate', excelRow: 42 },
+    { row: 42, gender: 'Mujeres', age_group: '14-29 años', segment: 'Total', indicator: 'employment_rate', excelRow: 43 },
+    { row: 43, gender: 'Mujeres', age_group: '30-64 años', segment: 'Total', indicator: 'employment_rate', excelRow: 44 },
+    { row: 44, gender: 'Varones', age_group: '14-29 años', segment: 'Total', indicator: 'employment_rate', excelRow: 45 },
+    { row: 45, gender: 'Varones', age_group: '30-64 años', segment: 'Total', indicator: 'employment_rate', excelRow: 46 },
     
-    // Desocupación
-    { row: 48, gender: 'Total', age_group: '14+ años', segment: 'Total', indicator: 'unemployment_rate' },
-    { row: 49, gender: 'Mujeres', age_group: 'Total', segment: 'Total', indicator: 'unemployment_rate' },
-    { row: 50, gender: 'Varones', age_group: 'Total', segment: 'Total', indicator: 'unemployment_rate' },
-    { row: 51, gender: 'Total', age_group: 'Total', segment: 'Jefes de hogar', indicator: 'unemployment_rate' },
-    { row: 52, gender: 'Mujeres', age_group: '14-29 años', segment: 'Total', indicator: 'unemployment_rate' },
-    { row: 53, gender: 'Mujeres', age_group: '30-64 años', segment: 'Total', indicator: 'unemployment_rate' },
-    { row: 54, gender: 'Varones', age_group: '14-29 años', segment: 'Total', indicator: 'unemployment_rate' },
-    { row: 55, gender: 'Varones', age_group: '30-64 años', segment: 'Total', indicator: 'unemployment_rate' }
+    // === DESOCUPACIÓN === (desde fila 52 Excel)
+    { row: 51, gender: 'Mujeres', age_group: 'Total', segment: 'Total', indicator: 'unemployment_rate', excelRow: 52 },
+    { row: 52, gender: 'Varones', age_group: 'Total', segment: 'Total', indicator: 'unemployment_rate', excelRow: 53 },
+    { row: 53, gender: 'Total', age_group: 'Total', segment: 'Jefes de hogar', indicator: 'unemployment_rate', excelRow: 54 },
+    { row: 54, gender: 'Mujeres', age_group: '14-29 años', segment: 'Total', indicator: 'unemployment_rate', excelRow: 55 },
+    { row: 55, gender: 'Mujeres', age_group: '30-64 años', segment: 'Total', indicator: 'unemployment_rate', excelRow: 56 },
+    { row: 56, gender: 'Varones', age_group: '14-29 años', segment: 'Total', indicator: 'unemployment_rate', excelRow: 57 },
+    { row: 57, gender: 'Varones', age_group: '30-64 años', segment: 'Total', indicator: 'unemployment_rate', excelRow: 58 }
   ];
+  
+  console.info(`🧹 MAPEO LIMPIO: ${demographicSegments.length} segmentos específicos`);
+  console.info(`❌ EXCLUIDO: Fila 27 Excel = "Tasa de la población de 14 años y más"`);
+  console.info(`✅ INCLUIDOS: Solo los 7 segmentos que quieres por cada indicador`);
+  
+  // Verificar que no hay filas problemáticas
+  const problematicRows = demographicSegments.filter(seg => seg.row === 26); // índice 26 = fila 27 Excel
+  if (problematicRows.length > 0) {
+    console.error(`🚨 ERROR: Se encontraron ${problematicRows.length} filas problemáticas (fila 27 Excel)`);
+    throw new Error('Mapeo contiene fila 27 Excel que debe ser excluida');
+  }
   
   // Agrupar por combinación única de demografía
   const uniqueSegments = new Map<string, any>();
@@ -700,6 +782,12 @@ function extractDemographicData(workbook: XLSX.WorkBook): Omit<LaborMarketData, 
       });
     }
     uniqueSegments.get(key)!.rows[seg.indicator] = seg.row;
+  });
+  
+  console.info(`👥 Segmentos únicos generados: ${uniqueSegments.size}`);
+  console.info('📋 Lista de segmentos:');
+  Array.from(uniqueSegments.entries()).forEach(([key, segmentInfo], index) => {
+    console.info(`   ${index + 1}. ${segmentInfo.gender} ${segmentInfo.age_group} (${segmentInfo.segment})`);
   });
   
   // Crear registros por período y segmento
@@ -724,7 +812,7 @@ function extractDemographicData(workbook: XLSX.WorkBook): Omit<LaborMarketData, 
         inactive_population: null
       };
       
-      // Extraer valores para cada indicador
+      // Extraer valores usando los índices verificados
       Object.entries(segmentInfo.rows).forEach(([indicator, row]) => {
         const cell = sheet[XLSX.utils.encode_cell({r: row as number, c: period.colIndex})];
         const value = cell ? (cell.v || cell.w || '') : '';
@@ -737,6 +825,22 @@ function extractDemographicData(workbook: XLSX.WorkBook): Omit<LaborMarketData, 
       data.push(record as Omit<LaborMarketData, "id">);
     });
   });
+  
+  console.info(`🎉 DATOS DEMOGRÁFICOS LIMPIOS: ${data.length} registros`);
+  console.info(`🔢 Cálculo: ${uniqueSegments.size} segmentos × ${periods.length} períodos = ${data.length} registros`);
+  
+  // Verificación final: asegurar que no hay datos de fila 27 Excel
+  const hasProblematicData = data.some(record => 
+    record.age_group === '14+ años' || 
+    record.demographic_segment?.includes('14 años y más')
+  );
+  
+  if (hasProblematicData) {
+    console.error('🚨 ERROR: Se detectaron datos de fila 27 Excel en los resultados');
+    throw new Error('Los datos contienen información de fila 27 Excel que debe ser excluida');
+  } else {
+    console.info('✅ VERIFICACIÓN EXITOSA: No hay datos de fila 27 Excel en los resultados');
+  }
   
   return data;
 }

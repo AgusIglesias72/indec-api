@@ -453,6 +453,151 @@ export type Database = {
         }
         Relationships: []
       }
+      labor_market_annual: {
+        Row: {
+          age_group: string | null
+          annual_variation_activity: number | null
+          annual_variation_employment: number | null
+          annual_variation_unemployment: number | null
+          avg_activity_rate: number | null
+          avg_employment_rate: number | null
+          avg_unemployment_rate: number | null
+          avg_yoy_variation_activity: number | null
+          avg_yoy_variation_employment: number | null
+          avg_yoy_variation_unemployment: number | null
+          data_type: string | null
+          demographic_segment: string | null
+          gender: string | null
+          quarters_count: number | null
+          region: string | null
+          year: number | null
+          year_end_date: string | null
+          year_start_date: string | null
+        }
+        Relationships: []
+      }
+      labor_market_by_type: {
+        Row: {
+          activity_rate: number | null
+          age_group: string | null
+          data_type: string | null
+          data_type_label: string | null
+          date: string | null
+          demographic_segment: string | null
+          employment_rate: number | null
+          gender: string | null
+          period: string | null
+          prev_yoy_activity_rate: number | null
+          prev_yoy_employment_rate: number | null
+          prev_yoy_period: string | null
+          prev_yoy_unemployment_rate: number | null
+          region: string | null
+          segment_id: string | null
+          unemployment_rate: number | null
+          variation_qtq_activity_rate: number | null
+          variation_qtq_employment_rate: number | null
+          variation_qtq_unemployment_rate: number | null
+          variation_yoy_activity_rate: number | null
+          variation_yoy_employment_rate: number | null
+          variation_yoy_unemployment_rate: number | null
+        }
+        Relationships: []
+      }
+      labor_market_comparison: {
+        Row: {
+          brecha_genero_activity: number | null
+          brecha_genero_variation_yoy_activity: number | null
+          date: string | null
+          dispersion_regional_activity: number | null
+          gba_activity_rate: number | null
+          gba_variation_yoy_activity: number | null
+          jefes_hogar_activity_rate: number | null
+          jefes_hogar_variation_yoy_activity: number | null
+          mujeres_activity_rate: number | null
+          mujeres_variation_yoy_activity: number | null
+          nacional_activity_rate: number | null
+          nacional_employment_rate: number | null
+          nacional_unemployment_rate: number | null
+          nacional_variation_yoy_activity: number | null
+          nacional_variation_yoy_employment: number | null
+          nacional_variation_yoy_unemployment: number | null
+          pampeana_activity_rate: number | null
+          pampeana_variation_yoy_activity: number | null
+          period: string | null
+          prev_yoy_period: string | null
+          varones_activity_rate: number | null
+          varones_variation_yoy_activity: number | null
+        }
+        Relationships: []
+      }
+      labor_market_latest: {
+        Row: {
+          activity_rate: number | null
+          age_group: string | null
+          created_at: string | null
+          data_type: string | null
+          date: string | null
+          demographic_segment: string | null
+          economically_active_population: number | null
+          employed_population: number | null
+          employment_rate: number | null
+          gender: string | null
+          id: string | null
+          inactive_population: number | null
+          period: string | null
+          prev_yoy_activity_rate: number | null
+          prev_yoy_employment_rate: number | null
+          prev_yoy_period: string | null
+          prev_yoy_unemployment_rate: number | null
+          region: string | null
+          source_file: string | null
+          total_population: number | null
+          unemployed_population: number | null
+          unemployment_rate: number | null
+          updated_at: string | null
+          variation_qtq_activity_rate: number | null
+          variation_qtq_employment_rate: number | null
+          variation_qtq_unemployment_rate: number | null
+          variation_yoy_activity_rate: number | null
+          variation_yoy_employment_rate: number | null
+          variation_yoy_unemployment_rate: number | null
+        }
+        Relationships: []
+      }
+      labor_market_temporal: {
+        Row: {
+          activity_rate: number | null
+          age_group: string | null
+          created_at: string | null
+          data_type: string | null
+          date: string | null
+          demographic_segment: string | null
+          economically_active_population: number | null
+          employed_population: number | null
+          employment_rate: number | null
+          gender: string | null
+          id: string | null
+          inactive_population: number | null
+          period: string | null
+          prev_yoy_activity_rate: number | null
+          prev_yoy_employment_rate: number | null
+          prev_yoy_period: string | null
+          prev_yoy_unemployment_rate: number | null
+          region: string | null
+          source_file: string | null
+          total_population: number | null
+          unemployed_population: number | null
+          unemployment_rate: number | null
+          updated_at: string | null
+          variation_qtq_activity_rate: number | null
+          variation_qtq_employment_rate: number | null
+          variation_qtq_unemployment_rate: number | null
+          variation_yoy_activity_rate: number | null
+          variation_yoy_employment_rate: number | null
+          variation_yoy_unemployment_rate: number | null
+        }
+        Relationships: []
+      }
       v_embi_daily_closing: {
         Row: {
           change_percentage: number | null
