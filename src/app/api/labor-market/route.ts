@@ -3,6 +3,24 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/supabase';
 
+interface LaborMarketRecord {
+  id?: string;
+  date?: string;
+  period?: string;
+  data_type?: string;
+  region?: string;
+  gender?: string;
+  age_group?: string;
+  demographic_segment?: string;
+  activity_rate?: number;
+  employment_rate?: number;
+  unemployment_rate?: number;
+  variation_yoy_activity_rate?: number;
+  variation_yoy_employment_rate?: number;
+  variation_yoy_unemployment_rate?: number;
+  [key: string]: any; // Para campos adicionales
+}
+
 // Inicializar cliente Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY as string;
@@ -201,33 +219,34 @@ export async function GET(request: NextRequest) {
                   .order('data_type', { ascending: true });
     }
 
-    // Ejecutar query
-    const { data, error } = await query;
+// Ejecutar query
+const { data, error } = await query;
 
-    if (error) {
-      throw new Error(`Error fetching labor market data: ${error.message}`);
-    }
+if (error) {
+  throw new Error(`Error fetching labor market data: ${error.message}`);
+}
 
-    // Filtro adicional por indicador en el backend si es necesario
-    let processedData = data || [];
-    
-    // Corregido: especificar el tipo de item para evitar el error de tipo implícito
-    if (
-      indicator !== 'all' &&
-      (view === 'temporal' || view === 'latest' || view === 'by_type')
-    ) {
-      processedData = processedData.filter((item: Record<string, any>) =>
-        item[indicator] !== null && item[indicator] !== undefined
-      );
-    }
-    // Agregar información sobre variaciones YoY significativas
-    if (view === 'latest' || view === 'temporal') {
-      processedData = processedData.map(item => ({
-        ...item,
-        has_significant_yoy_change: hasSignificantYoYChange(item),
-        significant_yoy_indicators: getSignificantYoYIndicators(item)
-      }));
-    }
+// Filtro adicional por indicador en el backend si es necesario
+let processedData: any[] = data || [];
+
+// Corregido: especificar el tipo de item para evitar el error de tipo implícito
+if (
+  indicator !== 'all' &&
+  (view === 'temporal' || view === 'latest' || view === 'by_type')
+) {
+  processedData = processedData.filter((item: any) =>
+    item[indicator] !== null && item[indicator] !== undefined
+  );
+}
+
+// Agregar información sobre variaciones YoY significativas
+if (view === 'latest' || view === 'temporal') {
+  processedData = processedData.map((item: any) => ({
+    ...item,
+    has_significant_yoy_change: hasSignificantYoYChange(item),
+    significant_yoy_indicators: getSignificantYoYIndicators(item)
+  }));
+}
 
     // Responder en CSV si se solicita
     if (format === 'csv') {
