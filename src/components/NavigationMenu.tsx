@@ -100,7 +100,7 @@ export function MainNavigation() {
         </NavigationMenuItem>
         
         <NavigationMenuItem>
-          <Link href="/api-docs" legacyBehavior passHref>
+          <Link href="/documentacion" legacyBehavior passHref>
             <NavigationMenuLink className={navigationMenuTriggerStyle()}>
               API Docs
             </NavigationMenuLink>

@@ -4,8 +4,8 @@ export async function GET() {
   return NextResponse.json(
     {
       error: 'Ruta no encontrada',
-      message: 'La ruta solicitada no existe. Por favor, consulta la documentación en /api-docs para ver las rutas disponibles.',
-      available_docs: '/api-docs',
+      message: 'La ruta solicitada no existe. Por favor, consulta la documentación en /documentacion para ver las rutas disponibles.',
+      available_docs: '/documentacion',
       // Generate a list of available routes in the API
       available_routes: [
         {"api/emae": {

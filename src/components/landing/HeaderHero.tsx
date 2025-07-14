@@ -71,7 +71,7 @@ export default function HeaderHero() {
               </Button>
               
               <Button size="lg" variant="outline" className="border-indec-blue text-indec-blue hover:bg-indec-blue/5 rounded-full px-6">
-                <Link href="/api-docs" className="flex items-center">
+                <Link href="/documentacion" className="flex items-center">
                   Documentación API <Code className="ml-2 h-4 w-4" />
                 </Link>
               </Button>

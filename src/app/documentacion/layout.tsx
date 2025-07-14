@@ -1,4 +1,4 @@
-// src/app/api-docs/layout.tsx
+// src/app/documentacion/layout.tsx
 import { Metadata } from 'next';
 import { apiDocsMetadata } from '@/lib/metadata';
 

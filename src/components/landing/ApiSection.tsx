@@ -216,7 +216,7 @@ export default function APISection() {
             
             <div className="flex flex-wrap gap-4">
               <Button asChild size="lg" className="bg-white text-indec-blue hover:bg-indec-gray-light flex-1 lg:flex-none">
-                <Link href="/api-docs">
+                <Link href="/documentacion">
                   Documentación API <ExternalLink className="ml-2 h-4 w-4" />
                 </Link>
               </Button>

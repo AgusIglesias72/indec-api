@@ -141,7 +141,6 @@ const HeroWithMetrics = () => {
           const monthlyValue = monthlyResult.data[0].closing_value;
           const monthlyVar = ((currentData.closing_value - monthlyValue) / monthlyValue * 100);
           setMonthlyVariation(monthlyVar);
-          console.log(`Variación mensual: ${monthlyVar.toFixed(2)}% (desde ${monthlyResult.data[0].closing_date})`);
         } else {
           setMonthlyVariation(null);
         }
@@ -156,7 +155,6 @@ const HeroWithMetrics = () => {
           const yearlyValue = yearlyResult.data[0].closing_value;
           const yearlyVar = ((currentData.closing_value - yearlyValue) / yearlyValue * 100);
           setYearlyVariation(yearlyVar);
-          console.log(`Variación anual: ${yearlyVar.toFixed(2)}% (desde ${yearlyResult.data[0].closing_date})`);
         } else {
           setYearlyVariation(null);
         }

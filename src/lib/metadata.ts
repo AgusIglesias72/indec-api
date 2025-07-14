@@ -188,7 +188,7 @@ export const apiDocsMetadata: Metadata = {
   openGraph: {
     title: "Documentación de API | ArgenStats",
     description: "Guía completa para utilizar nuestras APIs de datos económicos y estadísticos. Accede a endpoints bien documentados con filtrado flexible y múltiples formatos de salida.",
-    url: `${BASE_URL}/api-docs`,
+    url: `${BASE_URL}/documentacion`,
     images: [
       {
         url: `${BASE_URL}/images/api-docs-og-image.jpg`,

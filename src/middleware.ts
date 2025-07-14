@@ -20,6 +20,7 @@ export function middleware(request: NextRequest) {
     '/api/calendar',
     '/api/not-found',
     '/api-docs',
+    '/api/documentacion',
     '/api/stats',
     '/api/cron/update-indec-data',
     '/api/cron/update-dollar-data',

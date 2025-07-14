@@ -51,7 +51,7 @@ export default function FeatureCards() {
         icon={<Code className="h-6 w-6 text-indec-blue" />}
         title="API RESTful potente"
         description="Integra datos económicos en tus aplicaciones con nuestra API fácil de usar. Accede a endpoints bien documentados con filtrado flexible y múltiples formatos de salida."
-        link="/api-docs"
+        link="/documentacion"
         linkText="Ver documentación"
       />
       

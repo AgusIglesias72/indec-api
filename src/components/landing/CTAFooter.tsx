@@ -65,7 +65,7 @@ export default function Footer() {
               <Link href="/calendario" className="text-md text-gray-300 hover:text-white transition-colors duration-300 hover:translate-x-1 transform">
                 Calendario INDEC
               </Link>
-              <Link href="/api-docs" className="text-md text-gray-300 hover:text-white transition-colors duration-300 hover:translate-x-1 transform">
+              <Link href="/documentacion" className="text-md text-gray-300 hover:text-white transition-colors duration-300 hover:translate-x-1 transform">
                 API Docs
               </Link>
             </nav>
@@ -78,9 +78,7 @@ export default function Footer() {
               <Link href="/documentacion" className="text-md text-gray-300 hover:text-white transition-colors duration-300 hover:translate-x-1 transform">
                 Documentación
               </Link>
-              <Link href="/acerca-de" className="text-md text-gray-300 hover:text-white transition-colors duration-300 hover:translate-x-1 transform">
-                Acerca de
-              </Link>
+           
               <Link href="/contacto" className="text-md text-gray-300 hover:text-white transition-colors duration-300 hover:translate-x-1 transform">
                 Contacto
               </Link>
