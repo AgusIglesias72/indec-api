@@ -202,7 +202,7 @@ export async function fetchIPCData(): Promise<Omit<IpcRow, "id">[]> {
   try {
     // Obtener el mes y año actual para construir la URL
     const now = new Date();
-    const month = String(now.getMonth()).padStart(2, "0");
+    const month = String(now.getMonth() + 1).padStart(2, "0");
 
     // URL del archivo Excel del INDEC
     const url = `https://www.indec.gob.ar/ftp/cuadros/economia/sh_ipc_${month}_25.xls`;

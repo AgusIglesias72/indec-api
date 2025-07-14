@@ -5,7 +5,7 @@ import { fetchINDECData } from '@/services/emae-fetcher';
 import { CronTaskResult } from '@/types';
 import { Database } from '@/types/supabase';
 
-export const runtime = 'edge';
+//export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minutos como máximo para completar la tarea
 
