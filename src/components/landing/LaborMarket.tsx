@@ -187,10 +187,14 @@ export default function EmploymentSection() {
   };
 
   return (
-    <section className="py-20 bg-gradient-to-br from-orange-50 to-amber-50 relative z-10" id="empleo">
+    <section className="py-20 bg-gradient-to-br from-orange-50 to-amber-50 relative z-10 overflow-hidden" id="empleo">
       {/* Fondo decorativo */}
       <div className="absolute inset-0 bg-transparent"></div>
-      
+         {/* Círculos decorativos */}
+         <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full bg-orange-500/30 translate-x-1/2 -translate-y-1/4"></div>
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] rounded-full bg-orange-500/20 -translate-x-1/3 translate-y-1/3"></div>
+
+ 
       <div className="container mx-auto px-4 md:px-8 lg:px-12 max-w-7xl relative z-10">
         {/* Header */}
         <motion.div 
@@ -581,49 +585,8 @@ export default function EmploymentSection() {
           </div>
         </motion.div>
 
-        {/* Estadísticas adicionales */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto"
-        >
-          <div className="text-center p-6 bg-white rounded-xl shadow-sm border border-orange-100">
-            <div className="text-2xl font-bold text-gray-900">31 aglomerados</div>
-            <div className="text-sm text-gray-600">urbanos incluidos en la EPH</div>
-          </div>
-          
-          <div className="text-center p-6 bg-white rounded-xl shadow-sm border border-orange-100">
-            <div className="text-2xl font-bold text-gray-900">Trimestral</div>
-            <div className="text-sm text-gray-600">frecuencia de actualización</div>
-          </div>
-          
-          <div className="text-center p-6 bg-white rounded-xl shadow-sm border border-orange-100">
-            <div className="text-2xl font-bold text-gray-900">INDEC</div>
-            <div className="text-sm text-gray-600">fuente oficial de datos</div>
-          </div>
-        </motion.div>
-
-        {/* Indicador de estado de los datos */}
-        <motion.div 
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-          className="mt-8 text-center"
-        >
-          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${
-            error 
-              ? 'bg-yellow-100 text-yellow-800' 
-              : 'bg-green-100 text-green-800'
-          }`}>
-            <div className={`h-2 w-2 rounded-full ${
-              error ? 'bg-yellow-500' : 'bg-green-500'
-            }`}></div>
-            {error ? 'Datos de respaldo' : 'Datos actualizados'}
-          </div>
-        </motion.div>
+     
+   
       </div>
     </section>
   )

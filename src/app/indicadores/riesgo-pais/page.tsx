@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, TrendingUp, TrendingDown, BarChart3, Clock, RefreshCw, ArrowUpRight, ArrowDownRight, Info, Minus } from 'lucide-react';
+import { AlertTriangle, Globe, TrendingUp, TrendingDown, BarChart3, Clock, RefreshCw, ArrowUpRight, ArrowDownRight, Info, Minus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
@@ -48,7 +48,7 @@ function HeroSection({ title, subtitle }: { title: string; subtitle: string }) {
         >
           <div className="inline-flex items-center gap-3 mb-4">
             <div className="h-12 w-12 bg-red-500 rounded-xl flex items-center justify-center">
-              <AlertTriangle className="h-6 w-6 text-white" />
+              <Globe className="h-6 w-6 text-white" />
             </div>
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-4">{title}</h1>
@@ -153,7 +153,7 @@ function CurrentRiskCard() {
         <div className="absolute -inset-1 bg-gradient-to-r from-red-600/20 to-red-400/20 rounded-2xl blur opacity-50"></div>
         <div className="relative bg-white rounded-2xl p-6 md:p-8 shadow-lg border border-red-100">
           <div className="text-center text-red-600">
-            <AlertTriangle className="h-12 w-12 mx-auto mb-4" />
+            <Globe className="h-12 w-12 mx-auto mb-4" />
             <p className="font-medium mb-2">Error al cargar Riesgo País</p>
             <p className="text-sm text-gray-600 mb-4">{error}</p>
             <button 
@@ -182,7 +182,7 @@ function CurrentRiskCard() {
           
           <div className="flex items-center justify-center md:justify-start gap-4 mb-6">
             <div className="h-12 w-12 bg-red-100 rounded-xl flex items-center justify-center">
-              <AlertTriangle className="h-6 w-6 text-red-600" />
+              <Globe className="h-6 w-6 text-red-600" />
             </div>
             <div>
               <h3 className="text-xl md:text-2xl font-bold text-gray-900">Riesgo País Argentina</h3>
@@ -681,7 +681,7 @@ function RiskCountryInfo() {
             <div className="relative bg-white rounded-2xl p-6 shadow-md border border-red-100">
               <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                 <div className="h-6 w-6 bg-red-100 rounded-lg flex items-center justify-center">
-                  <AlertTriangle className="h-3 w-3 text-red-600" />
+                  <Globe className="h-3 w-3 text-red-600" />
                 </div>
                 {section.category}
               </h3>
@@ -763,7 +763,7 @@ export default function RiesgoPaisPage() {
         <div className="mb-8 md:mb-12 mt-6 md:mt-8">
           <div className="flex items-center justify-center md:justify-start gap-3 mb-6">
             <div className="h-8 w-8 bg-red-100 rounded-lg flex items-center justify-center">
-              <AlertTriangle className="h-4 w-4 text-red-600" />
+              <Globe className="h-4 w-4 text-red-600" />
             </div>
             <h2 className="text-xl md:text-2xl font-bold text-gray-900">Nivel Actual</h2>
           </div>
