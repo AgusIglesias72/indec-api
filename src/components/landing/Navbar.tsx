@@ -70,21 +70,22 @@ export default function NavBar() {
         ? "bg-white/95 backdrop-blur-sm border-b border-indec-gray-medium shadow-sm" 
         : "bg-white border-b border-white"
     )}>
-      <div className="mx-auto flex h-16 items-center justify-between px-4 xl:px-12">
-        {/* Logo */}
-        <div className="flex items-center justify-start flex-1">
-          <Link href="/" className="flex items-center gap-2 mr-6">
+      {/* Grid layout para centrado perfecto */}
+      <div className="mx-auto h-16 px-4 xl:px-12 grid grid-cols-3 items-center">
+        {/* Logo - columna izquierda */}
+        <div className="flex items-center justify-start">
+          <Link href="/" className="flex items-center gap-2">
             <Logo />
           </Link>
         </div>
 
-        {/* Desktop Navigation */}
-        <div className="hidden md:block font-clear-sans justify-center font-extrabold flex-1">
+        {/* Desktop Navigation - columna central, perfectamente centrada */}
+        <div className="hidden md:flex justify-center font-clear-sans font-extrabold">
           <MainNavigation />
         </div>
           
-        {/* Contact button and mobile menu */}
-        <div className="flex items-center justify-end gap-2 flex-1">
+        {/* Contact button and mobile menu - columna derecha */}
+        <div className="flex items-center justify-end gap-2">
           {/* Contact button - desktop */}
           <div className="hidden md:flex md:items-center md:gap-2">
             <Button 
