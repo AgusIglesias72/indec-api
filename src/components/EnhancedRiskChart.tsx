@@ -21,6 +21,8 @@ interface EnhancedRiskChartProps {
   description?: string;
   height?: number;
   darkMode?: boolean;
+  enableExtendedPeriods?: boolean;
+  maxDataPoints?: number;
 }
 
 // Interfaz para los datos del gráfico
@@ -35,9 +37,11 @@ export default function EnhancedRiskChart({
   title = "Evolución del Riesgo País", 
   description = "Selecciona el rango de tiempo para visualizar",
   height = 450,
-  darkMode = false 
+  darkMode = false,
+  enableExtendedPeriods = false,
+  maxDataPoints = 5000
 }: EnhancedRiskChartProps) {
-  const [selectedPeriod, setSelectedPeriod] = useState<'30d' | '90d' | '1y' | '5y' | '10y' | '20y'>('90d');
+  const [selectedPeriod, setSelectedPeriod] = useState<'30d' | '3m' | '1y' | '5y' | '10y'>('3m');
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<{
@@ -48,68 +52,73 @@ export default function EnhancedRiskChart({
 
   const periodOptions = [
     { value: '30d' as const, label: '30D', apiType: 'last_30_days' as const },
-    { value: '90d' as const, label: '90D', apiType: 'last_90_days' as const },
-    { value: '1y' as const, label: '1A', apiType: 'custom' as const }, // Cambiado a custom para últimos 365 días
+    { value: '3m' as const, label: '3M', apiType: 'last_90_days' as const },
+    { value: '1y' as const, label: '1A', apiType: 'custom' as const },
     { value: '5y' as const, label: '5A', apiType: 'custom' as const },
-    { value: '10y' as const, label: '10A', apiType: 'custom' as const },
-    { value: '20y' as const, label: '20A', apiType: 'custom' as const }
+    { value: '10y' as const, label: '10A', apiType: 'custom' as const }
   ];
 
-  // Cargar datos del gráfico
-  const fetchChartData = async (period: '30d' | '90d' | '1y' | '5y' | '10y' | '20y') => {
+  // Cargar datos del gráfico con autopaginación mejorada
+  const fetchChartData = async (period: '30d' | '3m' | '1y' | '5y' | '10y') => {
     try {
       setLoading(true);
-      let params: any = { order: 'asc' };
-      
       const selectedOption = periodOptions.find(opt => opt.value === period);
-      if (selectedOption) {
-        if (selectedOption.apiType === 'custom') {
-          // Para períodos personalizados
-          const daysAgo = new Date();
-          if (period === '1y') daysAgo.setDate(daysAgo.getDate() - 365); // Últimos 365 días
-          if (period === '5y') daysAgo.setFullYear(daysAgo.getFullYear() - 5);
-          if (period === '10y') daysAgo.setFullYear(daysAgo.getFullYear() - 10);
-          if (period === '20y') daysAgo.setFullYear(daysAgo.getFullYear() - 20);
-          
-          params = {
-            ...params,
-            type: 'custom',
-            date_from: daysAgo.toISOString().split('T')[0],
-            date_to: new Date().toISOString().split('T')[0]
-          };
-        } else {
-          params.type = selectedOption.apiType;
-        }
+      if (!selectedOption) return;
+
+      let params: any = { order: 'asc', auto_paginate: true };
+
+      if (selectedOption.apiType === 'custom') {
+        const daysAgo = new Date();
+        if (period === '1y') daysAgo.setDate(daysAgo.getDate() - 365);
+        if (period === '5y') daysAgo.setFullYear(daysAgo.getFullYear() - 5);
+        if (period === '10y') daysAgo.setFullYear(daysAgo.getFullYear() - 10);
+        
+        params = {
+          ...params,
+          type: 'custom',
+          date_from: daysAgo.toISOString().split('T')[0],
+          date_to: new Date().toISOString().split('T')[0],
+          limit: maxDataPoints
+        };
+      } else {
+        params.type = selectedOption.apiType;
+        params.limit = Math.min(maxDataPoints, 1000); // Para períodos cortos no necesitamos tanto
       }
 
+      console.log(`Loading ${period} data with params:`, params);
+
       const response = await getRiskCountryData(params);
+      
       if (response.success && response.data.length > 0) {
-        // Procesar datos para el gráfico
-        const processedData = response.data.map((point: RiskCountryDataPoint, index: number) => ({
+        const finalData = response.data.map((point: RiskCountryDataPoint, index) => ({
           date: point.closing_date,
           value: point.closing_value,
-          change: point.change_percentage,
+          change: point.change_percentage === null ? undefined : point.change_percentage,
           formattedDate: formatDateForAxis(point.closing_date, period, index, response.data.length)
         }));
 
-        // Solución: Asegurarse de que 'change' sea 'number | undefined' en vez de 'number | null'
-        setChartData(
-          processedData.map(d => ({
-            ...d,
-            change: d.change === null ? undefined : d.change
-          }))
-        );
-        
-        // Calcular estadísticas simples
-        const values = processedData.map(d => d.value);
-        setStats({
-          min: Math.min(...values),
-          max: Math.max(...values),
-          avg: values.reduce((a, b) => a + b, 0) / values.length
-        });
+        setChartData(finalData);
+
+        if (finalData.length > 0) {
+          const values = finalData.map(d => d.value);
+          setStats({
+            min: Math.min(...values),
+            max: Math.max(...values),
+            avg: values.reduce((a, b) => a + b, 0) / values.length
+          });
+        }
+
+        console.log(`Loaded ${finalData.length} data points for ${period}`);
+      } else {
+        console.error('Error loading data:', response.error);
+        setChartData([]);
+        setStats(null);
       }
+
     } catch (error) {
       console.error('Error loading chart data:', error);
+      setChartData([]);
+      setStats(null);
     } finally {
       setLoading(false);
     }
@@ -117,7 +126,7 @@ export default function EnhancedRiskChart({
 
   useEffect(() => {
     fetchChartData(selectedPeriod);
-  }, [selectedPeriod]);
+  }, [selectedPeriod, maxDataPoints]);
 
   // Formatear fechas para el eje X con espaciado inteligente
   const formatDateForAxis = (dateString: string, period: string, index: number, totalLength: number) => {
@@ -126,24 +135,22 @@ export default function EnhancedRiskChart({
     // Determinar cuántas etiquetas mostrar según el período
     let showEvery = 1;
     if (period === '30d') showEvery = Math.floor(totalLength / 6); // ~6 etiquetas
-    if (period === '90d') showEvery = Math.floor(totalLength / 8); // ~8 etiquetas  
+    if (period === '3m') showEvery = Math.floor(totalLength / 8); // ~8 etiquetas  
     if (period === '1y') showEvery = Math.floor(totalLength / 12); // ~12 etiquetas
     if (period === '5y') showEvery = Math.floor(totalLength / 10); // ~10 etiquetas
     if (period === '10y') showEvery = Math.floor(totalLength / 10); // ~10 etiquetas
-    if (period === '20y') showEvery = Math.floor(totalLength / 15); // ~15 etiquetas
 
     // Solo mostrar etiquetas espaciadas
-    if (index % showEvery !== 0) return '';
+    if (index % Math.max(1, showEvery) !== 0) return '';
     
     switch (period) {
       case '30d':
-      case '90d':
+      case '3m':
         return date.toLocaleDateString('es-AR', { month: 'short', day: 'numeric' });
       case '1y':
         return date.toLocaleDateString('es-AR', { month: 'short', year: '2-digit' });
       case '5y':
       case '10y':
-      case '20y':
         return date.getFullYear().toString();
       default:
         return date.toLocaleDateString('es-AR');
@@ -168,7 +175,7 @@ export default function EnhancedRiskChart({
           <p className="text-sm text-red-600 font-semibold mb-1">
             {formatRiskValue(data.value)} puntos básicos
           </p>
-          {data.change !== null && (
+          {data.change !== null && data.change !== undefined && (
             <p className={`text-xs ${data.change >= 0 ? 'text-red-600' : 'text-green-600'}`}>
               {data.change >= 0 ? '+' : ''}{data.change?.toFixed(2)}% vs anterior
             </p>
@@ -202,6 +209,11 @@ export default function EnhancedRiskChart({
               <Calendar className="h-5 w-5 text-red-600" />
               <span className="text-sm font-medium text-gray-700">
                 {periodOptions.find(opt => opt.value === selectedPeriod)?.label}
+                {chartData.length > 0 && (
+                  <span className="text-gray-500 ml-2">
+                    ({chartData.length.toLocaleString()} puntos)
+                  </span>
+                )}
               </span>
             </div>
             
@@ -254,6 +266,11 @@ export default function EnhancedRiskChart({
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
                   <p className="text-gray-500">Cargando datos...</p>
+                  {selectedPeriod === '5y' || selectedPeriod === '10y' ? (
+                    <p className="text-xs text-gray-400 mt-1">
+                      Procesando {selectedPeriod === '5y' ? '~1,800' : '~3,600'} puntos de datos
+                    </p>
+                  ) : null}
                 </div>
               </div>
             ) : chartData.length === 0 ? (

@@ -44,13 +44,12 @@ export interface RiskCountryStats {
   } | null;
 }
 
-// Respuesta completa de la API
 export interface RiskCountryResponse {
   success: boolean;
   data: RiskCountryDataPoint[];
   meta: {
     type: string;
-    total_records: number;
+    total_records?: number; // Hacemos opcional para la nueva estructura
     date_range: any;
     order: string;
     limit: number | null;
@@ -59,6 +58,13 @@ export interface RiskCountryResponse {
   stats: RiskCountryStats | null;
   error?: string;
   details?: string;
+  // Añadir este objeto para la paginación
+  pagination?: {
+    page: number;
+    limit: number;
+    total_records: number;
+    total_pages: number;
+  };
 }
 
 // Parámetros de consulta

@@ -7,6 +7,7 @@ import AppWrapper from "@/lib/AppWrapper";
 import NavBar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/CTAFooter";
 import { defaultMetadata } from "@/lib/metadata";
+import { GoogleAnalytics } from '@next/third-parties/google';
 
 const clearSans = localFont({
   src: [
@@ -86,6 +87,8 @@ export default function RootLayout({
           {children}
           <Footer />
         </AppWrapper>
+        <GoogleAnalytics gaId="G-WFK681BVSD" />
+
       </body>
     </html>
   );

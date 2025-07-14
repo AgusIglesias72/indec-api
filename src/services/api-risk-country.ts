@@ -1,37 +1,10 @@
 // src/services/api-risk-country.ts
-// Servicio para conectarse a la API del Riesgo País
+// Servicio actualizado para manejar la nueva API con paginación
 
-// Tipos para el Riesgo País basados en tu API
-export interface RiskCountryDataPoint {
-  closing_date: string;
-  closing_value: number;
-  change_percentage: number | null;
-  previous_value?: number | null;
-  volume?: number | null;
-  high_value?: number | null;
-  low_value?: number | null;
-}
+import { RiskCountryDataPoint, RiskCountryStats } from '@/types/risk-country';
 
-export interface RiskCountryStats {
-  latest_value: number;
-  latest_date: string;
-  latest_change: number | null;
-  min_value: number;
-  max_value: number;
-  avg_value: number;
-  total_records: number;
-  period_change: {
-    absolute: number;
-    percentage: number | null;
-  } | null;
-  volatility: {
-    avg_daily_change: number;
-    max_daily_increase: number;
-    max_daily_decrease: number;
-  } | null;
-}
-
-export interface RiskCountryResponse {
+// Tipos para la respuesta de la API
+interface ApiResponse {
   success: boolean;
   data: RiskCountryDataPoint[];
   meta: {
@@ -39,70 +12,80 @@ export interface RiskCountryResponse {
     total_records: number;
     date_range: any;
     order: string;
-    limit: number | null;
+    limit: number;
+    auto_paginated: boolean;
     query_timestamp: string;
+  };
+  pagination?: {
+    current_page: number;
+    per_page: number;
+    total_pages: number;
+    total_records: number;
+    has_more: boolean;
+    has_previous: boolean;
   };
   stats: RiskCountryStats | null;
   error?: string;
-  details?: string;
 }
 
-export type RiskCountryQueryType = 
-  | 'latest' 
-  | 'last_7_days' 
-  | 'last_30_days' 
-  | 'last_90_days' 
-  | 'year_to_date' 
-  | 'last_year' 
-  | 'custom';
-
-export interface RiskCountryQueryParams {
-  type?: RiskCountryQueryType;
-  date_from?: string; // YYYY-MM-DD
-  date_to?: string;   // YYYY-MM-DD
-  limit?: number;     // Max 1000
+// Tipos para los parámetros de consulta
+interface QueryParams {
+  type?: 'latest' | 'last_7_days' | 'last_30_days' | 'last_90_days' | 'year_to_date' | 'last_year' | 'last_5_years' | 'all_time' | 'custom';
+  date_from?: string;
+  date_to?: string;
+  limit?: number;
+  page?: number;
+  per_page?: number;
   order?: 'asc' | 'desc';
+  auto_paginate?: boolean;
 }
+
+// Configuración base
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
+const RISK_COUNTRY_ENDPOINT = '/api/riesgo-pais';
 
 /**
  * Función principal para obtener datos del riesgo país
  */
-export async function getRiskCountryData(
-  params: RiskCountryQueryParams = {}
-): Promise<RiskCountryResponse> {
+export async function getRiskCountryData(params: QueryParams = {}): Promise<ApiResponse> {
   try {
-    // Parámetros por defecto
-    const {
-      type = 'last_30_days',
-      date_from,
-      date_to,
-      limit,
-      order = 'desc'
-    } = params;
+    // Configurar parámetros por defecto
+    const queryParams = {
+      type: 'last_30_days',
+      order: 'desc',
+      auto_paginate: true,
+      ...params
+    };
 
     // Construir URL con parámetros
     const searchParams = new URLSearchParams();
-    searchParams.append('type', type);
     
-    if (date_from) searchParams.append('date_from', date_from);
-    if (date_to) searchParams.append('date_to', date_to);
-    if (limit) searchParams.append('limit', limit.toString());
-    if (order) searchParams.append('order', order);
+    Object.entries(queryParams).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        searchParams.append(key, value.toString());
+      }
+    });
 
-    const response = await fetch(`/api/riesgo-pais?${searchParams.toString()}`, {
+    const url = `${API_BASE_URL}${RISK_COUNTRY_ENDPOINT}?${searchParams.toString()}`;
+    
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
-      // No cache para datos en tiempo real
-      cache: 'no-store'
+      // Configurar cache según el tipo de consulta
+      cache: queryParams.type === 'latest' ? 'no-store' : 'default',
+      next: {
+        revalidate: queryParams.type === 'latest' ? 0 : 300 // 5 minutos para datos históricos
+      }
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
     }
 
-    const data: RiskCountryResponse = await response.json();
+    const data: ApiResponse = await response.json();
     
     if (!data.success) {
       throw new Error(data.error || 'Error desconocido en la API');
@@ -111,9 +94,8 @@ export async function getRiskCountryData(
     return data;
 
   } catch (error) {
-    console.error('Error fetching risk country data:', error);
+    console.error('Error in getRiskCountryData:', error);
     
-    // Retornar respuesta de error consistente
     return {
       success: false,
       data: [],
@@ -122,7 +104,8 @@ export async function getRiskCountryData(
         total_records: 0,
         date_range: null,
         order: params.order || 'desc',
-        limit: params.limit || null,
+        limit: params.limit || 100,
+        auto_paginated: false,
         query_timestamp: new Date().toISOString()
       },
       stats: null,
@@ -132,129 +115,190 @@ export async function getRiskCountryData(
 }
 
 /**
- * Obtener el último valor del riesgo país
+ * Función específica para obtener el último valor del riesgo país
  */
-export async function getLatestRiskCountryRate(): Promise<RiskCountryDataPoint | null> {
+export async function getLatestRiskCountryRate(): Promise<{
+  success: boolean;
+  data: RiskCountryDataPoint | null;
+  error?: string;
+}> {
   try {
     const response = await getRiskCountryData({ type: 'latest' });
     
     if (response.success && response.data.length > 0) {
-      return response.data[0];
+      return {
+        success: true,
+        data: response.data[0]
+      };
     }
     
-    return null;
+    return {
+      success: false,
+      data: null,
+      error: response.error || 'No se encontraron datos'
+    };
+    
   } catch (error) {
-    console.error('Error fetching latest risk country rate:', error);
-    return null;
+    return {
+      success: false,
+      data: null,
+      error: error instanceof Error ? error.message : 'Error desconocido'
+    };
   }
 }
 
 /**
- * Obtener datos históricos del riesgo país
+ * Función para obtener datos con paginación manual
  */
-export async function getHistoricalRiskCountryData(
-  days: number = 30,
-  limit?: number
-): Promise<RiskCountryDataPoint[]> {
-  try {
-    let type: RiskCountryQueryType;
-    
-    if (days <= 7) type = 'last_7_days';
-    else if (days <= 30) type = 'last_30_days';
-    else if (days <= 90) type = 'last_90_days';
-    else type = 'last_year';
-
-    const response = await getRiskCountryData({ 
-      type, 
-      limit,
-      order: 'asc' // Para gráficos es mejor orden ascendente
-    });
-    
-    if (response.success) {
-      return response.data;
-    }
-    
-    return [];
-  } catch (error) {
-    console.error('Error fetching historical risk country data:', error);
-    return [];
-  }
+export async function getRiskCountryDataPaginated(
+  page: number = 1, 
+  perPage: number = 100, 
+  filters: Omit<QueryParams, 'page' | 'per_page' | 'auto_paginate'> = {}
+): Promise<ApiResponse> {
+  return getRiskCountryData({
+    ...filters,
+    page,
+    per_page: perPage,
+    auto_paginate: false
+  });
 }
 
 /**
- * Obtener datos del riesgo país en un rango de fechas personalizado
+ * Función para obtener grandes conjuntos de datos con autopaginación
  */
-export async function getRiskCountryDataByDateRange(
+export async function getRiskCountryDataExtended(
+  type: QueryParams['type'] = 'last_year',
+  limit: number = 2000,
+  order: 'asc' | 'desc' = 'desc'
+): Promise<ApiResponse> {
+  return getRiskCountryData({
+    type,
+    limit,
+    order,
+    auto_paginate: true
+  });
+}
+
+/**
+ * Función para obtener datos de un rango personalizado
+ */
+export async function getRiskCountryDataCustomRange(
   dateFrom: string,
   dateTo: string,
-  limit?: number
-): Promise<RiskCountryDataPoint[]> {
+  limit?: number,
+  order: 'asc' | 'desc' = 'desc'
+): Promise<ApiResponse> {
+  return getRiskCountryData({
+    type: 'custom',
+    date_from: dateFrom,
+    date_to: dateTo,
+    limit,
+    order,
+    auto_paginate: true
+  });
+}
+
+/**
+ * Función para obtener estadísticas rápidas sin datos detallados
+ */
+export async function getRiskCountryStats(type: QueryParams['type'] = 'last_90_days'): Promise<{
+  success: boolean;
+  stats: RiskCountryStats | null;
+  error?: string;
+}> {
   try {
-    const response = await getRiskCountryData({
-      type: 'custom',
-      date_from: dateFrom,
-      date_to: dateTo,
-      limit,
-      order: 'asc'
+    const response = await getRiskCountryData({ 
+      type, 
+      limit: 1, // Mínimo para obtener stats
+      auto_paginate: false 
     });
     
-    if (response.success) {
-      return response.data;
-    }
+    return {
+      success: response.success,
+      stats: response.stats,
+      error: response.error
+    };
     
-    return [];
   } catch (error) {
-    console.error('Error fetching risk country data by date range:', error);
-    return [];
+    return {
+      success: false,
+      stats: null,
+      error: error instanceof Error ? error.message : 'Error desconocido'
+    };
   }
 }
 
 /**
- * Funciones de utilidad para el riesgo país
+ * Función para calcular variaciones entre fechas específicas
  */
+export async function calculateRiskCountryVariation(
+  baseDateFrom: string,
+  baseDateTo: string,
+  compareToLatest: boolean = true
+): Promise<{
+  success: boolean;
+  variation: {
+    absolute: number;
+    percentage: number;
+    base_value: number;
+    current_value: number;
+    base_date: string;
+    current_date: string;
+  } | null;
+  error?: string;
+}> {
+  try {
+    // Obtener valor base
+    const baseResponse = await getRiskCountryDataCustomRange(baseDateFrom, baseDateTo, 1, 'desc');
+    
+    if (!baseResponse.success || baseResponse.data.length === 0) {
+      throw new Error('No se encontraron datos para el período base');
+    }
 
-// Determinar el nivel de riesgo basado en el valor
-export function getRiskLevel(value: number) {
-  if (value < 500) {
+    const baseValue = baseResponse.data[0];
+    
+    // Obtener valor actual
+    let currentValue: RiskCountryDataPoint;
+    
+    if (compareToLatest) {
+      const latestResponse = await getLatestRiskCountryRate();
+      if (!latestResponse.success || !latestResponse.data) {
+        throw new Error('No se pudo obtener el valor actual');
+      }
+      currentValue = latestResponse.data;
+    } else {
+      // Si no es latest, usar el mismo valor base (para casos específicos)
+      currentValue = baseValue;
+    }
+
+    // Calcular variación
+    const absoluteChange = currentValue.closing_value - baseValue.closing_value;
+    const percentageChange = (absoluteChange / baseValue.closing_value) * 100;
+
     return {
-      level: 'Bajo',
-      color: 'green',
-      bgColor: 'bg-green-50',
-      borderColor: 'border-green-200',
-      textColor: 'text-green-700',
-      description: 'Riesgo soberano bajo - Acceso favorable a mercados internacionales'
+      success: true,
+      variation: {
+        absolute: absoluteChange,
+        percentage: percentageChange,
+        base_value: baseValue.closing_value,
+        current_value: currentValue.closing_value,
+        base_date: baseValue.closing_date,
+        current_date: currentValue.closing_date
+      }
     };
-  } else if (value < 1000) {
+
+  } catch (error) {
     return {
-      level: 'Moderado',
-      color: 'yellow',
-      bgColor: 'bg-yellow-50',
-      borderColor: 'border-yellow-200',
-      textColor: 'text-yellow-700',
-      description: 'Riesgo soberano moderado - Condiciones de financiamiento normales'
-    };
-  } else if (value < 1500) {
-    return {
-      level: 'Alto',
-      color: 'orange',
-      bgColor: 'bg-orange-50',
-      borderColor: 'border-orange-200',
-      textColor: 'text-orange-700',
-      description: 'Riesgo soberano alto - Acceso limitado y costoso a financiamiento'
-    };
-  } else {
-    return {
-      level: 'Muy Alto',
-      color: 'red',
-      bgColor: 'bg-red-50',
-      borderColor: 'border-red-200',
-      textColor: 'text-red-700',
-      description: 'Riesgo soberano muy alto - Acceso severamente restringido'
+      success: false,
+      variation: null,
+      error: error instanceof Error ? error.message : 'Error desconocido'
     };
   }
 }
 
-// Formatear valor del riesgo país
+/**
+ * Funciones de utilidad para formateo
+ */
 export function formatRiskValue(value: number): string {
   return new Intl.NumberFormat('es-AR', {
     minimumFractionDigits: 0,
@@ -262,25 +306,65 @@ export function formatRiskValue(value: number): string {
   }).format(value);
 }
 
-// Formatear cambio porcentual
-export function formatPercentageChange(change: number | null): string {
-  if (change === null) return 'N/A';
-  
-  const sign = change >= 0 ? '+' : '';
-  return `${sign}${change.toFixed(2)}%`;
+export function formatPercentageChange(value: number): string {
+  const sign = value > 0 ? '+' : '';
+  return `${sign}${new Intl.NumberFormat('es-AR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(value)}%`;
 }
 
-// Calcular tendencia basada en datos históricos
-export function calculateTrend(data: RiskCountryDataPoint[]): 'up' | 'down' | 'stable' {
-  if (data.length < 2) return 'stable';
-  
-  const recent = data.slice(-5); // Últimos 5 puntos
-  const avg = recent.reduce((sum, point) => sum + point.closing_value, 0) / recent.length;
-  const latest = data[data.length - 1].closing_value;
-  
-  const threshold = avg * 0.02; // 2% de variación se considera estable
-  
-  if (latest > avg + threshold) return 'up';
-  if (latest < avg - threshold) return 'down';
-  return 'stable';
+export function formatCurrencyARS(value: number): string {
+  return new Intl.NumberFormat('es-AR', {
+    style: 'currency',
+    currency: 'ARS',
+    minimumFractionDigits: 2
+  }).format(value);
 }
+
+/**
+ * Hook personalizado para usar en componentes React
+ */
+export function useRiskCountryData(params: QueryParams = {}) {
+  const [data, setData] = React.useState<RiskCountryDataPoint[]>([]);
+  const [stats, setStats] = React.useState<RiskCountryStats | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+  const [lastUpdate, setLastUpdate] = React.useState<string>('');
+
+  const fetchData = React.useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await getRiskCountryData(params);
+      
+      if (response.success) {
+        setData(response.data);
+        setStats(response.stats);
+        setError(null);
+        setLastUpdate(new Date().toISOString());
+      } else {
+        setError(response.error || 'Error al cargar datos');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error desconocido');
+    } finally {
+      setLoading(false);
+    }
+  }, [JSON.stringify(params)]);
+
+  React.useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return {
+    data,
+    stats,
+    loading,
+    error,
+    lastUpdate,
+    refetch: fetchData
+  };
+}
+
+// Importar React para el hook
+import React from 'react';

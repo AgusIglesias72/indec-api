@@ -1,5 +1,5 @@
 // src/app/api/riesgo-pais/route.ts
-// Endpoint principal para consultar datos del riesgo país (EMBI)
+// Endpoint principal para consultar datos del riesgo país (EMBI) con paginación
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
@@ -18,15 +18,23 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient<Database>(supabaseUrl, supabaseKey);
 
+// Límites por defecto
+const DEFAULT_LIMIT = 100;
+const MAX_LIMIT = 5000; // Aumentado para gráficos más completos
+const MAX_LIMIT_SINGLE_REQUEST = 1000;
+
 /**
  * GET /api/riesgo-pais
  * 
  * Query Parameters:
- * - type: 'latest' | 'last_7_days' | 'last_30_days' | 'last_90_days' | 'year_to_date' | 'last_year' | 'custom'
+ * - type: 'latest' | 'last_7_days' | 'last_30_days' | 'last_90_days' | 'year_to_date' | 'last_year' | 'last_5_years' | 'all_time' | 'custom'
  * - date_from: string (YYYY-MM-DD) - requerido si type='custom'
  * - date_to: string (YYYY-MM-DD) - requerido si type='custom'
- * - limit: number (opcional, máximo 1000)
+ * - limit: number (opcional, máximo 5000, se maneja con paginación automática si es mayor a 1000)
+ * - page: number (opcional, para paginación manual, default: 1)
+ * - per_page: number (opcional, para paginación manual, default: 100, máximo: 1000)
  * - order: 'asc' | 'desc' (default: 'desc')
+ * - auto_paginate: boolean (default: true) - si es true, maneja automáticamente la paginación para límites grandes
  */
 export async function GET(request: NextRequest) {
   try {
@@ -37,10 +45,16 @@ export async function GET(request: NextRequest) {
     const dateFrom = searchParams.get('date_from');
     const dateTo = searchParams.get('date_to');
     const limitParam = searchParams.get('limit');
+    const pageParam = searchParams.get('page');
+    const perPageParam = searchParams.get('per_page');
     const order = searchParams.get('order') || 'desc';
+    const autoPaginate = searchParams.get('auto_paginate') !== 'false';
     
     // Validar parámetros
-    const validTypes = ['latest', 'last_7_days', 'last_30_days', 'last_90_days', 'year_to_date', 'last_year', 'custom'];
+    const validTypes = [
+      'latest', 'last_7_days', 'last_30_days', 'last_90_days', 
+      'year_to_date', 'last_year', 'last_5_years', 'all_time', 'custom'
+    ];
     if (!validTypes.includes(type)) {
       return NextResponse.json({
         success: false,
@@ -57,16 +71,19 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
     
-    // Validar limit
-    const limit = limitParam ? parseInt(limitParam) : null;
-    if (limit && (limit < 1 || limit > 1000)) {
+    // Configurar paginación
+    const limit = limitParam ? Math.min(parseInt(limitParam), MAX_LIMIT) : DEFAULT_LIMIT;
+    const page = pageParam ? Math.max(parseInt(pageParam), 1) : 1;
+    const perPage = perPageParam ? Math.min(parseInt(perPageParam), MAX_LIMIT_SINGLE_REQUEST) : DEFAULT_LIMIT;
+    
+    // Validar parámetros numéricos
+    if (limit && (limit < 1 || limit > MAX_LIMIT)) {
       return NextResponse.json({
         success: false,
-        error: 'Limit debe estar entre 1 y 1000'
+        error: `Limit debe estar entre 1 y ${MAX_LIMIT}`
       }, { status: 400 });
     }
     
-    // Validar order
     if (!['asc', 'desc'].includes(order)) {
       return NextResponse.json({
         success: false,
@@ -74,20 +91,53 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
     
-    // Construir query según el tipo
-    const { data, error, query } = await buildQuery(type, dateFrom, dateTo, limit, order);
+    // Determinar si usar autopaginación
+    const useAutoPagination = autoPaginate && limit > MAX_LIMIT_SINGLE_REQUEST;
     
-    if (error) {
-      console.error('Error querying riesgo país:', error);
-      return NextResponse.json({
-        success: false,
-        error: 'Error interno del servidor',
-        details: error.message
-      }, { status: 500 });
+    let data: any[] = [];
+    let totalRecords = 0;
+    let hasMore = false;
+    let currentPage = page;
+    let totalPages = 1;
+    
+    if (useAutoPagination) {
+      // Manejo automático de paginación para datasets grandes
+      const result = await fetchAllData(type, dateFrom, dateTo, limit, order);
+      if (result.error) {
+        throw result.error;
+      }
+      data = result.data || [];
+      totalRecords = data.length;
+      totalPages = 1;
+      hasMore = false;
+    } else {
+      // Paginación manual o consulta simple
+      const result = await buildQuery(type, dateFrom, dateTo, perPage, order, page);
+      if (result.error) {
+        throw result.error;
+      }
+      
+      data = result.data || [];
+      
+      // Obtener total de registros para paginación
+      const countResult = await getRecordCount(type, dateFrom, dateTo);
+      totalRecords = countResult.count || 0;
+      totalPages = Math.ceil(totalRecords / perPage);
+      hasMore = currentPage < totalPages;
     }
     
     // Calcular estadísticas
-    const stats = calculateStats(data || [], type);
+    const stats = calculateStats(data, type);
+    
+    // Preparar metadata de paginación
+    const pagination = useAutoPagination ? null : {
+      current_page: currentPage,
+      per_page: perPage,
+      total_pages: totalPages,
+      total_records: totalRecords,
+      has_more: hasMore,
+      has_previous: currentPage > 1
+    };
     
     return NextResponse.json({
       success: true,
@@ -97,9 +147,11 @@ export async function GET(request: NextRequest) {
         total_records: data?.length || 0,
         date_range: type === 'custom' ? { from: dateFrom, to: dateTo } : getDateRange(type),
         order,
-        limit: limit || null,
+        limit: useAutoPagination ? limit : perPage,
+        auto_paginated: useAutoPagination,
         query_timestamp: new Date().toISOString()
       },
+      pagination,
       stats
     });
 
@@ -114,14 +166,116 @@ export async function GET(request: NextRequest) {
 }
 
 /**
+ * Maneja la obtención automática de todos los datos necesarios mediante paginación interna
+ */
+async function fetchAllData(
+  type: string, 
+  dateFrom: string | null, 
+  dateTo: string | null, 
+  totalLimit: number, 
+  order: string
+) {
+  const allData: any[] = [];
+  let currentPage = 1;
+  let hasMore = true;
+  const perPage = MAX_LIMIT_SINGLE_REQUEST;
+  
+  while (hasMore && allData.length < totalLimit) {
+    const remainingLimit = Math.min(perPage, totalLimit - allData.length);
+    
+    const result = await buildQuery(type, dateFrom, dateTo, remainingLimit, order, currentPage);
+    
+    if (result.error) {
+      return { error: result.error, data: null };
+    }
+    
+    const pageData = result.data || [];
+    allData.push(...pageData);
+    
+    // Verificar si hay más datos
+    hasMore = pageData.length === remainingLimit;
+    currentPage++;
+    
+    // Protección contra loops infinitos
+    if (currentPage > 100) {
+      console.warn('Reached maximum page limit in auto-pagination');
+      break;
+    }
+  }
+  
+  return { data: allData, error: null };
+}
+
+/**
+ * Obtiene el conteo total de registros para paginación
+ */
+async function getRecordCount(
+  type: string,
+  dateFrom: string | null,
+  dateTo: string | null
+) {
+  let query = supabase
+    .from('v_embi_daily_closing')
+    .select('*', { count: 'exact', head: true });
+
+  // Aplicar los mismos filtros que en la query principal
+  switch (type) {
+    case 'latest':
+      return { count: 1 };
+      
+    case 'last_7_days':
+      query = query.gte('closing_date', getDateDaysAgo(7));
+      break;
+      
+    case 'last_30_days':
+      query = query.gte('closing_date', getDateDaysAgo(30));
+      break;
+      
+    case 'last_90_days':
+      query = query.gte('closing_date', getDateDaysAgo(90));
+      break;
+      
+    case 'year_to_date':
+      const yearStart = new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0];
+      query = query.gte('closing_date', yearStart);
+      break;
+      
+    case 'last_year':
+      const lastYear = new Date().getFullYear() - 1;
+      const lastYearStart = `${lastYear}-01-01`;
+      const lastYearEnd = `${lastYear}-12-31`;
+      query = query.gte('closing_date', lastYearStart).lte('closing_date', lastYearEnd);
+      break;
+      
+    case 'last_5_years':
+      query = query.gte('closing_date', getDateDaysAgo(5 * 365));
+      break;
+      
+    case 'all_time':
+      // Sin filtros adicionales
+      break;
+      
+    case 'custom':
+      if (dateFrom && dateTo) {
+        query = query.gte('closing_date', dateFrom).lte('closing_date', dateTo);
+      }
+      break;
+  }
+
+  const { count, error } = await query;
+  return { count: count || 0, error };
+}
+
+/**
  * Construye la query de Supabase según el tipo solicitado
  */
 async function buildQuery(
   type: string, 
   dateFrom: string | null, 
   dateTo: string | null, 
-  limit: number | null, 
-  order: string
+  limit: number, 
+  order: string,
+  page: number = 1
 ) {
   let query = supabase
     .from('v_embi_daily_closing')
@@ -168,6 +322,16 @@ async function buildQuery(
         .order('closing_date', { ascending: order === 'asc' });
       break;
       
+    case 'last_5_years':
+      query = query
+        .gte('closing_date', getDateDaysAgo(5 * 365))
+        .order('closing_date', { ascending: order === 'asc' });
+      break;
+      
+    case 'all_time':
+      query = query.order('closing_date', { ascending: order === 'asc' });
+      break;
+      
     case 'custom':
       if (dateFrom && dateTo) {
         query = query
@@ -181,9 +345,10 @@ async function buildQuery(
       throw new Error(`Tipo no implementado: ${type}`);
   }
   
-  // Aplicar limit si se especifica (excepto para 'latest' que ya tiene limit 1)
-  if (limit && type !== 'latest') {
-    query = query.limit(limit);
+  // Aplicar paginación (excepto para 'latest' que ya tiene limit 1)
+  if (type !== 'latest') {
+    const offset = (page - 1) * limit;
+    query = query.range(offset, offset + limit - 1);
   }
   
   const { data, error } = await query;
@@ -220,13 +385,17 @@ function getDateRange(type: string) {
     case 'last_year':
       const lastYear = new Date().getFullYear() - 1;
       return { from: `${lastYear}-01-01`, to: `${lastYear}-12-31` };
+    case 'last_5_years':
+      return { from: getDateDaysAgo(5 * 365), to: today };
+    case 'all_time':
+      return { description: 'Todos los datos disponibles' };
     default:
       return null;
   }
 }
 
 /**
- * Calcula estadísticas básicas de los datos
+ * Calcula estadísticas básicas de los datos incluyendo variaciones temporales
  */
 function calculateStats(data: any[], type: string) {
   if (!data || data.length === 0) {
@@ -240,13 +409,33 @@ function calculateStats(data: any[], type: string) {
     return null;
   }
   
-  const latest = data[0]; // Asumiendo order desc por defecto
-  const oldest = data[data.length - 1];
+  const latest = data.find(item => item.closing_value !== null);
+  const oldest = [...data].reverse().find(item => item.closing_value !== null);
+  
+  // Calcular variaciones específicas si tenemos datos suficientes
+  let monthlyVariation = null;
+  let yearlyVariation = null;
+  
+  if (data.length > 20) { // Aproximadamente un mes de datos laborables
+    const monthAgoData = data[Math.min(20, data.length - 1)];
+    if (monthAgoData && latest) {
+      monthlyVariation = ((latest.closing_value - monthAgoData.closing_value) / monthAgoData.closing_value * 100);
+    }
+  }
+  
+  if (data.length > 250) { // Aproximadamente un año de datos laborables
+    const yearAgoData = data[Math.min(250, data.length - 1)];
+    if (yearAgoData && latest) {
+      yearlyVariation = ((latest.closing_value - yearAgoData.closing_value) / yearAgoData.closing_value * 100);
+    }
+  }
   
   return {
     latest_value: latest?.closing_value || null,
     latest_date: latest?.closing_date || null,
     latest_change: latest?.change_percentage || null,
+    monthly_variation: monthlyVariation,
+    yearly_variation: yearlyVariation,
     min_value: Math.min(...values),
     max_value: Math.max(...values),
     avg_value: parseFloat((values.reduce((a, b) => a + b, 0) / values.length).toFixed(2)),

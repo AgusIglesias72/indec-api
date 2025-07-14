@@ -2,20 +2,51 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Menu } from "lucide-react"
+import { Menu, DollarSign, TrendingUp, BarChart3, Globe, Calendar, FileText, Users, Mail } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
 import { MainNavigation } from "@/components/NavigationMenu"
 import { cn } from "@/lib/utils"
-import Image from "next/image"
 import Logo from "../Logo"
 
+// Datos de navegación sincronizados con MainNavigation
+const indicators = [
+  {
+    title: "EMAE",
+    href: "/indicadores/emae",
+    description: "Estimador Mensual de Actividad Económica",
+    icon: BarChart3,
+  },
+  {
+    title: "IPC",
+    href: "/indicadores/ipc",
+    description: "Índice de Precios al Consumidor",
+    icon: TrendingUp,
+  },
+  {
+    title: "Riesgo País",
+    href: "/indicadores/riesgo-pais",
+    description: "Indicador de riesgo soberano argentino",
+    icon: Globe,
+  },
+  {
+    title: "Mercado de Trabajo",
+    href: "/indicadores/labor-market",
+    description: "Índice de Empleo y Mercado Laboral",
+    icon: Users,
+  },
+]
 
-
+const mainNavItems = [
+  { title: "Cotizaciones", href: "/cotizaciones", icon: DollarSign },
+  { title: "Calendario INDEC", href: "/calendario", icon: Calendar },
+  { title: "API Docs", href: "/api-docs", icon: FileText },
+]
 
 export default function NavBar() {
   const [isScrolled, setIsScrolled] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   
   // Manejar scroll para efectos visuales
   useEffect(() => {
@@ -26,6 +57,11 @@ export default function NavBar() {
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
+
+  // Cerrar menú móvil al navegar
+  const handleMobileNavClick = () => {
+    setIsMobileMenuOpen(false)
+  }
   
   return (
     <header className={cn(
@@ -37,159 +73,179 @@ export default function NavBar() {
       <div className="mx-auto flex h-16 items-center justify-between px-4 xl:px-12">
         {/* Logo */}
         <div className="flex items-center justify-start flex-1">
-            <Link href="/" className="flex items-center gap-2 mr-6">
+          <Link href="/" className="flex items-center gap-2 mr-6">
             <Logo />
           </Link>
-           {/*
-
-                     <Link href="/" className="flex items-center gap-2 mr-6">
-           
-            <div className="flex h-8 w-8 items-center justify-center rounded bg-indec-blue text-white font-bold">
-              E
-            </div>
-            <span className="font-semibold tracking-tight text-indec-blue transition-colors duration-300">
-              EconoVista
-            </span>
-            </Link>
-            <Image 
-                src="/argenstats.png"
-                alt="EconoVista"
-                width={200}
-                height={250}
-            />
-           */}
-
         </div>
 
-          {/* Desktop Navigation */}
-            <div className="hidden md:block font-clear-sans justify-center font-extrabold flex-1">
-                <MainNavigation />
-            </div>
+        {/* Desktop Navigation */}
+        <div className="hidden md:block font-clear-sans justify-center font-extrabold flex-1">
+          <MainNavigation />
+        </div>
           
-        {/* Auth buttons and mobile menu */}
+        {/* Contact button and mobile menu */}
         <div className="flex items-center justify-end gap-2 flex-1">
-          {/* Auth buttons - desktop */}
+          {/* Contact button - desktop */}
           <div className="hidden md:flex md:items-center md:gap-2">
             <Button 
+              asChild
               variant="outline" 
               size="sm"
-              className="font-medium border-indec-blue text-indec-blue"
+              className="font-medium border-indec-blue text-indec-blue hover:bg-indec-blue hover:text-white transition-colors"
             >
-              Iniciar sesión
+              <Link href="/contacto" className="flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                Contacto
+              </Link>
             </Button>
-          
           </div>
           
           {/* Mobile menu trigger */}
           <div className="md:hidden">
-            <Sheet>
+            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button 
                   variant="ghost" 
                   size="icon"
-                  className="text-indec-blue"
+                  className="text-indec-blue hover:bg-indec-blue/10"
                 >
                   <Menu className="h-5 w-5" />
                   <span className="sr-only">Menú</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] sm:w-[350px]">
+              <SheetContent side="right" className="w-[300px] sm:w-[350px] p-0">
+                {/* Título accesible oculto */}
+                <SheetTitle className="sr-only">
+                  Menú de navegación principal
+                </SheetTitle>
+                
                 <div className="flex flex-col h-full">
-                  <div className="px-2 py-6">
-                    <div className="flex items-center gap-2 mb-6">
-                      <div className="flex h-8 w-8 items-center justify-center rounded bg-indec-blue text-white font-bold">
-                        E
-                      </div>
-                      <span className="font-semibold tracking-tight text-indec-blue">
-                        EconoVista
-                      </span>
+                  {/* Header del menú móvil */}
+                  <div className="flex items-center justify-between p-6 border-b">
+                    <div className="flex items-center gap-2">
+                      <Logo />
                     </div>
-                    
-                    <nav className="flex flex-col space-y-4">
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium text-muted-foreground px-4">
+                  </div>
+                  
+                  {/* Contenido de navegación */}
+                  <div className="flex-1 overflow-y-auto py-6 px-6">
+                    <nav className="space-y-6">
+                      {/* Sección Indicadores */}
+                      <div className="space-y-3">
+                        <h3 className="text-sm font-semibold text-indec-blue uppercase tracking-wider">
                           Indicadores
-                        </p>
-                        <Link 
-                          href="/indicadores/emae"
-                          className="block px-4 py-2 text-sm rounded-md hover:bg-accent"
-                        >
-                          EMAE
-                        </Link>
-                        <Link 
-                          href="/indicadores/ipc"
-                          className="block px-4 py-2 text-sm rounded-md hover:bg-accent"
-                        >
-                          IPC
-                        </Link>
-                        <Link 
-                          href="/indicadores/emae-por-actividad"
-                          className="block px-4 py-2 text-sm rounded-md hover:bg-accent"
-                        >
-                          EMAE por Actividad
-                        </Link>
-                        <Link 
-                          href="/indicadores/comparativas"
-                          className="block px-4 py-2 text-sm rounded-md hover:bg-accent"
-                        >
-                          Comparativas
-                        </Link>
+                        </h3>
+                        <div className="space-y-1">
+                          {indicators.map((indicator) => {
+                            const IconComponent = indicator.icon;
+                            return (
+                              <Link
+                                key={indicator.title}
+                                href={indicator.href}
+                                onClick={handleMobileNavClick}
+                                className="flex items-start gap-3 rounded-lg p-3 hover:bg-indec-blue/5 transition-colors group"
+                              >
+                                <div className="flex-shrink-0 mt-0.5">
+                                  <IconComponent className="h-5 w-5 text-indec-blue group-hover:text-indec-blue-dark transition-colors" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-medium text-gray-900 group-hover:text-indec-blue transition-colors">
+                                    {indicator.title}
+                                  </div>
+                                  <div className="text-sm text-gray-600 mt-1 font-clear-sans font-light">
+                                    {indicator.description}
+                                  </div>
+                                </div>
+                              </Link>
+                            );
+                          })}
+                        </div>
                       </div>
                       
+                      {/* Separador */}
+                      <div className="border-t border-gray-200"></div>
+                      
+                      {/* Sección Principal */}
+                      <div className="space-y-3">
+                        <h3 className="text-sm font-semibold text-indec-blue uppercase tracking-wider">
+                          Navegación
+                        </h3>
+                        <div className="space-y-1">
+                          {mainNavItems.map((item) => {
+                            const IconComponent = item.icon;
+                            return (
+                              <Link
+                                key={item.title}
+                                href={item.href}
+                                onClick={handleMobileNavClick}
+                                className="flex items-center gap-3 rounded-lg p-3 hover:bg-indec-blue/5 transition-colors group"
+                              >
+                                <div className="flex-shrink-0">
+                                  <IconComponent className="h-5 w-5 text-indec-blue group-hover:text-indec-blue-dark transition-colors" />
+                                </div>
+                                <div className="font-medium text-gray-900 group-hover:text-indec-blue transition-colors">
+                                  {item.title}
+                                </div>
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </div>
+                      
+                      {/* Separador */}
+                      <div className="border-t border-gray-200"></div>
+                      
+                      {/* Enlaces adicionales */}
                       <div className="space-y-1">
-                        <p className="text-sm font-medium text-muted-foreground px-4">
-                          API
-                        </p>
                         <Link 
-                          href="/api-docs"
-                          className="block px-4 py-2 text-sm rounded-md hover:bg-accent"
+                          href="/contacto"
+                          onClick={handleMobileNavClick}
+                          className="flex items-center gap-3 rounded-lg p-3 hover:bg-indec-blue/5 transition-colors group"
                         >
-                          Documentación
+                          <div className="flex-shrink-0">
+                            <Mail className="h-5 w-5 text-indec-blue group-hover:text-indec-blue-dark transition-colors" />
+                          </div>
+                          <div className="font-medium text-gray-900 group-hover:text-indec-blue transition-colors">
+                            Contacto
+                          </div>
                         </Link>
+                        
                         <Link 
-                          href="/api-docs/ejemplos"
-                          className="block px-4 py-2 text-sm rounded-md hover:bg-accent"
+                          href="/documentacion"
+                          onClick={handleMobileNavClick}
+                          className="flex items-center gap-3 rounded-lg p-3 hover:bg-indec-blue/5 transition-colors group"
                         >
-                          Ejemplos de Código
+                          <div className="flex-shrink-0">
+                            <FileText className="h-5 w-5 text-indec-blue group-hover:text-indec-blue-dark transition-colors" />
+                          </div>
+                          <div className="font-medium text-gray-900 group-hover:text-indec-blue transition-colors">
+                            Documentación
+                          </div>
                         </Link>
+                        
                         <Link 
-                          href="/api-docs/endpoints"
-                          className="block px-4 py-2 text-sm rounded-md hover:bg-accent"
+                          href="/acerca-de"
+                          onClick={handleMobileNavClick}
+                          className="flex items-center gap-3 rounded-lg p-3 hover:bg-indec-blue/5 transition-colors group"
                         >
-                          Referencias de Endpoints
-                        </Link>
-                        <Link 
-                          href="/api-docs/playground"
-                          className="block px-4 py-2 text-sm rounded-md hover:bg-accent"
-                        >
-                          Playground
+                          <div className="flex-shrink-0">
+                            <Users className="h-5 w-5 text-indec-blue group-hover:text-indec-blue-dark transition-colors" />
+                          </div>
+                          <div className="font-medium text-gray-900 group-hover:text-indec-blue transition-colors">
+                            Acerca de
+                          </div>
                         </Link>
                       </div>
-                      
-                      <Link 
-                        href="/documentacion"
-                        className="block px-4 py-2 text-sm rounded-md hover:bg-accent"
-                      >
-                        Documentación
-                      </Link>
-                      
-                      <Link 
-                        href="/acerca-de"
-                        className="block px-4 py-2 text-sm rounded-md hover:bg-accent"
-                      >
-                        Acerca de
-                      </Link>
                     </nav>
                   </div>
                   
-                  {/* Mobile auth buttons */}
-                  <div className="mt-auto p-6 border-t space-y-2">
-                    <Button className="w-full" variant="outline">
-                      Iniciar sesión
-                    </Button>
-                    <Button className="w-full bg-indec-blue text-white hover:bg-indec-blue-dark">
-                      Registrarse
-                    </Button>
+                  {/* Footer del menú móvil */}
+                  <div className="p-6 border-t bg-gray-50/80">
+                    <div className="text-center">
+                      <p className="text-xs text-gray-500">
+                        ArgenStats • Datos económicos en tiempo real
+                      </p>
+                    </div>
                   </div>
                 </div>
               </SheetContent>

@@ -59,83 +59,24 @@ function HeroSection({ title, subtitle }: { title: string; subtitle: string }) {
   );
 }
 
-// Mini gráfico sparkline para la card principal
-function MiniSparkline() {
-  const [chartData, setChartData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchSparklineData = async () => {
-      try {
-        const response = await getRiskCountryData({ type: 'last_90_days', order: 'asc' });
-        if (response.success && response.data.length > 0) {
-          // Simplificar datos para el sparkline
-          const processedData = response.data.map((point) => ({
-            value: point.closing_value
-          }));
-          setChartData(processedData);
-        }
-      } catch (error) {
-        console.error('Error loading sparkline data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSparklineData();
-  }, []);
-
-  if (loading || chartData.length === 0) {
-    return (
-      <div className="h-16 bg-gray-50 rounded-lg animate-pulse"></div>
-    );
-  }
-
-  return (
-    <div className="h-16 w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={chartData} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
-          <defs>
-            <linearGradient id="miniGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#DC2626" stopOpacity={0.2}/>
-              <stop offset="95%" stopColor="#DC2626" stopOpacity={0.02}/>
-            </linearGradient>
-          </defs>
-          <Area 
-            type="monotone" 
-            dataKey="value" 
-            stroke="#DC2626"
-            strokeWidth={1.5}
-            fill="url(#miniGradient)"
-            dot={false}
-          />
-        </AreaChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
-
-// Componente para la card principal del riesgo país - simplificada
-function RiskCountryCard() {
+// Componente para la card principal del riesgo país (simplificada y responsive)
+function CurrentRiskCard() {
   const [riskData, setRiskData] = useState<RiskCountryDataPoint | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<string>('');
 
-  // Cargar datos del riesgo país
   const fetchData = async () => {
     try {
       setLoading(true);
+      const latestResponse = await getRiskCountryData({ type: 'latest' });
       
-      // Obtener datos del último valor
-      const response = await getRiskCountryData({ type: 'latest' });
-      
-      if (response.success && response.data.length > 0) {
-        setRiskData(response.data[0]);
+      if (latestResponse.success && latestResponse.data.length > 0) {
+        setRiskData(latestResponse.data[0]);
         setLastUpdate(new Date().toISOString());
         setError(null);
       } else {
-        setError(response.error || 'No se encontraron datos');
+        setError(latestResponse.error || 'No se encontraron datos');
       }
     } catch (err) {
       console.error('Error al cargar riesgo país:', err);
@@ -147,24 +88,22 @@ function RiskCountryCard() {
 
   useEffect(() => {
     fetchData();
-    
-    // Actualizar cada 5 minutos
     const interval = setInterval(fetchData, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 
   const getVariationColor = (variation: number | null) => {
     if (!variation) return 'text-gray-700';
-    if (variation > 0) return 'text-red-700'; // Subida = malo para riesgo país
-    if (variation < 0) return 'text-green-700'; // Bajada = bueno para riesgo país
+    if (variation > 0) return 'text-red-700';
+    if (variation < 0) return 'text-green-700';
     return 'text-gray-700';
   };
 
   const getVariationIcon = (variation: number | null) => {
-    if (!variation) return <Minus className="h-3 w-3" />;
-    if (variation > 0) return <ArrowUpRight className="h-3 w-3" />;
-    if (variation < 0) return <ArrowDownRight className="h-3 w-3" />;
-    return <Minus className="h-3 w-3" />;
+    if (!variation) return <Minus className="h-4 w-4" />;
+    if (variation > 0) return <ArrowUpRight className="h-4 w-4" />;
+    if (variation < 0) return <ArrowDownRight className="h-4 w-4" />;
+    return <Minus className="h-4 w-4" />;
   };
 
   const getVariationBg = (variation: number | null) => {
@@ -174,7 +113,6 @@ function RiskCountryCard() {
     return 'bg-gray-100 text-gray-700';
   };
 
-  // Renderizar skeleton mientras carga
   if (loading) {
     return (
       <motion.div
@@ -184,29 +122,19 @@ function RiskCountryCard() {
         className="group relative w-full"
       >
         <div className="absolute -inset-1 bg-gradient-to-r from-red-600/20 to-orange-400/20 rounded-2xl blur opacity-50"></div>
-        <div className="relative bg-white rounded-2xl p-8 shadow-lg border border-red-100">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
-            {/* Left side skeleton */}
-            <div className="lg:col-span-2">
-              <div className="flex items-center gap-3 mb-4">
-                <Skeleton className="h-10 w-10 rounded-xl" />
-                <div>
-                  <Skeleton className="h-5 w-32 mb-1" />
-                  <Skeleton className="h-4 w-20" />
-                </div>
+        <div className="relative bg-white rounded-2xl p-6 md:p-8 shadow-lg border border-red-100">
+          <div className="text-center md:text-left">
+            <div className="flex items-center justify-center md:justify-start gap-4 mb-6">
+              <Skeleton className="h-12 w-12 rounded-xl" />
+              <div>
+                <Skeleton className="h-6 w-48 mb-2" />
+                <Skeleton className="h-4 w-24" />
               </div>
-              <div className="flex flex-col sm:flex-row sm:items-end sm:gap-6 mb-6">
-                <Skeleton className="h-12 w-32 mb-2 sm:mb-0" />
-                <Skeleton className="h-8 w-24" />
-              </div>
-              <Skeleton className="h-4 w-20 mb-4" />
-              <Skeleton className="h-4 w-40" />
             </div>
-            {/* Right side skeleton */}
-            <div className="lg:pl-4">
-              <Skeleton className="h-4 w-24 mb-1" />
-              <Skeleton className="h-3 w-20 mb-3" />
-              <Skeleton className="h-16 w-full" />
+            <div className="space-y-4">
+              <Skeleton className="h-16 w-32 mx-auto md:mx-0" />
+              <Skeleton className="h-8 w-24 mx-auto md:mx-0" />
+              <Skeleton className="h-4 w-32 mx-auto md:mx-0" />
             </div>
           </div>
         </div>
@@ -214,7 +142,6 @@ function RiskCountryCard() {
     );
   }
 
-  // Renderizar error
   if (error || !riskData) {
     return (
       <motion.div
@@ -224,7 +151,7 @@ function RiskCountryCard() {
         className="group relative w-full"
       >
         <div className="absolute -inset-1 bg-gradient-to-r from-red-600/20 to-red-400/20 rounded-2xl blur opacity-50"></div>
-        <div className="relative bg-white rounded-2xl p-8 shadow-lg border border-red-100">
+        <div className="relative bg-white rounded-2xl p-6 md:p-8 shadow-lg border border-red-100">
           <div className="text-center text-red-600">
             <AlertTriangle className="h-12 w-12 mx-auto mb-4" />
             <p className="font-medium mb-2">Error al cargar Riesgo País</p>
@@ -248,77 +175,47 @@ function RiskCountryCard() {
       transition={{ duration: 0.5 }}
       className="group relative w-full"
     >
-      {/* Gradient background effect */}
       <div className="absolute -inset-1 bg-gradient-to-r from-red-600/20 to-orange-400/20 rounded-2xl blur opacity-50 group-hover:opacity-75 transition duration-500"></div>
       
-      {/* Main card */}
-      <div className="relative bg-white rounded-2xl p-8 shadow-lg border border-red-100">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+      <div className="relative bg-white rounded-2xl p-6 md:p-8 shadow-lg border border-red-100">
+        <div className="text-center md:text-left">
           
-          {/* Left side - Main info */}
-          <div className="lg:col-span-2">
-            {/* Header */}
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-10 w-10 bg-red-100 rounded-xl flex items-center justify-center">
-                <AlertTriangle className="h-5 w-5 text-red-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Riesgo País Argentina</h3>
-                <p className="text-sm text-gray-600">Nivel actual</p>
-              </div>
+          <div className="flex items-center justify-center md:justify-start gap-4 mb-6">
+            <div className="h-12 w-12 bg-red-100 rounded-xl flex items-center justify-center">
+              <AlertTriangle className="h-6 w-6 text-red-600" />
             </div>
-
-            {/* Main value and variation */}
-            <div className="flex flex-col sm:flex-row sm:items-end sm:gap-6 mb-6">
-              <div className="mb-2 sm:mb-0">
-                <div className="flex items-baseline gap-3">
-                  <p className="text-4xl font-bold text-gray-900">
-                    {formatRiskValue(riskData.closing_value)}
-                  </p>
-                  <p className="text-sm text-gray-500">puntos básicos</p>
-                </div>
-              </div>
-              
-              {/* Variation indicator */}
-              {riskData.change_percentage !== null && (
-                <div className="flex items-center gap-2">
-                  <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-sm font-medium ${getVariationBg(riskData.change_percentage)}`}>
-                    {getVariationIcon(riskData.change_percentage)}
-                    {formatPercentageChange(riskData.change_percentage)}
-                  </div>
-                  <span className="text-sm text-gray-600">vs anterior</span>
-                </div>
-              )}
-            </div>
-
-            {/* Status and update info */}
-            <div className="space-y-3">
-              <div>
-                <p className="text-sm text-gray-600">
-                  {riskData.change_percentage && riskData.change_percentage < 0 ? 'En descenso' : 
-                   riskData.change_percentage && riskData.change_percentage > 0 ? 'En aumento' : 'Sin cambios'}
-                </p>
-              </div>
-
-              {/* Last update */}
-              <div className="pt-2 border-t border-gray-100">
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <Clock className="h-3 w-3" />
-                  <span>
-                    Actualizado: {new Date(riskData.closing_date).toLocaleDateString('es-AR')} · {getTimeAgo(lastUpdate)}
-                  </span>
-                </div>
-              </div>
+            <div>
+              <h3 className="text-xl md:text-2xl font-bold text-gray-900">Riesgo País Argentina</h3>
+              <p className="text-gray-600">Nivel actual</p>
             </div>
           </div>
 
-          {/* Right side - Mini chart */}
-          <div className="lg:pl-4">
-            <div className="mb-3">
-              <h4 className="text-sm font-medium text-gray-700 mb-1">Últimos 3 meses</h4>
-              <p className="text-xs text-gray-500">Evolución del período</p>
+          <div className="space-y-4 mb-6">
+            <div className="flex items-baseline justify-center md:justify-start gap-3">
+              <p className="text-4xl md:text-5xl font-bold text-gray-900">
+                {formatRiskValue(riskData.closing_value)}
+              </p>
+              <p className="text-base md:text-lg text-gray-500">puntos básicos</p>
             </div>
-            <MiniSparkline />
+            
+            {riskData.change_percentage !== null && (
+              <div className="flex items-center justify-center md:justify-start gap-2 flex-wrap">
+                <div className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg font-medium ${getVariationBg(riskData.change_percentage)}`}>
+                  {getVariationIcon(riskData.change_percentage)}
+                  {formatPercentageChange(riskData.change_percentage)}
+                </div>
+                <span className="text-gray-600">vs ayer</span>
+              </div>
+            )}
+          </div>
+
+          <div className="pt-4 border-t border-gray-100">
+            <div className="flex items-center justify-center md:justify-start gap-2 text-sm text-gray-500">
+              <Clock className="h-4 w-4" />
+              <span>
+                Actualizado: {new Date(riskData.closing_date).toLocaleDateString('es-AR')} · {getTimeAgo(lastUpdate)}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -326,7 +223,196 @@ function RiskCountryCard() {
   );
 }
 
-// Componente para valores actuales - cards individuales
+// Componente para las variaciones por período (responsive)
+function PeriodVariations() {
+  const [variations, setVariations] = useState<{
+    thirtyDays: { value: number | null; date: string | null };
+    sixMonths: { value: number | null; date: string | null };
+    oneYear: { value: number | null; date: string | null };
+  }>({ 
+    thirtyDays: { value: null, date: null }, 
+    sixMonths: { value: null, date: null }, 
+    oneYear: { value: null, date: null } 
+  });
+  const [loading, setLoading] = useState(true);
+  const [currentValue, setCurrentValue] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchVariations = async () => {
+      try {
+        // Obtener valor actual
+        const currentResponse = await getRiskCountryData({ type: 'latest' });
+        if (!currentResponse.success || currentResponse.data.length === 0) {
+          throw new Error('No se pudo obtener el valor actual');
+        }
+        
+        const current = currentResponse.data[0].closing_value;
+        setCurrentValue(current);
+
+        // Calcular fechas
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+        
+        const oneYearAgo = new Date();
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+        // Obtener datos históricos (con rango más amplio para encontrar datos)
+        const [thirtyDaysData, sixMonthsData, oneYearData] = await Promise.all([
+          getRiskCountryData({ 
+            type: 'custom',
+            date_from: new Date(thirtyDaysAgo.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            date_to: new Date(thirtyDaysAgo.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            order: 'desc',
+            limit: 10
+          }),
+          getRiskCountryData({ 
+            type: 'custom',
+            date_from: new Date(sixMonthsAgo.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            date_to: new Date(sixMonthsAgo.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            order: 'desc',
+            limit: 10
+          }),
+          getRiskCountryData({ 
+            type: 'custom',
+            date_from: new Date(oneYearAgo.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            date_to: new Date(oneYearAgo.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            order: 'desc',
+            limit: 10
+          })
+        ]);
+
+        // Procesar resultados
+        const processVariation = (data: any) => {
+          if (data.success && data.data.length > 0) {
+            const historicalValue = data.data[0].closing_value;
+            return {
+              value: ((current - historicalValue) / historicalValue * 100),
+              date: data.data[0].closing_date
+            };
+          }
+          return { value: null, date: null };
+        };
+
+        setVariations({
+          thirtyDays: processVariation(thirtyDaysData),
+          sixMonths: processVariation(sixMonthsData),
+          oneYear: processVariation(oneYearData)
+        });
+      } catch (error) {
+        console.error('Error calculating variations:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVariations();
+  }, []);
+
+  const getVariationColor = (variation: number | null) => {
+    if (!variation) return 'text-gray-700';
+    if (variation > 0) return 'text-red-700';
+    if (variation < 0) return 'text-green-700';
+    return 'text-gray-700';
+  };
+
+  const getVariationIcon = (variation: number | null) => {
+    if (!variation) return <Minus className="h-4 w-4" />;
+    if (variation > 0) return <ArrowUpRight className="h-4 w-4" />;
+    if (variation < 0) return <ArrowDownRight className="h-4 w-4" />;
+    return <Minus className="h-4 w-4" />;
+  };
+
+  const getVariationBg = (variation: number | null) => {
+    if (!variation) return 'from-gray-600/10 to-gray-400/10 border-gray-100';
+    if (variation > 0) return 'from-red-600/10 to-red-400/10 border-red-100';
+    if (variation < 0) return 'from-green-600/10 to-green-400/10 border-green-100';
+    return 'from-gray-600/10 to-gray-400/10 border-gray-100';
+  };
+
+  const periods = [
+    { key: 'thirtyDays', label: '30 días', data: variations.thirtyDays },
+    { key: 'sixMonths', label: '6 meses', data: variations.sixMonths },
+    { key: 'oneYear', label: '1 año', data: variations.oneYear }
+  ];
+
+  if (loading) {
+    return (
+      <div className="mb-12">
+        <div className="flex items-center justify-center md:justify-start gap-3 mb-6">
+          <div className="h-8 w-8 bg-red-100 rounded-lg flex items-center justify-center">
+            <TrendingUp className="h-4 w-4 text-red-600" />
+          </div>
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900">Variaciones por Período</h2>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="group relative">
+              <div className="absolute -inset-1 bg-gradient-to-r from-gray-600/10 to-gray-400/10 rounded-2xl blur opacity-30"></div>
+              <div className="relative bg-white rounded-2xl p-4 md:p-6 shadow-md border text-center md:text-left">
+                <Skeleton className="h-4 w-16 mb-4 mx-auto md:mx-0" />
+                <Skeleton className="h-10 w-24 mb-2 mx-auto md:mx-0" />
+                <Skeleton className="h-3 w-20 mx-auto md:mx-0" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-12">
+      <div className="flex items-center justify-center md:justify-start gap-3 mb-6">
+        <div className="h-8 w-8 bg-red-100 rounded-lg flex items-center justify-center">
+          <TrendingUp className="h-4 w-4 text-red-600" />
+        </div>
+        <h2 className="text-xl md:text-2xl font-bold text-gray-900">Variaciones por Período</h2>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+        {periods.map((period, index) => (
+          <motion.div
+            key={period.key}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: index * 0.1 }}
+            className="group relative"
+          >
+            <div className={`absolute -inset-1 bg-gradient-to-r ${getVariationBg(period.data.value)} rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-300`}></div>
+            <div className={`relative bg-white rounded-2xl p-4 md:p-6 shadow-md border ${getVariationBg(period.data.value).includes('border-') ? getVariationBg(period.data.value).split('border-')[1] : 'border-gray-100'} text-center md:text-left`}>
+              <div className="flex items-center justify-center md:justify-between mb-4">
+                <p className="text-sm font-medium text-gray-600">{period.label}</p>
+                <div className="ml-2 md:ml-0">
+                  {getVariationIcon(period.data.value)}
+                </div>
+              </div>
+              
+              <p className={`text-2xl md:text-3xl font-bold mb-2 ${getVariationColor(period.data.value)}`}>
+                {period.data.value !== null ? formatPercentageChange(period.data.value) : 'N/A'}
+              </p>
+              
+              {period.data.date && (
+                <p className="text-xs text-gray-500">
+                  desde {new Date(period.data.date).toLocaleDateString('es-AR', { 
+                    day: 'numeric', 
+                    month: 'short',
+                    year: 'numeric'
+                  })}
+                </p>
+              )}
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Componente para valores actuales de los últimos 3 meses (responsive)
 function ValoresActuales() {
   const [stats, setStats] = useState<RiskCountryStats | null>(null);
   const [minData, setMinData] = useState<{ value: number; date: string } | null>(null);
@@ -340,7 +426,6 @@ function ValoresActuales() {
         if (response.success) {
           setStats(response.stats);
           
-          // Encontrar el valor mínimo y máximo de los últimos 3 meses
           if (response.data.length > 0) {
             const minPoint = response.data.reduce((min, current) => 
               current.closing_value < min.closing_value ? current : min
@@ -371,16 +456,16 @@ function ValoresActuales() {
 
   if (loading) {
     return (
-      <div className="mb-12 mt-8">
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
+      <div className="mb-12">
+        <div className="mb-6 md:mb-8">
+          <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
             <div className="h-8 w-8 bg-red-100 rounded-lg flex items-center justify-center">
               <BarChart3 className="h-4 w-4 text-red-600" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900">Últimos 3 meses</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900">Últimos 3 meses</h2>
           </div>
           
-          <div className="flex flex-wrap items-center gap-6 text-sm text-gray-600">
+          <div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-4 md:gap-6 text-sm text-gray-600">
             <div className="flex items-center gap-2">
               <div className="h-1 w-1 bg-red-600 rounded-full"></div>
               <span>Último dato disponible: julio 2025</span>
@@ -392,17 +477,17 @@ function ValoresActuales() {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
           {[1, 2, 3].map((i) => (
             <div key={i} className="group relative">
               <div className="absolute -inset-1 bg-gradient-to-r from-red-600/10 to-orange-400/10 rounded-2xl blur opacity-30"></div>
-              <div className="relative bg-white rounded-2xl p-6 shadow-md border border-red-100">
-                <div className="flex items-center gap-3 mb-4">
+              <div className="relative bg-white rounded-2xl p-4 md:p-6 shadow-md border border-red-100 text-center md:text-left">
+                <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
                   <Skeleton className="h-8 w-8 rounded-lg" />
                   <Skeleton className="h-4 w-24" />
                 </div>
-                <Skeleton className="h-10 w-20 mb-2" />
-                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-10 w-20 mb-2 mx-auto md:mx-0" />
+                <Skeleton className="h-3 w-16 mx-auto md:mx-0" />
               </div>
             </div>
           ))}
@@ -412,18 +497,16 @@ function ValoresActuales() {
   }
 
   return (
-    <div className="mb-12 mt-8">
-      {/* Header con información del período */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-4">
+    <div className="mb-12">
+      <div className="mb-6 md:mb-8">
+        <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
           <div className="h-8 w-8 bg-red-100 rounded-lg flex items-center justify-center">
             <BarChart3 className="h-4 w-4 text-red-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900">Últimos 3 meses</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900">Últimos 3 meses</h2>
         </div>
         
-        {/* Info adicional */}
-        <div className="flex flex-wrap items-center gap-6 text-sm text-gray-600">
+        <div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-4 md:gap-6 text-sm text-gray-600">
           <div className="flex items-center gap-2">
             <div className="h-1 w-1 bg-red-600 rounded-full"></div>
             <span>Último dato disponible: julio 2025</span>
@@ -435,8 +518,7 @@ function ValoresActuales() {
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Cards aquí... */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         {/* Valor mínimo */}
         {minData && (
           <motion.div
@@ -446,8 +528,8 @@ function ValoresActuales() {
             className="group relative"
           >
             <div className="absolute -inset-1 bg-gradient-to-r from-green-600/10 to-green-400/10 rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-300"></div>
-            <div className="relative bg-white rounded-2xl p-6 shadow-md border border-green-100">
-              <div className="flex items-center gap-3 mb-4">
+            <div className="relative bg-white rounded-2xl p-4 md:p-6 shadow-md border border-green-100 text-center md:text-left">
+              <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
                 <div className="h-8 w-8 bg-green-100 rounded-lg flex items-center justify-center">
                   <TrendingDown className="h-4 w-4 text-green-600" />
                 </div>
@@ -457,7 +539,7 @@ function ValoresActuales() {
               </div>
               
               <p className="text-sm font-medium text-gray-600 mb-2">Valor mínimo</p>
-              <p className="text-3xl font-bold text-green-700 mb-1">{formatRiskValue(minData.value)}</p>
+              <p className="text-2xl md:text-3xl font-bold text-green-700 mb-1">{formatRiskValue(minData.value)}</p>
               <p className="text-xs text-gray-500">
                 {new Date(minData.date).toLocaleDateString('es-AR', { 
                   day: 'numeric', 
@@ -478,8 +560,8 @@ function ValoresActuales() {
             className="group relative"
           >
             <div className="absolute -inset-1 bg-gradient-to-r from-red-600/10 to-red-400/10 rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-300"></div>
-            <div className="relative bg-white rounded-2xl p-6 shadow-md border border-red-100">
-              <div className="flex items-center gap-3 mb-4">
+            <div className="relative bg-white rounded-2xl p-4 md:p-6 shadow-md border border-red-100 text-center md:text-left">
+              <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
                 <div className="h-8 w-8 bg-red-100 rounded-lg flex items-center justify-center">
                   <TrendingUp className="h-4 w-4 text-red-600" />
                 </div>
@@ -489,7 +571,7 @@ function ValoresActuales() {
               </div>
               
               <p className="text-sm font-medium text-gray-600 mb-2">Valor máximo</p>
-              <p className="text-3xl font-bold text-red-700 mb-1">{formatRiskValue(maxData.value)}</p>
+              <p className="text-2xl md:text-3xl font-bold text-red-700 mb-1">{formatRiskValue(maxData.value)}</p>
               <p className="text-xs text-gray-500">
                 {new Date(maxData.date).toLocaleDateString('es-AR', { 
                   day: 'numeric', 
@@ -510,8 +592,8 @@ function ValoresActuales() {
             className="group relative"
           >
             <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/10 to-blue-400/10 rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-300"></div>
-            <div className="relative bg-white rounded-2xl p-6 shadow-md border border-blue-100">
-              <div className="flex items-center gap-3 mb-4">
+            <div className="relative bg-white rounded-2xl p-4 md:p-6 shadow-md border border-blue-100 text-center md:text-left">
+              <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
                 <div className="h-8 w-8 bg-blue-100 rounded-lg flex items-center justify-center">
                   <BarChart3 className="h-4 w-4 text-blue-600" />
                 </div>
@@ -521,7 +603,7 @@ function ValoresActuales() {
               </div>
               
               <p className="text-sm font-medium text-gray-600 mb-2">Promedio del período</p>
-              <p className="text-3xl font-bold text-blue-700 mb-1">{formatRiskValue(stats.avg_value)}</p>
+              <p className="text-2xl md:text-3xl font-bold text-blue-700 mb-1">{formatRiskValue(stats.avg_value)}</p>
               <p className="text-xs text-gray-500">últimos 3 meses</p>
             </div>
           </motion.div>
@@ -534,11 +616,11 @@ function ValoresActuales() {
 // Componente para los headers de sección
 function SectionHeader({ title, icon: Icon }: { title: string; icon: any }) {
   return (
-    <div className="flex items-center gap-3 mb-6">
+    <div className="flex items-center justify-center md:justify-start gap-3 mb-6">
       <div className="h-8 w-8 bg-red-100 rounded-lg flex items-center justify-center">
         <Icon className="h-4 w-4 text-red-600" />
       </div>
-      <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+      <h2 className="text-xl md:text-2xl font-bold text-gray-900">{title}</h2>
     </div>
   );
 }
@@ -632,7 +714,6 @@ function UpdateInfo() {
       <div className="absolute -inset-1 bg-gradient-to-r from-red-600/10 to-orange-400/10 rounded-xl blur opacity-30"></div>
       <div className="relative bg-white rounded-xl p-4 shadow-sm border border-red-100">
         <div className="space-y-3">
-          {/* Info principal */}
           <div className="flex items-center justify-center gap-4 text-sm text-gray-600 flex-wrap">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-red-600" />
@@ -645,7 +726,6 @@ function UpdateInfo() {
             </div>
           </div>
           
-          {/* Nota sobre el indicador */}
           <div className="text-center pt-2 border-t border-gray-200">
             <p className="text-xs text-gray-500">
               <Info className="h-3 w-3 inline mr-1" />
@@ -668,7 +748,6 @@ export default function RiesgoPaisPage() {
         subtitle="Seguimiento en tiempo real del indicador de riesgo soberano argentino"
       />
 
-      {/* Background pattern */}
       <div 
         className="absolute inset-0 opacity-[0.85] pointer-events-none"
         style={{
@@ -678,24 +757,33 @@ export default function RiesgoPaisPage() {
       ></div>
       
       <div className="container mx-auto px-4 py-8 relative z-10 max-w-7xl">
-        {/* Update Information - Movido arriba */}
         <UpdateInfo />
         
         {/* Current Risk Level Section */}
-        <div className="mb-12 mt-8">
-          <SectionHeader title="Nivel Actual" icon={AlertTriangle} />
-          <RiskCountryCard />
+        <div className="mb-8 md:mb-12 mt-6 md:mt-8">
+          <div className="flex items-center justify-center md:justify-start gap-3 mb-6">
+            <div className="h-8 w-8 bg-red-100 rounded-lg flex items-center justify-center">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
+            </div>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900">Nivel Actual</h2>
+          </div>
+          <CurrentRiskCard />
         </div>
         
-        {/* Valores Actuales Section */}
+        {/* Period Variations Section */}
+        <PeriodVariations />
+        
+        {/* Last 3 Months Values Section */}
         <ValoresActuales />
         
-        {/* Historical Analysis */}
+        {/* Historical Analysis with enhanced limits */}
         <EnhancedRiskChart 
           title="Análisis histórico"
-          description="Evolución del riesgo país con selector de períodos"
+          description="Evolución del riesgo país con selector de períodos extendidos"
           height={450}
           darkMode={false}
+          enableExtendedPeriods={true}
+          maxDataPoints={5000}
         />
         
         {/* Information Sections */}
