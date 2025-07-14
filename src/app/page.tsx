@@ -8,6 +8,7 @@ import DashboardFeature from "@/components/landing/DashboardFeatures";
 import APISection from "@/components/landing/ApiSection";
 import EconomicMetricsSection from '@/components/KPI';
 import EmploymentSection from '@/components/landing/LaborMarket';
+import NetworkGraph from '@/components/Newsletter';
 
 export const metadata: Metadata = homeMetadata;
 
@@ -27,9 +28,10 @@ export default function HomePage() {
       <EconomicMetricsSection />
       <EmploymentSection />
       {/* <DashboardFeature /> */}
-      <Stats />
       <APISection />
       <Indicators />
+      <NetworkGraph />
+
        {/* <Features /> */}
     </div>
   )

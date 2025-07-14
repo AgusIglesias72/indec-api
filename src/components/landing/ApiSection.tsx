@@ -133,7 +133,7 @@ export default function APISection() {
                 {/* Code content */}
                 <pre className="font-mono text-xs sm:text-sm text-indec-gray-light p-5 pl-10 overflow-x-auto">
                   <code className="language-javascript">{`// Obtener datos del EMAE con variación interanual
-fetch('https://api.econovista.gov.ar/v1/emae?start_date=2023-01-01&include_variations=true')
+fetch('https://argenstats.com/api/emae?start_date=2023-01-01&include_variations=true')
   .then(response => response.json())
   .then(data => {
     console.log('Último valor EMAE:', data.data[data.data.length - 1]);

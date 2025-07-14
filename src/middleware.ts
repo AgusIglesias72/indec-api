@@ -26,7 +26,8 @@ export function middleware(request: NextRequest) {
     '/api/cron/update-labor-market',
     '/api/cron/update-embi',
     '/api/riesgo-pais',
-    '/api/contact'
+    '/api/contact',
+    '/api/newsletter/subscribe'
 
   ];
   

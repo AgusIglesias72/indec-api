@@ -277,3 +277,43 @@ export const laborMarketMetadata: Metadata = {
     description: "Seguimiento del mercado laboral argentino con datos oficiales del INDEC. Tasas de empleo, desempleo, actividad y análisis por regiones y sectores.",
   },
 };
+
+
+
+
+export const empleoMetadata: Metadata = {
+  title: "Indicadores de Empleo y Mercado Laboral",
+  description: "Seguimiento completo del mercado laboral argentino con datos oficiales del INDEC. Tasas de empleo, desempleo y actividad actualizadas trimestralmente por regiones y segmentos demográficos.",
+  keywords: [
+    "empleo argentina", 
+    "desempleo argentina", 
+    "mercado laboral argentino", 
+    "tasa de desempleo", 
+    "tasa de empleo", 
+    "tasa de actividad", 
+    "INDEC empleo", 
+    "EPH encuesta permanente hogares", 
+    "estadísticas laborales", 
+    "desempleo por regiones", 
+    "empleo juvenil argentina", 
+    "indicadores económicos", 
+    "datos laborales oficiales"
+  ],
+  openGraph: {
+    title: "Indicadores de Empleo y Mercado Laboral | EconData",
+    description: "Seguimiento completo del mercado laboral argentino con datos oficiales del INDEC. Tasas de empleo, desempleo y actividad actualizadas trimestralmente por regiones y segmentos demográficos.",
+    url: `${BASE_URL}/indicadores/empleo`,
+    images: [
+      {
+        url: `${BASE_URL}/images/empleo-og-image.jpg`,
+        width: 1200,
+        height: 630,
+        alt: "Indicadores de Empleo y Mercado Laboral Argentina",
+      },
+    ],
+  },
+  twitter: {
+    title: "Indicadores de Empleo y Mercado Laboral | EconData",
+    description: "Seguimiento completo del mercado laboral argentino con datos oficiales del INDEC. Tasas de empleo, desempleo y actividad actualizadas trimestralmente.",
+  },
+};

@@ -312,7 +312,10 @@ const HeroWithMetrics = () => {
               className="group relative"
             >
               <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-green-400 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
-              <div className="relative bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 min-h-[320px] flex flex-col">
+              <div 
+                className="relative bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 min-h-[320px] flex flex-col cursor-pointer"
+                onClick={() => window.open('/dolar', '_blank')}
+              >
                 <div className="flex items-center justify-between mb-4">
                   <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
                     <DollarSign className="h-6 w-6 text-green-600" />
@@ -359,7 +362,10 @@ const HeroWithMetrics = () => {
               className="group relative"
             >
               <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-purple-400 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
-              <div className="relative bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 min-h-[320px] flex flex-col">
+              <div 
+                className="relative bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 min-h-[320px] flex flex-col cursor-pointer"
+                onClick={() => window.open('/indicadores/ipc', '_blank')}
+              >
                 <div className="flex items-center justify-between mb-4">
                   <div className="h-12 w-12 bg-purple-100 rounded-full flex items-center justify-center">
                     <TrendingUp className="h-6 w-6 text-purple-600" />
@@ -408,7 +414,10 @@ const HeroWithMetrics = () => {
               className="group relative"
             >
               <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-blue-400 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
-              <div className="relative bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 min-h-[320px] flex flex-col">
+              <div 
+                className="relative bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 min-h-[320px] flex flex-col cursor-pointer"
+                onClick={() => window.open('/indicadores/emae', '_blank')}
+              >
                 <div className="flex items-center justify-between mb-4">
                   <div className="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center">
                     <BarChart3 className="h-6 w-6 text-blue-600" />
@@ -454,7 +463,10 @@ const HeroWithMetrics = () => {
               className="group relative"
             >
               <div className="absolute -inset-1 bg-gradient-to-r from-red-600 to-red-400 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
-              <div className="relative bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 min-h-[320px] flex flex-col">
+              <div 
+                className="relative bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 min-h-[320px] flex flex-col cursor-pointer"
+                onClick={() => window.open('/indicadores/riesgo-pais', '_blank')}
+              >
                 <div className="flex items-center justify-between mb-4">
                   <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center">
                     <Globe className="h-6 w-6 text-red-600" />

@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      contact_submissions: {
+        Row: {
+          admin_notes: string | null
+          contact_type: string
+          created_at: string | null
+          email: string
+          id: number
+          ip_address: unknown | null
+          is_spam: boolean | null
+          message: string
+          name: string
+          priority: string | null
+          referrer: string | null
+          replied_at: string | null
+          resolved_at: string | null
+          spam_score: number | null
+          status: string | null
+          subject: string | null
+          updated_at: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          contact_type: string
+          created_at?: string | null
+          email: string
+          id?: number
+          ip_address?: unknown | null
+          is_spam?: boolean | null
+          message: string
+          name: string
+          priority?: string | null
+          referrer?: string | null
+          replied_at?: string | null
+          resolved_at?: string | null
+          spam_score?: number | null
+          status?: string | null
+          subject?: string | null
+          updated_at?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          contact_type?: string
+          created_at?: string | null
+          email?: string
+          id?: number
+          ip_address?: unknown | null
+          is_spam?: boolean | null
+          message?: string
+          name?: string
+          priority?: string | null
+          referrer?: string | null
+          replied_at?: string | null
+          resolved_at?: string | null
+          spam_score?: number | null
+          status?: string | null
+          subject?: string | null
+          updated_at?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       cron_executions: {
         Row: {
           created_at: string
@@ -275,8 +338,55 @@ export type Database = {
         }
         Relationships: []
       }
+      newsletter_subscriptions: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          metadata: Json | null
+          source: string | null
+          status: string | null
+          subscribed_at: string | null
+          unsubscribed_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          metadata?: Json | null
+          source?: string | null
+          status?: string | null
+          subscribed_at?: string | null
+          unsubscribed_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          metadata?: Json | null
+          source?: string | null
+          status?: string | null
+          subscribed_at?: string | null
+          unsubscribed_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
+      contact_stats: {
+        Row: {
+          avg_resolution_hours: number | null
+          contact_type: string | null
+          last_30_days: number | null
+          last_7_days: number | null
+          resolved_count: number | null
+          total_submissions: number | null
+        }
+        Relationships: []
+      }
       emae_by_activity_with_variations: {
         Row: {
           date: string | null
