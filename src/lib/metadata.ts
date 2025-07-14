@@ -140,7 +140,7 @@ export const dollarMetadata: Metadata = {
   openGraph: {
     title: "Cotizaciones de Dólar en Argentina | ArgenStats",
     description: "Seguimiento de los principales tipos de cambio en Argentina, actualizado en tiempo real. Visualiza tendencias y análisis históricos del dólar blue, oficial, CCL, MEP, y más.",
-    url: `${BASE_URL}/cotizaciones`,
+    url: `${BASE_URL}/dolar`,
     images: [
       {
         url: `${BASE_URL}/images/dollar-og-image.jpg`,
@@ -262,7 +262,7 @@ export const laborMarketMetadata: Metadata = {
   openGraph: {
     title: "Índice de Empleo y Mercado Laboral | ArgenStats",
     description: "Seguimiento del mercado laboral argentino con datos oficiales del INDEC. Tasas de empleo, desempleo, actividad y análisis por regiones y sectores.",
-    url: `${BASE_URL}/indicadores/labor-market`,
+    url: `${BASE_URL}/indicadores/empleo`,
     images: [
       {
         url: `${BASE_URL}/images/labor-market-og-image.jpg`,

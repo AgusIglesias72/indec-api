@@ -31,7 +31,7 @@ const indicators = [
   },
   {
     title: "Mercado de Trabajo",
-    href: "/indicadores/labor-market",
+    href: "/indicadores/empleo",
     description: "Índice de Empleo y Mercado Laboral",
   }, 
 ]
@@ -84,9 +84,9 @@ export function MainNavigation() {
         </NavigationMenuItem>
 
         <NavigationMenuItem>
-          <Link href="/cotizaciones" legacyBehavior passHref>
+          <Link href="/dolar" legacyBehavior passHref>
             <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-              Cotizaciones
+              Dólar
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>

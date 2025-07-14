@@ -32,14 +32,14 @@ const indicators = [
   },
   {
     title: "Mercado de Trabajo",
-    href: "/indicadores/labor-market",
+    href: "/indicadores/empleo",
     description: "Índice de Empleo y Mercado Laboral",
     icon: Users,
   },
 ]
 
 const mainNavItems = [
-  { title: "Cotizaciones", href: "/cotizaciones", icon: DollarSign },
+  { title: "Dólar", href: "/dolar", icon: DollarSign },
   { title: "Calendario INDEC", href: "/calendario", icon: Calendar },
   { title: "API Docs", href: "/api-docs", icon: FileText },
 ]

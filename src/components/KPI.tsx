@@ -275,8 +275,8 @@ const HeroWithMetrics = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              Datos económicos,
-              <span className="block text-indec-blue">en tiempo real.</span>
+              Toda la economía argentina,
+              <span className="block text-indec-blue">en un solo lugar y en tiempo real.</span>
             </motion.h1>
           </div>
         </div>

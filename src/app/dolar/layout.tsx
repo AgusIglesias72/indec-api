@@ -1,4 +1,4 @@
-// src/app/cotizaciones/layout.tsx
+// src/app/dolar/layout.tsx
 import { Metadata } from 'next';
 import { dollarMetadata } from '@/lib/metadata';
 
