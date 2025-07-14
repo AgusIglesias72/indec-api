@@ -23,19 +23,54 @@ const indicators = [
     title: "IPC",
     href: "/indicadores/ipc",
     description: "Índice de Precios al Consumidor",
+  },
+  {
+    title: "Riesgo País",
+    href: "/indicadores/riesgo-pais",
+    description: "Indicador de riesgo soberano argentino",
+  },
+  {
+    title: "Mercado de Trabajo",
+    href: "/indicadores/labor-market",
+    description: "Índice de Empleo y Mercado Laboral",
   }, 
 ]
 
+const ListItem = React.forwardRef<
+  React.ElementRef<"a">,
+  React.ComponentPropsWithoutRef<"a">
+>(({ className, title, children, ...props }, ref) => {
+  return (
+    <li>
+      <NavigationMenuLink asChild>
+      <a
+              ref={ref}
+              className={cn(
+                "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+                className
+              )}
+              {...props}
+            >
+              <div className="text-sm font-medium leading-none">{title}</div>
+              <p className="line-clamp-2 text-sm leading-snug text-muted-foreground font-clear-sans font-light">
+                {children}
+              </p>
+            </a>
+      </NavigationMenuLink>
+    </li>
+  )
+})
+ListItem.displayName = "ListItem"
 
 export function MainNavigation() {
   return (
     <NavigationMenu>
       <NavigationMenuList>
-        <NavigationMenuItem >
+        <NavigationMenuItem>
           <NavigationMenuTrigger className="">Indicadores</NavigationMenuTrigger>
           <NavigationMenuContent>
-          <ul className="grid gap-3 p-4 md:w-[300px] lg:w-[400px] lg:grid-cols-1">
-          {indicators.map((indicator) => (
+            <ul className="grid gap-3 p-4 md:w-[300px] lg:w-[400px] lg:grid-cols-2">
+              {indicators.map((indicator) => (
                 <ListItem
                   key={indicator.title}
                   title={indicator.title}
@@ -49,14 +84,13 @@ export function MainNavigation() {
         </NavigationMenuItem>
 
         <NavigationMenuItem>
-            <Link href="/cotizaciones" legacyBehavior passHref>
-              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                Cotizaciones
-              </NavigationMenuLink>
-            </Link>
-          </NavigationMenuItem>
+          <Link href="/cotizaciones" legacyBehavior passHref>
+            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+              Cotizaciones
+            </NavigationMenuLink>
+          </Link>
+        </NavigationMenuItem>
 
-       
         <NavigationMenuItem>
           <Link href="/calendario" legacyBehavior passHref>
             <NavigationMenuLink className={navigationMenuTriggerStyle()}>
@@ -64,48 +98,15 @@ export function MainNavigation() {
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>
+        
         <NavigationMenuItem>
-            <Link href="/api-docs" legacyBehavior passHref>
-              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                API Docs
-              </NavigationMenuLink>
-            </Link>
-          </NavigationMenuItem>
-
-       
+          <Link href="/api-docs" legacyBehavior passHref>
+            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+              API Docs
+            </NavigationMenuLink>
+          </Link>
+        </NavigationMenuItem>
       </NavigationMenuList>
     </NavigationMenu>
   )
 }
-
-interface ListItemProps extends React.ComponentPropsWithoutRef<"a"> {
-  title: string
-  href: string
-}
-
-const ListItem = React.forwardRef<React.ElementRef<"a">, ListItemProps>(
-  ({ className, title, children, href, ...props }, ref) => {
-    return (
-      <li>
-        <Link href={href} legacyBehavior passHref>
-          <NavigationMenuLink asChild>
-            <a
-              ref={ref}
-              className={cn(
-                "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
-                className
-              )}
-              {...props}
-            >
-              <div className="text-sm font-medium leading-none">{title}</div>
-              <p className="line-clamp-2 text-sm leading-snug text-muted-foreground font-clear-sans font-light">
-                {children}
-              </p>
-            </a>
-          </NavigationMenuLink>
-        </Link>
-      </li>
-    )
-  }
-)
-ListItem.displayName = "ListItem"

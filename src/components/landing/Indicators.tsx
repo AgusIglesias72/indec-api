@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowRight, Info, TrendingUp, BarChart3, PieChart, DollarSign } from "lucide-react"
+import { ArrowRight, Info, TrendingUp, BarChart3, PieChart, DollarSign, AlertTriangle, Users, Activity, TrendingDown } from "lucide-react"
 import { motion } from "framer-motion"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
@@ -165,39 +165,40 @@ export default function ImprovedIndicators() {
           className="mb-12"
         >
           <Tabs defaultValue="emae" className="w-full">
-            {/* Tabs navegación rediseñada */}
-            <div className="flex justify-center mb-12">
-              <TabsList className="bg-white shadow-lg border border-gray-200 p-2 rounded-2xl">
-                <TabsTrigger 
-                  value="emae" 
-                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-xl px-4 py-2.5 transition-all duration-300 font-medium text-sm"
-                >
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  EMAE
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="ipc" 
-                  className="data-[state=active]:bg-purple-600 data-[state=active]:text-white rounded-xl px-4 py-2.5 transition-all duration-300 font-medium text-sm"
-                >
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  IPC
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="dollar" 
-                  className="data-[state=active]:bg-green-600 data-[state=active]:text-white rounded-xl px-4 py-2.5 transition-all duration-300 font-medium text-sm"
-                >
-                  <DollarSign className="h-4 w-4 mr-2" />
-                  Dólar
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="actividad" 
-                  className="data-[state=active]:bg-orange-600 data-[state=active]:text-white rounded-xl px-4 py-2.5 transition-all duration-300 font-medium text-sm"
-                >
-                  <PieChart className="h-4 w-4 mr-2" />
-                  Actividad sectorial
-                </TabsTrigger>
-              </TabsList>
-            </div>
+{/* Tabs navegación rediseñada - ACTUALIZADA */}
+<div className="flex justify-center mb-12">
+  <TabsList className="bg-white shadow-lg border border-gray-200 p-2 rounded-2xl">
+    <TabsTrigger 
+      value="emae" 
+      className="data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-xl px-4 py-2.5 transition-all duration-300 font-medium text-sm"
+    >
+      <BarChart3 className="h-4 w-4 mr-2" />
+      EMAE
+    </TabsTrigger>
+    <TabsTrigger 
+      value="ipc" 
+      className="data-[state=active]:bg-purple-600 data-[state=active]:text-white rounded-xl px-4 py-2.5 transition-all duration-300 font-medium text-sm"
+    >
+      <TrendingUp className="h-4 w-4 mr-2" />
+      IPC
+    </TabsTrigger>
+    <TabsTrigger 
+      value="riesgo-pais" 
+      className="data-[state=active]:bg-red-600 data-[state=active]:text-white rounded-xl px-4 py-2.5 transition-all duration-300 font-medium text-sm"
+    >
+      <AlertTriangle className="h-4 w-4 mr-2" />
+      Riesgo País
+    </TabsTrigger>
+    <TabsTrigger 
+      value="labor-market" 
+      className="data-[state=active]:bg-green-600 data-[state=active]:text-white rounded-xl px-4 py-2.5 transition-all duration-300 font-medium text-sm"
+    >
+      <Users className="h-4 w-4 mr-2" />
+      Empleo
+    </TabsTrigger>
+  </TabsList>
+</div>
+
             
             {/* Tab Content EMAE */}
             <TabsContent value="emae">
@@ -647,6 +648,155 @@ export default function ImprovedIndicators() {
                 </div>
               </motion.div>
             </TabsContent>
+
+            
+{/* Tab content para Riesgo País */}
+<TabsContent value="riesgo-pais" className="space-y-8">
+  <motion.div 
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true }}
+    transition={{ duration: 0.6 }}
+    className="text-center"
+  >
+    <div className="inline-flex items-center gap-2 bg-red-100 text-red-700 px-4 py-2 rounded-full text-sm font-medium mb-4">
+      <AlertTriangle className="h-4 w-4" />
+      <span>Riesgo País Argentina</span>
+    </div>
+    <h3 className="text-2xl font-bold text-gray-900 mb-4">
+      Indicador de Riesgo Soberano
+    </h3>
+    <p className="text-gray-600 max-w-2xl mx-auto">
+      Monitorea en tiempo real el diferencial de rendimiento entre los bonos argentinos 
+      y los bonos del Tesoro de EE.UU., indicador clave de la confianza del mercado.
+    </p>
+  </motion.div>
+  
+  <motion.div 
+    className="bg-white rounded-2xl shadow-lg border border-red-100 p-8 max-w-md mx-auto"
+    initial={{ opacity: 0, scale: 0.95 }}
+    whileInView={{ opacity: 1, scale: 1 }}
+    viewport={{ once: true }}
+    transition={{ duration: 0.6, delay: 0.2 }}
+  >
+    <div className="text-center mb-6">
+      <div className="h-12 w-12 bg-red-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+        <AlertTriangle className="h-6 w-6 text-red-600" />
+      </div>
+      <h4 className="text-lg font-semibold text-gray-900">Último Valor</h4>
+    </div>
+    
+    <div className="text-center mb-4">
+      <p className="text-3xl font-bold text-gray-900">1,247</p>
+      <p className="text-sm text-gray-500">puntos básicos</p>
+    </div>
+    
+    <div className="bg-orange-50 border border-orange-200 rounded-xl p-3 mb-4">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-gray-700">Nivel</span>
+        <span className="text-sm font-bold text-orange-700">Alto</span>
+      </div>
+    </div>
+    
+    <div className="text-center">
+      <Link href="/indicadores/riesgo-pais">
+        <Button className="bg-red-600 hover:bg-red-700 text-white rounded-full px-6">
+          Ver detalles completos
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      </Link>
+    </div>
+  </motion.div>
+</TabsContent>
+
+{/* Tab content para Labor Market */}
+<TabsContent value="labor-market" className="space-y-8">
+  <motion.div 
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true }}
+    transition={{ duration: 0.6 }}
+    className="text-center"
+  >
+    <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-medium mb-4">
+      <Users className="h-4 w-4" />
+      <span>Mercado Laboral</span>
+    </div>
+    <h3 className="text-2xl font-bold text-gray-900 mb-4">
+      Indicadores de Empleo
+    </h3>
+    <p className="text-gray-600 max-w-2xl mx-auto">
+      Seguimiento de las principales métricas del mercado laboral argentino 
+      con datos oficiales del INDEC: tasas de empleo, desempleo y actividad.
+    </p>
+  </motion.div>
+  
+  <motion.div 
+    className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto"
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true }}
+    transition={{ duration: 0.6, delay: 0.2 }}
+  >
+    {/* Tasa de Empleo */}
+    <div className="bg-white rounded-2xl shadow-lg border border-green-100 p-6">
+      <div className="text-center mb-4">
+        <div className="h-10 w-10 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-2">
+          <TrendingUp className="h-5 w-5 text-green-600" />
+        </div>
+        <h4 className="font-semibold text-gray-900">Tasa de Empleo</h4>
+      </div>
+      <div className="text-center">
+        <p className="text-2xl font-bold text-green-700">42.8%</p>
+        <p className="text-xs text-gray-500">T4 2024</p>
+      </div>
+    </div>
+    
+    {/* Tasa de Desempleo */}
+    <div className="bg-white rounded-2xl shadow-lg border border-green-100 p-6">
+      <div className="text-center mb-4">
+        <div className="h-10 w-10 bg-orange-100 rounded-xl flex items-center justify-center mx-auto mb-2">
+          <TrendingDown className="h-5 w-5 text-orange-600" />
+        </div>
+        <h4 className="font-semibold text-gray-900">Tasa de Desempleo</h4>
+      </div>
+      <div className="text-center">
+        <p className="text-2xl font-bold text-orange-700">7.6%</p>
+        <p className="text-xs text-gray-500">T4 2024</p>
+      </div>
+    </div>
+    
+    {/* Tasa de Actividad */}
+    <div className="bg-white rounded-2xl shadow-lg border border-green-100 p-6">
+      <div className="text-center mb-4">
+        <div className="h-10 w-10 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-2">
+          <Activity  className="h-5 w-5 text-blue-600" />
+        </div>
+        <h4 className="font-semibold text-gray-900">Tasa de Actividad</h4>
+      </div>
+      <div className="text-center">
+        <p className="text-2xl font-bold text-blue-700">46.3%</p>
+        <p className="text-xs text-gray-500">T4 2024</p>
+      </div>
+    </div>
+  </motion.div>
+  
+  <motion.div 
+    className="text-center"
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true }}
+    transition={{ duration: 0.6, delay: 0.4 }}
+  >
+    <Link href="/indicadores/labor-market">
+      <Button className="bg-green-600 hover:bg-green-700 text-white rounded-full px-6">
+        Ver análisis completo
+        <ArrowRight className="ml-2 h-4 w-4" />
+      </Button>
+    </Link>
+  </motion.div>
+</TabsContent>
+
           </Tabs>
         </motion.div>
       </div>

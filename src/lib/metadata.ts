@@ -227,3 +227,53 @@ export const contactMetadata: Metadata = {
     description: "Envíanos tus comentarios, sugerencias o consultas. Estamos aquí para ayudarte con cualquier duda sobre ArgenStats o nuestras APIs.",
   },
 };
+
+
+
+// Riesgo País page metadata
+export const riesgoPaisMetadata: Metadata = {
+  title: "Riesgo País Argentina",
+  description: "Seguimiento en tiempo real del indicador de riesgo soberano argentino. Análisis histórico, niveles de riesgo y factores que influyen en la percepción del mercado.",
+  keywords: ["riesgo país", "argentina", "bonos soberanos", "spread", "default", "mercados financieros", "deuda externa", "indicador económico"],
+  openGraph: {
+    title: "Riesgo País Argentina | ArgenStats",
+    description: "Seguimiento en tiempo real del indicador de riesgo soberano argentino. Análisis histórico, niveles de riesgo y factores que influyen en la percepción del mercado.",
+    url: `${BASE_URL}/indicadores/riesgo-pais`,
+    images: [
+      {
+        url: `${BASE_URL}/images/riesgo-pais-og-image.jpg`,
+        width: 1200,
+        height: 630,
+        alt: "Riesgo País Argentina",
+      },
+    ],
+  },
+  twitter: {
+    title: "Riesgo País Argentina | ArgenStats",
+    description: "Seguimiento en tiempo real del indicador de riesgo soberano argentino. Análisis histórico, niveles de riesgo y factores que influyen en la percepción del mercado.",
+  },
+};
+
+// Labor Market page metadata
+export const laborMarketMetadata: Metadata = {
+  title: "Índice de Empleo y Mercado Laboral",
+  description: "Seguimiento del mercado laboral argentino con datos oficiales del INDEC. Tasas de empleo, desempleo, actividad y análisis por regiones y sectores.",
+  keywords: ["empleo", "mercado laboral", "argentina", "INDEC", "desempleo", "tasa de actividad", "trabajo", "estadísticas laborales"],
+  openGraph: {
+    title: "Índice de Empleo y Mercado Laboral | ArgenStats",
+    description: "Seguimiento del mercado laboral argentino con datos oficiales del INDEC. Tasas de empleo, desempleo, actividad y análisis por regiones y sectores.",
+    url: `${BASE_URL}/indicadores/labor-market`,
+    images: [
+      {
+        url: `${BASE_URL}/images/labor-market-og-image.jpg`,
+        width: 1200,
+        height: 630,
+        alt: "Índice de Empleo y Mercado Laboral",
+      },
+    ],
+  },
+  twitter: {
+    title: "Índice de Empleo y Mercado Laboral | ArgenStats",
+    description: "Seguimiento del mercado laboral argentino con datos oficiales del INDEC. Tasas de empleo, desempleo, actividad y análisis por regiones y sectores.",
+  },
+};
