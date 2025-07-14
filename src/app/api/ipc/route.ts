@@ -119,7 +119,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Configurar caché para 1 hora
-    const CACHE_MAX_AGE = 60; // 1 hora en segundos
+    const CACHE_MAX_AGE = 30; // era 3600
     const CACHE_STALE_WHILE_REVALIDATE = 120; // 24 horas
     
     // Configurar encabezados de caché
@@ -210,4 +210,4 @@ function respondWithCSV(data: Record<string, any>[], filename: string) {
 }
 
 // Revalidación programada cada hora
-export const revalidate = 3600; // 1 hora
+export const revalidate = 30; // era 10

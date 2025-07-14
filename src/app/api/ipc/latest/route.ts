@@ -104,8 +104,8 @@ export async function GET(request: NextRequest) {
     }
     
     // Configurar caché para 1 hora
-    const CACHE_MAX_AGE = 3600; // 1 hora en segundos
-    const CACHE_STALE_WHILE_REVALIDATE = 86400; // 24 horas
+    const CACHE_MAX_AGE = 30; // era 3600
+    const CACHE_STALE_WHILE_REVALIDATE = 30; // 24 horas
     
     // Configurar encabezados de caché
     const headers = new Headers();
