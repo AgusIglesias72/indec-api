@@ -20,7 +20,7 @@ function getTimeAgo(dateString: string): string {
   const date = new Date(dateString);
   const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
   
-  if (diffInMinutes < 1) return 'ahora mismo';
+  if (diffInMinutes < 1) return 'hace menos de 1 minuto';
   if (diffInMinutes < 60) return `hace ${diffInMinutes} minuto${diffInMinutes !== 1 ? 's' : ''}`;
   
   const diffInHours = Math.floor(diffInMinutes / 60);
@@ -69,7 +69,11 @@ function CurrentRiskCard() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const latestResponse = await getRiskCountryData({ type: 'latest' });
+      const latestResponse = await getRiskCountryData({ 
+        type: 'latest',
+        // Add timestamp to force cache refresh
+        _t: Date.now().toString()
+      } as any);
       
       if (latestResponse.success && latestResponse.data.length > 0) {
         setRiskData(latestResponse.data[0]);
@@ -213,7 +217,7 @@ function CurrentRiskCard() {
             <div className="flex items-center justify-center md:justify-start gap-2 text-sm text-gray-500">
               <Clock className="h-4 w-4" />
               <span>
-                Actualizado: {new Date(riskData.closing_date).toLocaleDateString('es-AR')} · {getTimeAgo(lastUpdate)}
+                Actualizado: {new Date((riskData as any).latest_timestamp || (riskData as any).updated_at || riskData.closing_date).toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })} · {getTimeAgo((riskData as any).latest_timestamp || (riskData as any).updated_at || riskData.closing_date)}
               </span>
             </div>
           </div>
@@ -249,58 +253,86 @@ function PeriodVariations() {
         const current = currentResponse.data[0].closing_value;
         setCurrentValue(current);
 
-        // Calcular fechas
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        // Calcular fechas usando el día 16 de cada mes
+        const today = new Date();
         
-        const sixMonthsAgo = new Date();
-        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-        
-        const oneYearAgo = new Date();
-        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+        const thirtyDaysAgo = new Date(today.getFullYear(), today.getMonth() - 1, 16);
+        const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 6, 16);
+        const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), 16);
 
         // Obtener datos históricos (con rango más amplio para encontrar datos)
+        const thirtyDayRange = {
+          from: new Date(thirtyDaysAgo.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          to: new Date(thirtyDaysAgo.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        };
+        const sixMonthRange = {
+          from: new Date(sixMonthsAgo.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          to: new Date(sixMonthsAgo.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        };
+        const oneYearRange = {
+          from: new Date(oneYearAgo.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          to: new Date(oneYearAgo.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        };
+
+
         const [thirtyDaysData, sixMonthsData, oneYearData] = await Promise.all([
           getRiskCountryData({ 
             type: 'custom',
-            date_from: new Date(thirtyDaysAgo.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            date_to: new Date(thirtyDaysAgo.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            date_from: thirtyDayRange.from,
+            date_to: thirtyDayRange.to,
             order: 'desc',
             limit: 10
           }),
           getRiskCountryData({ 
             type: 'custom',
-            date_from: new Date(sixMonthsAgo.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            date_to: new Date(sixMonthsAgo.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            date_from: sixMonthRange.from,
+            date_to: sixMonthRange.to,
             order: 'desc',
             limit: 10
           }),
           getRiskCountryData({ 
             type: 'custom',
-            date_from: new Date(oneYearAgo.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            date_to: new Date(oneYearAgo.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            date_from: oneYearRange.from,
+            date_to: oneYearRange.to,
             order: 'desc',
             limit: 10
           })
         ]);
 
-        // Procesar resultados
-        const processVariation = (data: any) => {
+
+        // Procesar resultados - buscar fecha más cercana al día 16
+        const processVariation = (data: any, label: string, targetDate: Date) => {
           if (data.success && data.data.length > 0) {
-            const historicalValue = data.data[0].closing_value;
+            // Encontrar la fecha más cercana al 16
+            const targetDay = 16;
+            let closestRecord = data.data[0];
+            let smallestDiff = Math.abs(new Date(data.data[0].closing_date).getDate() - targetDay);
+            
+            for (const record of data.data) {
+              const recordDay = new Date(record.closing_date).getDate();
+              const diff = Math.abs(recordDay - targetDay);
+              if (diff < smallestDiff) {
+                smallestDiff = diff;
+                closestRecord = record;
+              }
+            }
+            
+            const historicalValue = closestRecord.closing_value;
             return {
               value: ((current - historicalValue) / historicalValue * 100),
-              date: data.data[0].closing_date
+              date: closestRecord.closing_date
             };
           }
           return { value: null, date: null };
         };
 
-        setVariations({
-          thirtyDays: processVariation(thirtyDaysData),
-          sixMonths: processVariation(sixMonthsData),
-          oneYear: processVariation(oneYearData)
-        });
+        const variations = {
+          thirtyDays: processVariation(thirtyDaysData, '30 days', thirtyDaysAgo),
+          sixMonths: processVariation(sixMonthsData, '6 months', sixMonthsAgo),
+          oneYear: processVariation(oneYearData, '1 year', oneYearAgo)
+        };
+
+        setVariations(variations);
       } catch (error) {
         console.error('Error calculating variations:', error);
       } finally {
