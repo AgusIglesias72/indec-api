@@ -374,6 +374,130 @@ export type Database = {
         }
         Relationships: []
       }
+      user_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string | null
+          id: string
+          indicator_code: string | null
+          indicator_type: string
+          is_active: boolean | null
+          last_triggered_at: string | null
+          threshold_value: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string | null
+          id?: string
+          indicator_code?: string | null
+          indicator_type: string
+          is_active?: boolean | null
+          last_triggered_at?: string | null
+          threshold_value?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string | null
+          id?: string
+          indicator_code?: string | null
+          indicator_type?: string
+          is_active?: boolean | null
+          last_triggered_at?: string | null
+          threshold_value?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_alerts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_favorites: {
+        Row: {
+          created_at: string | null
+          id: string
+          indicator_code: string | null
+          indicator_name: string | null
+          indicator_type: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          indicator_code?: string | null
+          indicator_name?: string | null
+          indicator_type: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          indicator_code?: string | null
+          indicator_name?: string | null
+          indicator_type?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_favorites_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          api_key: string | null
+          clerk_user_id: string
+          created_at: string | null
+          daily_requests_count: number | null
+          email: string
+          id: string
+          image_url: string | null
+          last_request_reset_at: string | null
+          name: string | null
+          plan_type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          api_key?: string | null
+          clerk_user_id: string
+          created_at?: string | null
+          daily_requests_count?: number | null
+          email: string
+          id?: string
+          image_url?: string | null
+          last_request_reset_at?: string | null
+          name?: string | null
+          plan_type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          api_key?: string | null
+          clerk_user_id?: string
+          created_at?: string | null
+          daily_requests_count?: number | null
+          email?: string
+          id?: string
+          image_url?: string | null
+          last_request_reset_at?: string | null
+          name?: string | null
+          plan_type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       contact_stats: {
@@ -722,6 +846,10 @@ export type Database = {
       }
     }
     Functions: {
+      generate_api_key: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_embi_history: {
         Args: { days_count?: number }
         Returns: {
@@ -743,6 +871,10 @@ export type Database = {
           trend: string
           risk_level: string
         }[]
+      }
+      reset_daily_requests: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
     }
     Enums: {

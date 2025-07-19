@@ -2,13 +2,23 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Menu, DollarSign, TrendingUp, BarChart3, Globe, Calendar, FileText, Users, Mail } from "lucide-react"
+import { Menu, DollarSign, TrendingUp, BarChart3, Globe, Calendar, FileText, Users, Mail, User, LogOut, Key, Settings } from "lucide-react"
+import { useUser, useClerk, SignInButton, SignUpButton } from "@clerk/nextjs"
 
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
 import { MainNavigation } from "@/components/NavigationMenu"
 import { cn } from "@/lib/utils"
 import Logo from "../Logo"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 // Datos de navegación sincronizados con MainNavigation
 const indicators = [
@@ -48,6 +58,10 @@ export default function NavBar() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
+  
+  // Clerk hooks
+  const { isSignedIn, user } = useUser()
+  const { signOut } = useClerk()
   
   // Evitar problemas de hidratación
   useEffect(() => {
@@ -123,9 +137,9 @@ export default function NavBar() {
           <MainNavigation />
         </div>
           
-        {/* Contact button and mobile menu - columna derecha */}
+        {/* Contact button, auth buttons and mobile menu - columna derecha */}
         <div className="flex items-center justify-end gap-2">
-          {/* Contact button - desktop */}
+          {/* Desktop buttons */}
           <div className="hidden md:flex md:items-center md:gap-2">
             <Button 
               asChild
@@ -138,6 +152,72 @@ export default function NavBar() {
                 Contacto
               </Link>
             </Button>
+            
+            {/* Auth section */}
+            {isSignedIn ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user.imageUrl} alt={user.fullName || ""} />
+                      <AvatarFallback>
+                        {user.firstName?.charAt(0) || user.emailAddresses[0].emailAddress.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{user.fullName}</p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.emailAddresses[0].emailAddress}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile" className="cursor-pointer">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Mi Perfil</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile/api-keys" className="cursor-pointer">
+                      <Key className="mr-2 h-4 w-4" />
+                      <span>API Keys</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile/settings" className="cursor-pointer">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Configuración</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="cursor-pointer text-red-600 focus:text-red-600"
+                    onClick={() => signOut()}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Cerrar sesión</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <SignInButton mode="modal">
+                  <Button variant="ghost" size="sm">
+                    Iniciar sesión
+                  </Button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <Button size="sm">
+                    Registrarse
+                  </Button>
+                </SignUpButton>
+              </>
+            )}
           </div>
           
           {/* Mobile menu trigger */}
@@ -235,33 +315,80 @@ export default function NavBar() {
                       {/* Separador */}
                       <div className="border-t border-gray-200"></div>
                       
-                      {/* Enlaces adicionales */}
+                      {/* Enlaces adicionales y auth */}
                       <div className="space-y-1">
-                        <Link 
-                          href="/contacto"
-                          onClick={handleMobileNavClick}
-                          className="flex items-center gap-3 rounded-lg p-3 hover:bg-indec-blue/5 transition-colors group"
-                        >
-                          <div className="flex-shrink-0">
-                            <Mail className="h-5 w-5 text-indec-blue group-hover:text-indec-blue-dark transition-colors" />
+                        {isSignedIn ? (
+                          <>
+                            <Link 
+                              href="/profile"
+                              onClick={handleMobileNavClick}
+                              className="flex items-center gap-3 rounded-lg p-3 hover:bg-indec-blue/5 transition-colors group"
+                            >
+                              <div className="flex-shrink-0">
+                                <User className="h-5 w-5 text-indec-blue group-hover:text-indec-blue-dark transition-colors" />
+                              </div>
+                              <div className="font-medium text-gray-900 group-hover:text-indec-blue transition-colors">
+                                Mi Perfil
+                              </div>
+                            </Link>
+                            
+                            <button
+                              onClick={() => {
+                                signOut()
+                                handleMobileNavClick()
+                              }}
+                              className="w-full flex items-center gap-3 rounded-lg p-3 hover:bg-red-50 transition-colors group text-left"
+                            >
+                              <div className="flex-shrink-0">
+                                <LogOut className="h-5 w-5 text-red-600 group-hover:text-red-700 transition-colors" />
+                              </div>
+                              <div className="font-medium text-red-600 group-hover:text-red-700 transition-colors">
+                                Cerrar sesión
+                              </div>
+                            </button>
+                          </>
+                        ) : (
+                          <div className="space-y-2 pt-2">
+                            <SignInButton mode="modal">
+                              <Button variant="outline" className="w-full">
+                                Iniciar sesión
+                              </Button>
+                            </SignInButton>
+                            <SignUpButton mode="modal">
+                              <Button className="w-full">
+                                Registrarse
+                              </Button>
+                            </SignUpButton>
                           </div>
-                          <div className="font-medium text-gray-900 group-hover:text-indec-blue transition-colors">
-                            Contacto
-                          </div>
-                        </Link>
+                        )}
                         
-                        <Link 
-                          href="/documentacion"
-                          onClick={handleMobileNavClick}
-                          className="flex items-center gap-3 rounded-lg p-3 hover:bg-indec-blue/5 transition-colors group"
-                        >
-                          <div className="flex-shrink-0">
-                            <FileText className="h-5 w-5 text-indec-blue group-hover:text-indec-blue-dark transition-colors" />
-                          </div>
-                          <div className="font-medium text-gray-900 group-hover:text-indec-blue transition-colors">
-                            Documentación
-                          </div>
-                        </Link>
+                        <div className="pt-2 space-y-1">
+                          <Link 
+                            href="/contacto"
+                            onClick={handleMobileNavClick}
+                            className="flex items-center gap-3 rounded-lg p-3 hover:bg-indec-blue/5 transition-colors group"
+                          >
+                            <div className="flex-shrink-0">
+                              <Mail className="h-5 w-5 text-indec-blue group-hover:text-indec-blue-dark transition-colors" />
+                            </div>
+                            <div className="font-medium text-gray-900 group-hover:text-indec-blue transition-colors">
+                              Contacto
+                            </div>
+                          </Link>
+                          
+                          <Link 
+                            href="/documentacion"
+                            onClick={handleMobileNavClick}
+                            className="flex items-center gap-3 rounded-lg p-3 hover:bg-indec-blue/5 transition-colors group"
+                          >
+                            <div className="flex-shrink-0">
+                              <FileText className="h-5 w-5 text-indec-blue group-hover:text-indec-blue-dark transition-colors" />
+                            </div>
+                            <div className="font-medium text-gray-900 group-hover:text-indec-blue transition-colors">
+                              Documentación
+                            </div>
+                          </Link>
+                        </div>
                       </div>
                     </nav>
                   </div>

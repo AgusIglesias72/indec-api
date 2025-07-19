@@ -1,70 +1,72 @@
+// src/app/api/user/api-key/route.ts
 import { auth } from '@clerk/nextjs/server'
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-import { randomBytes } from 'crypto'
+import { NextResponse } from 'next/server'
+import { createServerComponentClient } from '@/lib/supabase'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
-// GET - Fetch user's API key
 export async function GET() {
   try {
-    const { userId } = auth()
+    const { userId } = await auth()
     
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: user, error } = await supabase
+    const supabase = createServerComponentClient()
+
+    // Get user's API key
+    const { data, error } = await supabase
       .from('users')
       .select('api_key')
       .eq('clerk_user_id', userId)
       .single()
 
     if (error) {
-      console.error('Error fetching user:', error)
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      console.error('Error fetching API key:', error)
+      return NextResponse.json({ error: 'Error fetching API key' }, { status: 500 })
     }
 
-    return NextResponse.json({ apiKey: user?.api_key || null })
+    return NextResponse.json({ apiKey: data?.api_key || null })
   } catch (error) {
-    console.error('Error in GET /api/user/api-key:', error)
+    console.error('Error in API key GET:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
-// POST - Generate new API key
 export async function POST() {
   try {
-    const { userId } = auth()
+    const { userId } = await auth()
     
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Generate new API key
-    const apiKey = `ak_${randomBytes(32).toString('hex')}`
+    const supabase = createServerComponentClient()
 
-    const { data: user, error } = await supabase
+    // Generate new API key
+    const { data: apiKeyData, error: rpcError } = await supabase.rpc('generate_api_key')
+
+    if (rpcError) {
+      console.error('Error generating API key:', rpcError)
+      return NextResponse.json({ error: 'Error generating API key' }, { status: 500 })
+    }
+
+    // Update user's API key
+    const { error: updateError } = await supabase
       .from('users')
       .update({ 
-        api_key: apiKey,
+        api_key: apiKeyData,
         updated_at: new Date().toISOString()
       })
       .eq('clerk_user_id', userId)
-      .select('api_key')
-      .single()
 
-    if (error) {
-      console.error('Error updating user API key:', error)
-      return NextResponse.json({ error: 'Failed to generate API key' }, { status: 500 })
+    if (updateError) {
+      console.error('Error updating API key:', updateError)
+      return NextResponse.json({ error: 'Error updating API key' }, { status: 500 })
     }
 
-    return NextResponse.json({ apiKey: user.api_key })
+    return NextResponse.json({ apiKey: apiKeyData })
   } catch (error) {
-    console.error('Error in POST /api/user/api-key:', error)
+    console.error('Error in API key POST:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
