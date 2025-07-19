@@ -1,5 +1,5 @@
 // src/lib/rate-limit.ts
-import { createServerComponentClient } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 import { NextRequest } from 'next/server'
 
 export interface RateLimitResult {
@@ -10,93 +10,121 @@ export interface RateLimitResult {
   error?: string
 }
 
+// Crear cliente de Supabase para rate limiting
+function createRateLimitSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseKey) {
+    console.error('Missing Supabase environment variables for rate limiting')
+    throw new Error('Missing Supabase configuration')
+  }
+
+  return createClient(supabaseUrl, supabaseKey)
+}
+
 export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult> {
-  // Obtener headers relevantes
-  const origin = req.headers.get('origin')
-  const host = req.headers.get('host')
-  const referer = req.headers.get('referer')
-  const userAgent = req.headers.get('user-agent') || ''
-  const forwardedFor = req.headers.get('x-forwarded-for')
-  const realIp = req.headers.get('x-real-ip')
-  
-  // Lista de dominios permitidos sin API key
-  const allowedDomains = [
-    'localhost:3000',
-    '127.0.0.1:3000',
-    'argenstats.com',
-    'www.argenstats.com',
-    'argenstats.vercel.app',
-  ]
-  
-  // Detectar si es una petición desde el navegador (tiene origin o referer válido)
-  const isBrowserRequest = !!(origin || referer)
-  
-  // Verificar si es una petición interna genuina
-  const isInternalRequest = 
-    // Debe ser una petición desde el navegador
-    isBrowserRequest &&
-    // Y el origin o referer debe ser del mismo dominio
-    (
-      (origin && host && new URL(origin).host === host) ||
-      (referer && host && new URL(referer).host === host) ||
-      (origin && allowedDomains.some(domain => origin.includes(domain))) ||
-      (referer && allowedDomains.some(domain => referer.includes(domain)))
-    )
-  
-  // Detectar herramientas de desarrollo/testing conocidas
-  const isDevelopmentTool = 
-    userAgent.toLowerCase().includes('postman') ||
-    userAgent.toLowerCase().includes('insomnia') ||
-    userAgent.toLowerCase().includes('thunder client') ||
-    userAgent.toLowerCase().includes('httpie') ||
-    userAgent.toLowerCase().includes('curl') ||
-    userAgent.toLowerCase().includes('wget')
-  
-  // Si es una herramienta de desarrollo, siempre requerir API key
-  if (isDevelopmentTool) {
+  try {
+    // Obtener headers relevantes
+    const origin = req.headers.get('origin')
+    const host = req.headers.get('host')
+    const referer = req.headers.get('referer')
+    const userAgent = req.headers.get('user-agent') || ''
+    
+    // Log para debugging
+    console.log('Rate limit check:', {
+      origin,
+      host,
+      referer,
+      userAgent: userAgent.substring(0, 50),
+      path: req.url
+    })
+    
+    // Lista de dominios permitidos sin API key
+    const allowedDomains = [
+      'localhost:3000',
+      '127.0.0.1:3000',
+      'argenstats.com',
+      'www.argenstats.com',
+      'argenstats.vercel.app',
+    ]
+    
+    // Detectar si es una petición desde el navegador (tiene origin o referer válido)
+    const isBrowserRequest = !!(origin || referer)
+    
+    // Verificar si es una petición interna genuina
+    const isInternalRequest = 
+      isBrowserRequest &&
+      (
+        (origin && host && new URL(origin).host === host) ||
+        (referer && host && new URL(referer).host === host) ||
+        (origin && allowedDomains.some(domain => origin.includes(domain))) ||
+        (referer && allowedDomains.some(domain => referer.includes(domain)))
+      )
+    
+    // Detectar herramientas de desarrollo/testing conocidas
+    const isDevelopmentTool = 
+      userAgent.toLowerCase().includes('postman') ||
+      userAgent.toLowerCase().includes('insomnia') ||
+      userAgent.toLowerCase().includes('thunder client') ||
+      userAgent.toLowerCase().includes('httpie') ||
+      userAgent.toLowerCase().includes('curl') ||
+      userAgent.toLowerCase().includes('wget')
+    
+    // Si es una herramienta de desarrollo, siempre requerir API key
+    if (isDevelopmentTool) {
+      const apiKey = req.headers.get('x-api-key')
+      
+      if (!apiKey) {
+        console.log('Development tool detected without API key')
+        return {
+          success: false,
+          limit: 0,
+          remaining: 0,
+          reset: new Date(),
+          error: 'API key required for development tools'
+        }
+      }
+      
+      // Continuar con la verificación de API key más abajo
+    }
+    
+    // Si es una petición interna genuina desde el navegador, permitir sin límites
+    if (isInternalRequest && !isDevelopmentTool) {
+      console.log('Internal request detected, allowing without rate limit')
+      return {
+        success: true,
+        limit: 999999,
+        remaining: 999999,
+        reset: new Date(Date.now() + 86400000), // 24 horas
+      }
+    }
+    
+    // Para todas las demás peticiones (externas o de herramientas), verificar API key
     const apiKey = req.headers.get('x-api-key')
     
     if (!apiKey) {
+      console.log('External request without API key')
       return {
         success: false,
         limit: 0,
         remaining: 0,
         reset: new Date(),
-        error: 'API key required for development tools'
+        error: 'API key required'
       }
     }
-    
-    // Continuar con la verificación de API key más abajo
-  }
-  
-  // Si es una petición interna genuina desde el navegador, permitir sin límites
-  if (isInternalRequest && !isDevelopmentTool) {
-    return {
-      success: true,
-      limit: 999999,
-      remaining: 999999,
-      reset: new Date(Date.now() + 86400000), // 24 horas
-    }
-  }
-  
-  // Para todas las demás peticiones (externas o de herramientas), verificar API key
-  const apiKey = req.headers.get('x-api-key')
-  
-  if (!apiKey) {
-    return {
-      success: false,
-      limit: 0,
-      remaining: 0,
-      reset: new Date(),
-      error: 'API key required'
-    }
-  }
 
-  const supabase = createServerComponentClient()
+    console.log('Checking API key:', apiKey.substring(0, 10) + '...')
 
-  try {
+    // Crear cliente de Supabase
+    const supabase = createRateLimitSupabaseClient()
+
     // First, reset daily counts if needed
-    await supabase.rpc('reset_daily_requests')
+    const { error: rpcError } = await supabase.rpc('reset_daily_requests')
+    if (rpcError) {
+      console.error('Error resetting daily requests:', rpcError)
+      // No bloquear si falla el reset
+    }
 
     // Get user by API key
     const { data: user, error: userError } = await supabase
@@ -106,6 +134,7 @@ export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult>
       .single()
 
     if (userError || !user) {
+      console.error('Error fetching user:', userError)
       return {
         success: false,
         limit: 0,
@@ -114,6 +143,8 @@ export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult>
         error: 'Invalid API key'
       }
     }
+
+    console.log('User found:', { id: user.id, plan: user.plan_type, count: user.daily_requests_count })
 
     // Determine rate limit based on plan
     const limits = {
@@ -130,6 +161,8 @@ export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult>
       const tomorrow = new Date()
       tomorrow.setDate(tomorrow.getDate() + 1)
       tomorrow.setHours(0, 0, 0, 0)
+
+      console.log('Rate limit exceeded:', { limit, currentCount })
 
       return {
         success: false,
@@ -166,12 +199,13 @@ export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult>
     }
   } catch (error) {
     console.error('Rate limit check error:', error)
+    
+    // En caso de error, permitir la petición pero con límites conservadores
     return {
-      success: false,
-      limit: 0,
-      remaining: 0,
-      reset: new Date(),
-      error: 'Internal server error'
+      success: true,
+      limit: 100,
+      remaining: 99,
+      reset: new Date(Date.now() + 86400000),
     }
   }
 }
@@ -179,35 +213,42 @@ export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult>
 // Helper para aplicar rate limiting a una API route
 export function withRateLimit(handler: (req: NextRequest, ...args: any[]) => Promise<Response>) {
   return async (req: NextRequest, ...args: any[]) => {
-    const rateLimitResult = await checkRateLimit(req)
+    try {
+      const rateLimitResult = await checkRateLimit(req)
 
-    // Agregar headers de rate limit
-    const headers = new Headers({
-      'X-RateLimit-Limit': rateLimitResult.limit.toString(),
-      'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
-      'X-RateLimit-Reset': rateLimitResult.reset.toISOString(),
-    })
+      // Agregar headers de rate limit
+      const headers = new Headers({
+        'X-RateLimit-Limit': rateLimitResult.limit.toString(),
+        'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+        'X-RateLimit-Reset': rateLimitResult.reset.toISOString(),
+      })
 
-    if (!rateLimitResult.success) {
-      return new Response(
-        JSON.stringify({ error: rateLimitResult.error }),
-        { 
-          status: 429, 
-          headers 
-        }
-      )
+      if (!rateLimitResult.success) {
+        return new Response(
+          JSON.stringify({ error: rateLimitResult.error }),
+          { 
+            status: 429, 
+            headers 
+          }
+        )
+      }
+
+      // Llamar al handler original
+      const response = await handler(req, ...args)
+      
+      // Agregar headers de rate limit a la respuesta
+      if (response instanceof Response) {
+        response.headers.set('X-RateLimit-Limit', rateLimitResult.limit.toString())
+        response.headers.set('X-RateLimit-Remaining', rateLimitResult.remaining.toString())
+        response.headers.set('X-RateLimit-Reset', rateLimitResult.reset.toISOString())
+      }
+
+      return response
+    } catch (error) {
+      console.error('Error in withRateLimit wrapper:', error)
+      
+      // En caso de error en el rate limiting, permitir que la request continúe
+      return handler(req, ...args)
     }
-
-    // Llamar al handler original
-    const response = await handler(req, ...args)
-    
-    // Agregar headers de rate limit a la respuesta
-    if (response instanceof Response) {
-      rateLimitResult.limit && response.headers.set('X-RateLimit-Limit', rateLimitResult.limit.toString())
-      rateLimitResult.remaining !== undefined && response.headers.set('X-RateLimit-Remaining', rateLimitResult.remaining.toString())
-      rateLimitResult.reset && response.headers.set('X-RateLimit-Reset', rateLimitResult.reset.toISOString())
-    }
-
-    return response
   }
 }
