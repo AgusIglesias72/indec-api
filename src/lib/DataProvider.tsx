@@ -183,7 +183,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     loadAllData();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Agregamos el comentario para deshabilitar la advertencia
 
   // Valor del contexto
   const contextValue: DataContextType = {
