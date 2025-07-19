@@ -5,8 +5,8 @@
       "schedule": "*/20 * * * *"
     },
     {
-      "path": "/api/cron/update-dollar-data",
-      "schedule": "*/20 * * * *"
+      "path": "/api/cron/update-dollar",
+      "schedule": "*/5 * * * *"
     },
     {
       "path": "/api/cron/update-indec-data",

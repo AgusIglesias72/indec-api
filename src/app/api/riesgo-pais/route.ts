@@ -6,7 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/supabase';
 import { withRateLimit } from '@/lib/rate-limit';
 
-export const runtime = 'edge';
+//export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 // Configurar cliente de Supabase
