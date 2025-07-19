@@ -2,33 +2,31 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { clerkMiddleware } from '@clerk/nextjs/server';
+import { checkRateLimit } from './lib/rate-limit';
 
-// Lista de rutas API conocidas
-const knownApiPaths = [
+// Lista de rutas API públicas que necesitan rate limiting
+const publicApiPaths = [
   '/api/ipc',
   '/api/emae',
-  '/api/emae/latest',
-  '/api/emae/metadata',
-  '/api/emae/sectors',
   '/api/dollar',
-  '/api/dollar/latest',
-  '/api/dollar/metadata',
   '/api/labor-market',
-  '/api/labor-market/latest',
-  '/api/labor-market/metadata',
   '/api/calendar',
+  '/api/riesgo-pais',
+  '/api/stats',
+];
+
+// Lista de todas las rutas API conocidas
+const knownApiPaths = [
+  ...publicApiPaths,
   '/api/not-found',
   '/api-docs',
   '/api/documentacion',
-  '/api/stats',
+  '/api/contact',
+  '/api/newsletter/subscribe',
   '/api/cron/update-indec-data',
   '/api/cron/update-dollar-data',
   '/api/cron/update-labor-market',
   '/api/cron/update-embi',
-  '/api/riesgo-pais',
-  '/api/contact',
-  '/api/newsletter/subscribe',
-  // Nuevas rutas para Clerk
   '/api/webhook/clerk',
   '/api/user/api-key',
   '/api/user/favorites',
@@ -44,12 +42,34 @@ const protectedRoutes = [
   '/api/alerts/(.*)',
 ];
 
+// Rutas que NO necesitan rate limiting (webhooks, cron jobs, etc.)
+const rateLimitExemptPaths = [
+  '/api/cron/',
+  '/api/webhook/',
+  '/api/not-found',
+  '/api-docs',
+  '/api/documentacion',
+];
+
 // Función para verificar si una ruta está protegida
 const isProtectedRoute = (pathname: string) => {
   return protectedRoutes.some(route => {
     const regex = new RegExp(`^${route.replace(/\(\.\*\)/g, '.*')}$`);
     return regex.test(pathname);
   });
+};
+
+// Función para verificar si una ruta necesita rate limiting
+const needsRateLimit = (pathname: string) => {
+  // No aplicar rate limit a rutas exentas
+  if (rateLimitExemptPaths.some(path => pathname.startsWith(path))) {
+    return false;
+  }
+  
+  // Aplicar rate limit a todas las APIs públicas
+  return publicApiPaths.some(path => 
+    pathname === path || pathname.startsWith(`${path}/`)
+  );
 };
 
 export default clerkMiddleware(async (auth, request: NextRequest) => {
@@ -68,6 +88,39 @@ export default clerkMiddleware(async (auth, request: NextRequest) => {
     // Si no es una ruta conocida, redirigir a not-found
     if (!isKnownPath) {
       return NextResponse.rewrite(new URL('/api/not-found', request.url));
+    }
+    
+    // Aplicar rate limiting si es necesario
+    if (needsRateLimit(pathname)) {
+      const rateLimitResult = await checkRateLimit(request);
+      
+      if (!rateLimitResult.success) {
+        return new Response(
+          JSON.stringify({ 
+            error: rateLimitResult.error,
+            limit: rateLimitResult.limit,
+            remaining: rateLimitResult.remaining,
+            reset: rateLimitResult.reset
+          }),
+          { 
+            status: 429,
+            headers: {
+              'Content-Type': 'application/json',
+              'X-RateLimit-Limit': rateLimitResult.limit.toString(),
+              'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+              'X-RateLimit-Reset': rateLimitResult.reset.toISOString(),
+            }
+          }
+        );
+      }
+      
+      // Si pasa el rate limit, agregar los headers a la respuesta
+      const response = NextResponse.next();
+      response.headers.set('X-RateLimit-Limit', rateLimitResult.limit.toString());
+      response.headers.set('X-RateLimit-Remaining', rateLimitResult.remaining.toString());
+      response.headers.set('X-RateLimit-Reset', rateLimitResult.reset.toISOString());
+      
+      // Continuar con el request pero con los headers de rate limit
     }
   }
 

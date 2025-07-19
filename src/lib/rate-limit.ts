@@ -11,10 +11,13 @@ export interface RateLimitResult {
 }
 
 export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult> {
-  // Verificar si es una petición interna (mismo origen)
+  // Obtener headers relevantes
   const origin = req.headers.get('origin')
   const host = req.headers.get('host')
   const referer = req.headers.get('referer')
+  const userAgent = req.headers.get('user-agent') || ''
+  const forwardedFor = req.headers.get('x-forwarded-for')
+  const realIp = req.headers.get('x-real-ip')
   
   // Lista de dominios permitidos sin API key
   const allowedDomains = [
@@ -23,22 +26,51 @@ export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult>
     'argenstats.com',
     'www.argenstats.com',
     'argenstats.vercel.app',
-    // Agrega tus dominios de preview/staging aquí
   ]
   
-  // Verificar si es una petición del mismo origen
-  const isInternalRequest = 
-    // Si no hay origin header (peticiones del servidor)
-    !origin ||
-    // Si el origin coincide con el host
-    (origin && host && new URL(origin).host === host) ||
-    // Si el referer es del mismo dominio
-    (referer && host && new URL(referer).host === host) ||
-    // Si el origin está en la lista de permitidos
-    (origin && allowedDomains.some(domain => origin.includes(domain)))
+  // Detectar si es una petición desde el navegador (tiene origin o referer válido)
+  const isBrowserRequest = !!(origin || referer)
   
-  // Si es una petición interna, permitir sin límites
-  if (isInternalRequest) {
+  // Verificar si es una petición interna genuina
+  const isInternalRequest = 
+    // Debe ser una petición desde el navegador
+    isBrowserRequest &&
+    // Y el origin o referer debe ser del mismo dominio
+    (
+      (origin && host && new URL(origin).host === host) ||
+      (referer && host && new URL(referer).host === host) ||
+      (origin && allowedDomains.some(domain => origin.includes(domain))) ||
+      (referer && allowedDomains.some(domain => referer.includes(domain)))
+    )
+  
+  // Detectar herramientas de desarrollo/testing conocidas
+  const isDevelopmentTool = 
+    userAgent.toLowerCase().includes('postman') ||
+    userAgent.toLowerCase().includes('insomnia') ||
+    userAgent.toLowerCase().includes('thunder client') ||
+    userAgent.toLowerCase().includes('httpie') ||
+    userAgent.toLowerCase().includes('curl') ||
+    userAgent.toLowerCase().includes('wget')
+  
+  // Si es una herramienta de desarrollo, siempre requerir API key
+  if (isDevelopmentTool) {
+    const apiKey = req.headers.get('x-api-key')
+    
+    if (!apiKey) {
+      return {
+        success: false,
+        limit: 0,
+        remaining: 0,
+        reset: new Date(),
+        error: 'API key required for development tools'
+      }
+    }
+    
+    // Continuar con la verificación de API key más abajo
+  }
+  
+  // Si es una petición interna genuina desde el navegador, permitir sin límites
+  if (isInternalRequest && !isDevelopmentTool) {
     return {
       success: true,
       limit: 999999,
@@ -47,7 +79,7 @@ export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult>
     }
   }
   
-  // Para peticiones externas, verificar API key
+  // Para todas las demás peticiones (externas o de herramientas), verificar API key
   const apiKey = req.headers.get('x-api-key')
   
   if (!apiKey) {
@@ -56,7 +88,7 @@ export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult>
       limit: 0,
       remaining: 0,
       reset: new Date(),
-      error: 'API key required for external requests'
+      error: 'API key required'
     }
   }
 
