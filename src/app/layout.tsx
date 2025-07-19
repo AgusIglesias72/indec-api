@@ -8,6 +8,7 @@ import NavBar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/CTAFooter";
 import { defaultMetadata } from "@/lib/metadata";
 import { GoogleAnalytics } from '@next/third-parties/google';
+import { Analytics } from "@vercel/analytics/next"
 
 const clearSans = localFont({
   src: [
@@ -88,6 +89,7 @@ export default function RootLayout({
           <Footer />
         </AppWrapper>
         <GoogleAnalytics gaId="G-WFK681BVSD" />
+        <Analytics />
 
       </body>
     </html>
