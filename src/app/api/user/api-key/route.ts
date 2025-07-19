@@ -1,12 +1,12 @@
 // src/app/api/user/api-key/route.ts
-import { auth } from '@clerk/nextjs/server'
+import { auth, currentUser } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-// Crear cliente de Supabase para API routes
-function createSupabaseClient() {
+// IMPORTANTE: Usar Service Role Key para operaciones admin
+function createSupabaseAdmin() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY // ← IMPORTANTE: Service Role, no Anon Key
 
   if (!supabaseUrl || !supabaseKey) {
     throw new Error('Missing Supabase environment variables')
@@ -23,7 +23,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const supabase = createSupabaseClient()
+    const supabase = createSupabaseAdmin()
 
     // Get user's API key
     const { data, error } = await supabase
@@ -58,7 +58,14 @@ export async function POST() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const supabase = createSupabaseClient()
+    const supabase = createSupabaseAdmin()
+
+    // Obtener información del usuario de Clerk
+    const user = await currentUser()
+    
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
 
     // Primero, verificar si el usuario existe
     const { data: existingUser, error: checkError } = await supabase
@@ -67,31 +74,33 @@ export async function POST() {
       .eq('clerk_user_id', userId)
       .single()
 
-    // Si el usuario no existe, primero debemos crearlo
+    // Si el usuario no existe, crearlo
     if (checkError && checkError.code === 'PGRST116') {
-      // Obtener información del usuario de Clerk
-      const { userId, sessionClaims } = await auth();
-      const user = sessionClaims;
-
-      const { error: insertError } = await supabase
+      console.log('Creating new user in database...')
+      
+      const { data: newUser, error: insertError } = await supabase
         .from('users')
         .insert({
           clerk_user_id: userId,
-          email: Array.isArray(user?.emailAddresses) && user?.emailAddresses[0]?.emailAddress
-            ? user.emailAddresses[0].emailAddress
-            : '',
-          name: user?.firstName && user?.lastName
-            ? `${user.firstName} ${user.lastName}`
-            : user?.username || '',
+          email: user.emailAddresses?.[0]?.emailAddress || '',
+          name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username || 'User',
           plan_type: 'free',
+          daily_requests_count: 0,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
+        .select()
+        .single()
 
       if (insertError) {
         console.error('Error creating user:', insertError)
-        return NextResponse.json({ error: 'Error creating user' }, { status: 500 })
+        return NextResponse.json({ 
+          error: 'Error creating user', 
+          details: insertError.message 
+        }, { status: 500 })
       }
+      
+      console.log('User created successfully:', newUser?.id)
     }
 
     // Generate new API key
@@ -99,26 +108,45 @@ export async function POST() {
 
     if (rpcError) {
       console.error('Error generating API key:', rpcError)
-      return NextResponse.json({ error: 'Error generating API key' }, { status: 500 })
+      return NextResponse.json({ 
+        error: 'Error generating API key',
+        details: rpcError.message 
+      }, { status: 500 })
     }
 
+    console.log('Generated API key:', apiKeyData?.substring(0, 10) + '...')
+
     // Update user's API key
-    const { error: updateError } = await supabase
+    const { data: updatedUser, error: updateError } = await supabase
       .from('users')
       .update({ 
         api_key: apiKeyData,
         updated_at: new Date().toISOString()
       })
       .eq('clerk_user_id', userId)
+      .select()
+      .single()
 
     if (updateError) {
       console.error('Error updating API key:', updateError)
-      return NextResponse.json({ error: 'Error updating API key' }, { status: 500 })
+      return NextResponse.json({ 
+        error: 'Error updating API key',
+        details: updateError.message 
+      }, { status: 500 })
     }
 
-    return NextResponse.json({ apiKey: apiKeyData })
+    console.log('API key updated successfully for user:', updatedUser?.id)
+
+    return NextResponse.json({ 
+      apiKey: apiKeyData,
+      message: 'API key generated successfully' 
+    })
+    
   } catch (error) {
     console.error('Error in API key POST:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
