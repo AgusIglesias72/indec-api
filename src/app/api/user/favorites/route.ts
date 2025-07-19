@@ -10,10 +10,11 @@ const supabase = createClient(
 // GET - Fetch user's favorites
 export async function GET() {
   try {
-    const { userId } = auth()
-    
+    const session = await auth();
+    const userId = session?.userId;
+
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
     // Get user ID from users table
@@ -48,8 +49,12 @@ export async function GET() {
 // POST - Add favorite
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = auth()
-    
+    const session = await auth();
+    const userId = session?.userId;
+
+    if (!userId) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }    
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -99,8 +104,12 @@ export async function POST(request: NextRequest) {
 // DELETE - Remove favorite
 export async function DELETE(request: NextRequest) {
   try {
-    const { userId } = auth()
-    
+    const session = await auth();
+    const userId = session?.userId;
+
+    if (!userId) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }    
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
