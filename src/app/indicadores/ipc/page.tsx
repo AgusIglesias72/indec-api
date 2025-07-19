@@ -267,7 +267,7 @@ export default function ModernIPCPage() {
     const fetchLatestIPC = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/ipc/latest');
+        const response = await fetch('/api/ipc?type=latest');
         
         if (!response.ok) {
           throw new Error(`Error ${response.status}: ${response.statusText}`);

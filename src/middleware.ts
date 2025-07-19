@@ -6,8 +6,6 @@ import { clerkMiddleware } from '@clerk/nextjs/server';
 // Lista de rutas API conocidas
 const knownApiPaths = [
   '/api/ipc',
-  '/api/ipc/latest',
-  '/api/ipc/metadata',
   '/api/emae',
   '/api/emae/latest',
   '/api/emae/metadata',

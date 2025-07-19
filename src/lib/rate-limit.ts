@@ -11,6 +11,43 @@ export interface RateLimitResult {
 }
 
 export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult> {
+  // Verificar si es una petición interna (mismo origen)
+  const origin = req.headers.get('origin')
+  const host = req.headers.get('host')
+  const referer = req.headers.get('referer')
+  
+  // Lista de dominios permitidos sin API key
+  const allowedDomains = [
+    'localhost:3000',
+    '127.0.0.1:3000',
+    'argenstats.com',
+    'www.argenstats.com',
+    'argenstats.vercel.app',
+    // Agrega tus dominios de preview/staging aquí
+  ]
+  
+  // Verificar si es una petición del mismo origen
+  const isInternalRequest = 
+    // Si no hay origin header (peticiones del servidor)
+    !origin ||
+    // Si el origin coincide con el host
+    (origin && host && new URL(origin).host === host) ||
+    // Si el referer es del mismo dominio
+    (referer && host && new URL(referer).host === host) ||
+    // Si el origin está en la lista de permitidos
+    (origin && allowedDomains.some(domain => origin.includes(domain)))
+  
+  // Si es una petición interna, permitir sin límites
+  if (isInternalRequest) {
+    return {
+      success: true,
+      limit: 999999,
+      remaining: 999999,
+      reset: new Date(Date.now() + 86400000), // 24 horas
+    }
+  }
+  
+  // Para peticiones externas, verificar API key
   const apiKey = req.headers.get('x-api-key')
   
   if (!apiKey) {
@@ -19,7 +56,7 @@ export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult>
       limit: 0,
       remaining: 0,
       reset: new Date(),
-      error: 'API key required'
+      error: 'API key required for external requests'
     }
   }
 

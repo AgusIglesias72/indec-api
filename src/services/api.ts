@@ -121,7 +121,7 @@
    */
   export async function getLatestIPCData(): Promise<IPCLatestData> {
     try {
-      const response = await fetch(`${API_BASE_URL}/ipc/latest`);
+      const response = await fetch(`${API_BASE_URL}/ipc?type=latest'`);
       
       if (!response.ok) {
         throw new Error('Error al obtener datos del IPC');

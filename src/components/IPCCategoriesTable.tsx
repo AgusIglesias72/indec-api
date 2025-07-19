@@ -69,7 +69,7 @@ export default function IPCCategoriesTable({ lastUpdate, className }: IPCCategor
       setIsRefreshing(true);
       
       // Obtener la lista de componentes disponibles con sus metadatos
-      const metadataResponse = await fetch('/api/ipc/metadata');
+      const metadataResponse = await fetch('/api/ipc?type=metadata');
       if (!metadataResponse.ok) {
         throw new Error(`Error al obtener metadatos: ${metadataResponse.status}`);
       }
