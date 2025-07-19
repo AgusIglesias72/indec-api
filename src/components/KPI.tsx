@@ -55,7 +55,7 @@ const HeroWithMetrics = () => {
   const fetchDollarData = async () => {
     try {
       setLoadingDollar(true);
-      const response = await fetch('/api/dollar/latest?type=OFICIAL');
+      const response = await fetch('/api/dollar?type=latest&dollar_type=OFICIAL');
       
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);

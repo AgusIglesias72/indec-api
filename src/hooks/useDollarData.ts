@@ -19,7 +19,7 @@ export const useDollarData = (dollarType: string = 'BLUE', refreshInterval: numb
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`/api/dollar/latest?type=${dollarType}`);
+      const response = await fetch(`/api/dollar?type=latest&dollar_type=${dollarType}`);
       
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);

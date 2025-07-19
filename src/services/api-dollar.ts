@@ -35,7 +35,7 @@ export interface DollarLatestResponse {
  */
 export async function getLatestDollarRates(): Promise<DollarRateData[]> {
   try {
-    const response = await fetch('/api/dollar/latest');
+    const response = await fetch('/api/dollar?type=latest');
     
     if (!response.ok) {
       throw new Error(`Error ${response.status}: ${response.statusText}`);
@@ -54,7 +54,7 @@ export async function getLatestDollarRates(): Promise<DollarRateData[]> {
  */
 export async function getLatestDollarRate(type: DollarType): Promise<DollarRateData | null> {
   try {
-    const response = await fetch(`/api/dollar/latest?type=${type}`);
+    const response = await fetch(`/api/dollar?type=latest&dollar_type=${type}`);
     
     if (!response.ok) {
       throw new Error(`Error ${response.status}: ${response.statusText}`);
