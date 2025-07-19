@@ -1,17 +1,56 @@
-// src/services/api-dollar.ts
-import { DollarType } from '@/types/dollar';
+// services/api-dollar.ts
+import { DollarType, DollarRateData } from '@/types/dollar';
 
-/**
- * Interfaces para los datos de las cotizaciones
- */
-export interface DollarRateData {
-  date: string;
-  dollar_type: DollarType;
-  buy_price: number;
-  sell_price: number;
-  spread?: number;
-  last_updated: string;
+const API_BASE_URL = 'https://argenstats.com/api';
+
+export async function getLatestDollarRate(dollarType: DollarType): Promise<DollarRateData | null> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/dollar`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    
+    if (result.success && result.data) {
+      // Buscar el tipo de dólar específico en la respuesta
+      const dollarData = result.data.find(
+        (item: DollarRateData) => item.dollar_type === dollarType
+      );
+      
+      return dollarData || null;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error fetching dollar rate:', error);
+    return null;
+  }
 }
+
+// También podrías agregar una función para obtener todos los tipos de una vez
+export async function getAllDollarRates(): Promise<DollarRateData[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/dollar`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    
+    if (result.success && result.data) {
+      return result.data;
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('Error fetching dollar rates:', error);
+    return [];
+  }
+}
+
 
 export interface DollarRatesResponse {
   success: boolean;
@@ -48,30 +87,6 @@ export async function getLatestDollarRates(): Promise<DollarRateData[]> {
   }
 }
 
-/**
- * Obtiene la última cotización de un tipo específico de dólar
- */
-export async function getLatestDollarRate(type: DollarType): Promise<DollarRateData | null> {
-  try {
-    const response = await fetch(`/api/dollar?type=latest&dollar_type=${type}`);
-    
-    if (!response.ok) {
-      throw new Error(`Error ${response.status}: ${response.statusText}`);
-    }
-    
-    const result = await response.json() as DollarRatesResponse;
-    
-    // La API devuelve un array de datos, tomamos el primero
-    if (result.data && result.data.length > 0) {
-      return result.data[0];
-    }
-    
-    return null;
-  } catch (error) {
-    console.error(`Error al obtener cotización del dólar ${type}:`, error);
-    return null;
-  }
-}
 
 /**
  * Obtiene datos históricos de cotizaciones de dólar

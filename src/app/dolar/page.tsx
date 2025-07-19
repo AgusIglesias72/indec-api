@@ -3,10 +3,17 @@
 import React, { useState, useEffect } from 'react';
 import { DollarSign, TrendingUp, BarChart3, Clock, RefreshCw, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { getLatestDollarRate, DollarRateData } from '@/services/api-dollar';
+import { getLatestDollarRate } from '@/services/api-dollar';
+import { DollarRateData } from '@/types/dollar';
 import { DollarType } from '@/types/dollar';
 import { Skeleton } from '@/components/ui/skeleton';
 import EnhancedDollarChart from '@/components/EnhancedDollarChart';
+
+// Actualizar la interfaz DollarRateData para incluir las variaciones
+interface ExtendedDollarRateData extends DollarRateData {
+  buy_variation?: number;
+  sell_variation?: number;
+}
 
 // Componente Hero Section
 function HeroSection({ title, subtitle }: { title: string; subtitle: string }) {
@@ -39,7 +46,7 @@ interface ModernDollarRateCardProps {
 }
 
 function ModernDollarRateCard({ dollarType, title, index }: ModernDollarRateCardProps) {
-  const [dollarRate, setDollarRate] = useState<DollarRateData | null>(null);
+  const [dollarRate, setDollarRate] = useState<ExtendedDollarRateData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,7 +54,7 @@ function ModernDollarRateCard({ dollarType, title, index }: ModernDollarRateCard
   const fetchData = async () => {
     try {
       setLoading(true);
-      const data = await getLatestDollarRate(dollarType);
+      const data = await getLatestDollarRate(dollarType) as ExtendedDollarRateData;
       
       if (data) {
         setDollarRate(data);
@@ -79,12 +86,27 @@ function ModernDollarRateCard({ dollarType, title, index }: ModernDollarRateCard
     });
   };
 
-  // Calcular variación (simulada por ahora, ya que no viene en la API)
-  const getRandomVariation = () => {
-    return (Math.random() - 0.5) * 4; // Entre -2% y +2%
+  // Calcular variación real usando el promedio de buy_variation y sell_variation
+  const calculateVariation = (data: ExtendedDollarRateData | null): number => {
+    if (!data) return 0;
+    
+    const buyVar = data.buy_variation ?? 0;
+    const sellVar = data.sell_variation ?? 0;
+    
+    // Si ambas están disponibles, calculamos el promedio
+    if (data.buy_variation !== undefined && data.sell_variation !== undefined) {
+      return (buyVar + sellVar) / 2;
+    }
+    
+    // Si solo una está disponible, usamos esa
+    if (data.buy_variation !== undefined) return buyVar;
+    if (data.sell_variation !== undefined) return sellVar;
+    
+    // Si ninguna está disponible, retornamos 0
+    return 0;
   };
 
-  const variation = getRandomVariation();
+  const variation = calculateVariation(dollarRate);
   const isPositive = variation > 0;
   const isNegative = variation < 0;
 
@@ -179,7 +201,7 @@ function ModernDollarRateCard({ dollarType, title, index }: ModernDollarRateCard
           }`}>
             {isPositive && <ArrowUpRight className="h-3 w-3" />}
             {isNegative && <ArrowDownRight className="h-3 w-3" />}
-            {variation > 0 ? '+' : ''}{variation.toFixed(1)}%
+            {variation > 0 ? '+' : ''}{variation.toFixed(2)}%
           </div>
         </div>
 

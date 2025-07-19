@@ -7,15 +7,24 @@ export interface DollarRate {
     dollar_type: DollarType;
     created_at?: string;
   }
+
+
   
-  export type DollarType = 
-    | 'CCL'      // Contado con Liquidación
-    | 'MEP'      // Bolsa / MEP (Mercado Electrónico de Pagos)
-    | 'CRYPTO'   // Dólar Cripto
-    | 'BLUE'     // Dólar Blue (informal)
-    | 'OFICIAL'  // Dólar Oficial
-    | 'MAYORISTA' // Dólar Mayorista
-    | 'TARJETA'; // Dólar Tarjeta/Turista
+  // types/dollar.ts
+export type DollarType = 'BLUE' | 'CCL' | 'CRYPTO' | 'MEP' | 'MAYORISTA' | 'OFICIAL' | 'TARJETA';
+
+export interface DollarRateData {
+  date: string;
+  dollar_type: DollarType;
+  dollar_name: string;
+  buy_price?: number;
+  sell_price: number;
+  spread?: number;
+  buy_variation?: number;
+  sell_variation?: number;
+  last_updated: string;
+  minutes_ago?: number;
+}
   
   // Mapeo de nombres de API a tipos internos
   export const dollarTypeMapping: Record<string, DollarType> = {
