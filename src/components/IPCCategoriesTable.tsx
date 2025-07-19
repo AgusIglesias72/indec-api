@@ -1,14 +1,11 @@
-// src/components/IPCCategoriesTable.tsx
-"use client"
-
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { RefreshCw, ArrowUpRight, ArrowDownRight, Info, ArrowUpDown, ChevronUp, ChevronDown } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { RefreshCw, Info, ArrowUpRight, ArrowDownRight, ArrowUpDown, ChevronUp, ChevronDown } from 'lucide-react';
 
-// Definir la estructura de los datos de categoría
+// Tipos
 interface CategoryData {
   category: string;
   category_code: string;
@@ -16,13 +13,13 @@ interface CategoryData {
   yearly_pct_change: number;
 }
 
-type SortField = 'category' | 'monthly_pct_change' | 'yearly_pct_change';
-type SortDirection = 'asc' | 'desc';
-
 interface IPCCategoriesTableProps {
   lastUpdate?: string;
   className?: string;
 }
+
+type SortField = 'category' | 'monthly_pct_change' | 'yearly_pct_change';
+type SortDirection = 'asc' | 'desc';
 
 export default function IPCCategoriesTable({ lastUpdate, className }: IPCCategoriesTableProps) {
   const [categories, setCategories] = useState<CategoryData[]>([]);
@@ -35,8 +32,8 @@ export default function IPCCategoriesTable({ lastUpdate, className }: IPCCategor
   // Obtener nombres canónicos para los códigos de categoría
   const getCategoryFullName = (code: string, name: string): string => {
     // Si el nombre ya está completo (para GENERAL o categorías principales), dejarlo como está
-    if (name === "Nivel general" || !code.includes("_")) {
-      return name;
+    if (name === "Nivel general" || name === "Nivel General" || code === "GENERAL") {
+      return name || "Nivel General";
     }
 
     // Para rubros, mapear códigos a nombres completos si es necesario
@@ -60,7 +57,13 @@ export default function IPCCategoriesTable({ lastUpdate, className }: IPCCategor
       "BYS_SERVICIOS": "Servicios"
     };
 
-    return categoryMap[code] || name;
+    // Si ya tiene un nombre descriptivo, usarlo
+    if (name && name.length > 3 && !name.includes("_")) {
+      return name;
+    }
+
+    // Si no, buscar en el mapa o devolver el nombre original
+    return categoryMap[code] || name || code;
   };
 
   // Cargar los datos de la API
@@ -71,10 +74,21 @@ export default function IPCCategoriesTable({ lastUpdate, className }: IPCCategor
       // Obtener la lista de componentes disponibles con sus metadatos
       const metadataResponse = await fetch('/api/ipc?type=metadata');
       if (!metadataResponse.ok) {
+        const errorText = await metadataResponse.text();
+        console.error('Error response from metadata endpoint:', errorText);
         throw new Error(`Error al obtener metadatos: ${metadataResponse.status}`);
       }
       
-      const metadata = await metadataResponse.json();
+      const metadataJson = await metadataResponse.json();
+      console.log('Metadata response:', metadataJson); // Debug log
+      
+      // Verificar si la respuesta tiene la estructura esperada
+      if (!metadataJson.data) {
+        console.error('Invalid metadata structure:', metadataJson);
+        throw new Error('Estructura de respuesta inválida desde la API de metadata');
+      }
+      
+      const metadata = metadataJson.data;
       
       // Extraer las categorías que queremos mostrar
       const categoriesToFetch: string[] = ['GENERAL']; // Siempre incluir el nivel general
@@ -100,17 +114,23 @@ export default function IPCCategoriesTable({ lastUpdate, className }: IPCCategor
         });
       }
       
+      console.log('Categories to fetch:', categoriesToFetch); // Debug log
+      
       // Obtener el último dato disponible para cada categoría
       const latestDate = metadata.metadata?.last_updated || '';
       
       if (!latestDate) {
+        console.error('No last_updated date found in metadata:', metadata);
         throw new Error('No se pudo determinar la última fecha disponible');
       }
+      
+      console.log('Latest date:', latestDate); // Debug log
       
       // Construir un array de promesas para obtener los datos de cada categoría
       const fetchPromises = categoriesToFetch.map(async (categoryCode) => {
         try {
-          const response = await fetch(`/api/ipc?category=${categoryCode}&region=Nacional&month=${new Date(latestDate).getMonth() + 1}&year=${new Date(latestDate).getFullYear()}`);
+          // Usar el endpoint /api/ipc con type=latest para obtener el último valor
+          const response = await fetch(`/api/ipc?type=latest&category=${categoryCode}&region=Nacional`);
           
           if (!response.ok) {
             console.warn(`Error al obtener datos para ${categoryCode}: ${response.status}`);
@@ -119,8 +139,8 @@ export default function IPCCategoriesTable({ lastUpdate, className }: IPCCategor
           
           const result = await response.json();
           
-          if (result.data && result.data.length > 0) {
-            const categoryData = result.data[0];
+          if (result.success && result.data) {
+            const categoryData = result.data;
             return {
               category: categoryData.category,
               category_code: categoryData.category_code,

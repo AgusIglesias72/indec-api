@@ -6,8 +6,8 @@ import { motion } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 import EnhancedRiskChart from '@/components/EnhancedRiskChart';
-import { 
-  getRiskCountryData, 
+import {
+  getRiskCountryData,
   getLatestRiskCountryRate,
   formatRiskValue,
   formatPercentageChange
@@ -19,20 +19,20 @@ function getTimeAgo(dateString: string): string {
   const now = new Date();
   const date = new Date(dateString);
   const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-  
+
   if (diffInMinutes < 1) return 'hace menos de 1 minuto';
   if (diffInMinutes < 60) return `hace ${diffInMinutes} minuto${diffInMinutes !== 1 ? 's' : ''}`;
-  
+
   const diffInHours = Math.floor(diffInMinutes / 60);
   if (diffInHours < 24) return `hace ${diffInHours} hora${diffInHours !== 1 ? 's' : ''}`;
-  
+
   const diffInDays = Math.floor(diffInHours / 24);
   if (diffInDays < 7) return `hace ${diffInDays} día${diffInDays !== 1 ? 's' : ''}`;
-  
-  return date.toLocaleDateString('es-AR', { 
-    day: 'numeric', 
-    month: 'long', 
-    year: 'numeric' 
+
+  return date.toLocaleDateString('es-AR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
   });
 }
 
@@ -69,12 +69,12 @@ function CurrentRiskCard() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const latestResponse = await getRiskCountryData({ 
+      const latestResponse = await getRiskCountryData({
         type: 'latest',
         // Add timestamp to force cache refresh
         _t: Date.now().toString()
       } as any);
-      
+
       if (latestResponse.success && latestResponse.data.length > 0) {
         setRiskData(latestResponse.data[0]);
         setLastUpdate(new Date().toISOString());
@@ -160,7 +160,7 @@ function CurrentRiskCard() {
             <Globe className="h-12 w-12 mx-auto mb-4" />
             <p className="font-medium mb-2">Error al cargar Riesgo País</p>
             <p className="text-sm text-gray-600 mb-4">{error}</p>
-            <button 
+            <button
               onClick={fetchData}
               className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-colors"
             >
@@ -180,10 +180,10 @@ function CurrentRiskCard() {
       className="group relative w-full"
     >
       <div className="absolute -inset-1 bg-gradient-to-r from-red-600/20 to-orange-400/20 rounded-2xl blur opacity-50 group-hover:opacity-75 transition duration-500"></div>
-      
+
       <div className="relative bg-white rounded-2xl p-6 md:p-8 shadow-lg border border-red-100">
         <div className="text-center md:text-left">
-          
+
           <div className="flex items-center justify-center md:justify-start gap-4 mb-6">
             <div className="h-12 w-12 bg-red-100 rounded-xl flex items-center justify-center">
               <Globe className="h-6 w-6 text-red-600" />
@@ -201,7 +201,7 @@ function CurrentRiskCard() {
               </p>
               <p className="text-base md:text-lg text-gray-500">puntos básicos</p>
             </div>
-            
+
             {riskData.change_percentage !== null && (
               <div className="flex items-center justify-center md:justify-start gap-2 flex-wrap">
                 <div className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg font-medium ${getVariationBg(riskData.change_percentage)}`}>
@@ -233,10 +233,10 @@ function PeriodVariations() {
     thirtyDays: { value: number | null; date: string | null };
     sixMonths: { value: number | null; date: string | null };
     oneYear: { value: number | null; date: string | null };
-  }>({ 
-    thirtyDays: { value: null, date: null }, 
-    sixMonths: { value: null, date: null }, 
-    oneYear: { value: null, date: null } 
+  }>({
+    thirtyDays: { value: null, date: null },
+    sixMonths: { value: null, date: null },
+    oneYear: { value: null, date: null }
   });
   const [loading, setLoading] = useState(true);
   const [currentValue, setCurrentValue] = useState<number | null>(null);
@@ -249,16 +249,17 @@ function PeriodVariations() {
         if (!currentResponse.success || currentResponse.data.length === 0) {
           throw new Error('No se pudo obtener el valor actual');
         }
-        
+
         const current = currentResponse.data[0].closing_value;
         setCurrentValue(current);
 
-        // Calcular fechas usando el día 16 de cada mes
+        // Calcular fechas usando el día actual
         const today = new Date();
-        
-        const thirtyDaysAgo = new Date(today.getFullYear(), today.getMonth() - 1, 16);
-        const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 6, 16);
-        const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), 16);
+        const currentDay = today.getDate();
+
+        const thirtyDaysAgo = new Date(today.getFullYear(), today.getMonth() - 1, currentDay);
+        const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 6, currentDay);
+        const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), currentDay);
 
         // Obtener datos históricos (con rango más amplio para encontrar datos)
         const thirtyDayRange = {
@@ -276,21 +277,21 @@ function PeriodVariations() {
 
 
         const [thirtyDaysData, sixMonthsData, oneYearData] = await Promise.all([
-          getRiskCountryData({ 
+          getRiskCountryData({
             type: 'custom',
             date_from: thirtyDayRange.from,
             date_to: thirtyDayRange.to,
             order: 'desc',
             limit: 10
           }),
-          getRiskCountryData({ 
+          getRiskCountryData({
             type: 'custom',
             date_from: sixMonthRange.from,
             date_to: sixMonthRange.to,
             order: 'desc',
             limit: 10
           }),
-          getRiskCountryData({ 
+          getRiskCountryData({
             type: 'custom',
             date_from: oneYearRange.from,
             date_to: oneYearRange.to,
@@ -300,14 +301,14 @@ function PeriodVariations() {
         ]);
 
 
-        // Procesar resultados - buscar fecha más cercana al día 16
+        // Procesar resultados - buscar fecha más cercana al día actual
         const processVariation = (data: any, label: string, targetDate: Date) => {
           if (data.success && data.data.length > 0) {
-            // Encontrar la fecha más cercana al 16
-            const targetDay = 16;
+            // Encontrar la fecha más cercana al día actual
+            const targetDay = currentDay;
             let closestRecord = data.data[0];
             let smallestDiff = Math.abs(new Date(data.data[0].closing_date).getDate() - targetDay);
-            
+
             for (const record of data.data) {
               const recordDay = new Date(record.closing_date).getDate();
               const diff = Math.abs(recordDay - targetDay);
@@ -316,7 +317,7 @@ function PeriodVariations() {
                 closestRecord = record;
               }
             }
-            
+
             const historicalValue = closestRecord.closing_value;
             return {
               value: ((current - historicalValue) / historicalValue * 100),
@@ -379,7 +380,7 @@ function PeriodVariations() {
           </div>
           <h2 className="text-xl md:text-2xl font-bold text-gray-900">Variaciones por Período</h2>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
           {[1, 2, 3].map((i) => (
             <div key={i} className="group relative">
@@ -404,7 +405,7 @@ function PeriodVariations() {
         </div>
         <h2 className="text-xl md:text-2xl font-bold text-gray-900">Variaciones por Período</h2>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         {periods.map((period, index) => (
           <motion.div
@@ -422,15 +423,15 @@ function PeriodVariations() {
                   {getVariationIcon(period.data.value)}
                 </div>
               </div>
-              
+
               <p className={`text-2xl md:text-3xl font-bold mb-2 ${getVariationColor(period.data.value)}`}>
                 {period.data.value !== null ? formatPercentageChange(period.data.value) : 'N/A'}
               </p>
-              
+
               {period.data.date && (
                 <p className="text-xs text-gray-500">
-                  desde {new Date(period.data.date).toLocaleDateString('es-AR', { 
-                    day: 'numeric', 
+                  desde {new Date(period.data.date).toLocaleDateString('es-AR', {
+                    day: 'numeric',
                     month: 'short',
                     year: 'numeric'
                   })}
@@ -457,22 +458,22 @@ function ValoresActuales() {
         const response = await getRiskCountryData({ type: 'last_90_days' });
         if (response.success) {
           setStats(response.stats);
-          
+
           if (response.data.length > 0) {
-            const minPoint = response.data.reduce((min, current) => 
+            const minPoint = response.data.reduce((min, current) =>
               current.closing_value < min.closing_value ? current : min
             );
-            const maxPoint = response.data.reduce((max, current) => 
+            const maxPoint = response.data.reduce((max, current) =>
               current.closing_value > max.closing_value ? current : max
             );
-            
-            setMinData({ 
-              value: minPoint.closing_value, 
-              date: minPoint.closing_date 
+
+            setMinData({
+              value: minPoint.closing_value,
+              date: minPoint.closing_date
             });
-            setMaxData({ 
-              value: maxPoint.closing_value, 
-              date: maxPoint.closing_date 
+            setMaxData({
+              value: maxPoint.closing_value,
+              date: maxPoint.closing_date
             });
           }
         }
@@ -496,7 +497,7 @@ function ValoresActuales() {
             </div>
             <h2 className="text-xl md:text-2xl font-bold text-gray-900">Últimos 3 meses</h2>
           </div>
-          
+
           <div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-4 md:gap-6 text-sm text-gray-600">
             <div className="flex items-center gap-2">
               <div className="h-1 w-1 bg-red-600 rounded-full"></div>
@@ -508,7 +509,7 @@ function ValoresActuales() {
             </div>
           </div>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
           {[1, 2, 3].map((i) => (
             <div key={i} className="group relative">
@@ -537,7 +538,7 @@ function ValoresActuales() {
           </div>
           <h2 className="text-xl md:text-2xl font-bold text-gray-900">Últimos 3 meses</h2>
         </div>
-        
+
         <div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-4 md:gap-6 text-sm text-gray-600">
           <div className="flex items-center gap-2">
             <div className="h-1 w-1 bg-red-600 rounded-full"></div>
@@ -549,7 +550,7 @@ function ValoresActuales() {
           </div>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         {/* Valor mínimo */}
         {minData && (
@@ -569,12 +570,12 @@ function ValoresActuales() {
                   <Info className="h-4 w-4" />
                 </div>
               </div>
-              
+
               <p className="text-sm font-medium text-gray-600 mb-2">Valor mínimo</p>
               <p className="text-2xl md:text-3xl font-bold text-green-700 mb-1">{formatRiskValue(minData.value)}</p>
               <p className="text-xs text-gray-500">
-                {new Date(minData.date).toLocaleDateString('es-AR', { 
-                  day: 'numeric', 
+                {new Date(minData.date).toLocaleDateString('es-AR', {
+                  day: 'numeric',
                   month: 'short',
                   year: 'numeric'
                 })}
@@ -601,12 +602,12 @@ function ValoresActuales() {
                   <Info className="h-4 w-4" />
                 </div>
               </div>
-              
+
               <p className="text-sm font-medium text-gray-600 mb-2">Valor máximo</p>
               <p className="text-2xl md:text-3xl font-bold text-red-700 mb-1">{formatRiskValue(maxData.value)}</p>
               <p className="text-xs text-gray-500">
-                {new Date(maxData.date).toLocaleDateString('es-AR', { 
-                  day: 'numeric', 
+                {new Date(maxData.date).toLocaleDateString('es-AR', {
+                  day: 'numeric',
                   month: 'short',
                   year: 'numeric'
                 })}
@@ -633,7 +634,7 @@ function ValoresActuales() {
                   <Info className="h-4 w-4" />
                 </div>
               </div>
-              
+
               <p className="text-sm font-medium text-gray-600 mb-2">Promedio del período</p>
               <p className="text-2xl md:text-3xl font-bold text-blue-700 mb-1">{formatRiskValue(stats.avg_value)}</p>
               <p className="text-xs text-gray-500">últimos 3 meses</p>
@@ -699,7 +700,7 @@ function RiskCountryInfo() {
   return (
     <div className="mb-16">
       <SectionHeader title="Información sobre el Riesgo País" icon={Info} />
-      
+
       <div className="grid md:grid-cols-2 gap-8">
         {riskInfo.map((section, sectionIndex) => (
           <motion.div
@@ -717,7 +718,7 @@ function RiskCountryInfo() {
                 </div>
                 {section.category}
               </h3>
-              
+
               <div className="space-y-6">
                 {section.items.map((item, itemIndex) => (
                   <div key={itemIndex} className="border-l-4 border-red-200 pl-4">
@@ -757,11 +758,11 @@ function UpdateInfo() {
               <span>Fuente: Mercados Financieros Internacionales</span>
             </div>
           </div>
-          
+
           <div className="text-center pt-2 border-t border-gray-200">
             <p className="text-xs text-gray-500">
               <Info className="h-3 w-3 inline mr-1" />
-              Este indicador es calculado por ArgenStats basado en datos de mercado. 
+              Este indicador es calculado por ArgenStats basado en datos de mercado.
               No es el índice EMBI+ oficial de JP Morgan.
             </p>
           </div>
@@ -775,22 +776,22 @@ function UpdateInfo() {
 export default function RiesgoPaisPage() {
   return (
     <div className="relative min-h-screen">
-      <HeroSection 
-        title="Riesgo País Argentina" 
+      <HeroSection
+        title="Riesgo País Argentina"
         subtitle="Seguimiento en tiempo real del indicador de riesgo soberano argentino"
       />
 
-      <div 
+      <div
         className="absolute inset-0 opacity-[0.85] pointer-events-none"
         style={{
           backgroundImage: 'radial-gradient(circle, #d0d0d0 1px, transparent 1px)',
           backgroundSize: '24px 24px',
         }}
       ></div>
-      
+
       <div className="container mx-auto px-4 py-8 relative z-10 max-w-7xl">
         <UpdateInfo />
-        
+
         {/* Current Risk Level Section */}
         <div className="mb-8 md:mb-12 mt-6 md:mt-8">
           <div className="flex items-center justify-center md:justify-start gap-3 mb-6">
@@ -801,15 +802,15 @@ export default function RiesgoPaisPage() {
           </div>
           <CurrentRiskCard />
         </div>
-        
+
         {/* Period Variations Section */}
         <PeriodVariations />
-        
+
         {/* Last 3 Months Values Section */}
         <ValoresActuales />
-        
+
         {/* Historical Analysis with enhanced limits */}
-        <EnhancedRiskChart 
+        <EnhancedRiskChart
           title="Análisis histórico"
           description="Evolución del riesgo país con selector de períodos extendidos"
           height={450}
@@ -817,7 +818,7 @@ export default function RiesgoPaisPage() {
           enableExtendedPeriods={true}
           maxDataPoints={5000}
         />
-        
+
         {/* Information Sections */}
         <RiskCountryInfo />
       </div>

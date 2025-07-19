@@ -209,11 +209,6 @@ export default function EnhancedRiskChart({
               <Calendar className="h-5 w-5 text-red-600" />
               <span className="text-sm font-medium text-gray-700">
                 {periodOptions.find(opt => opt.value === selectedPeriod)?.label}
-                {chartData.length > 0 && (
-                  <span className="text-gray-500 ml-2">
-                    ({chartData.length.toLocaleString()} puntos)
-                  </span>
-                )}
               </span>
             </div>
             
