@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/supabase';
+import { withRateLimit } from '@/lib/rate-limit';
 
 interface LaborMarketRecord {
   id?: string;
@@ -40,7 +41,7 @@ type ViewType = 'temporal' | 'latest' | 'by_type' | 'comparison' | 'annual';
 type DataType = 'national' | 'regional' | 'demographic' | 'all';
 type IndicatorType = 'activity_rate' | 'employment_rate' | 'unemployment_rate' | 'all';
 
-export async function GET(request: NextRequest) {
+async function handler(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
     
@@ -428,3 +429,6 @@ function getSignificantYoYIndicators(item: any): string[] {
 
 // Configurar revalidación
 export const revalidate = 3600; // 1 hora
+
+// IMPORTANTE: Exportar con rate limiting
+export const GET = withRateLimit(handler);

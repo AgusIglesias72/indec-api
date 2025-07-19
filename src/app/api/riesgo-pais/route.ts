@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/supabase';
+import { withRateLimit } from '@/lib/rate-limit';
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
@@ -36,7 +37,7 @@ const MAX_LIMIT_SINGLE_REQUEST = 1000;
  * - order: 'asc' | 'desc' (default: 'desc')
  * - auto_paginate: boolean (default: true) - si es true, maneja automáticamente la paginación para límites grandes
  */
-export async function GET(request: NextRequest) {
+async function handler(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     
@@ -452,3 +453,6 @@ function calculateStats(data: any[], type: string) {
     } : null
   };
 }
+
+// IMPORTANTE: Exportar con rate limiting
+export const GET = withRateLimit(handler);
