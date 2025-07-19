@@ -177,7 +177,7 @@ async function getLatestDollar(dollarTypeParam?: string, includeVariations: bool
     
     // Obtener los datos más recientes por tipo
     const { data: latestData, error } = await query
-      .order('updated_at', { ascending: false })
+      .order('date', { ascending: false })
       .order('dollar_type');
     
     if (error) {
@@ -194,14 +194,12 @@ async function getLatestDollar(dollarTypeParam?: string, includeVariations: bool
     // Agrupar por tipo de dólar y obtener el más reciente de cada uno
     const latestByType: Record<string, any> = {};
     latestData.forEach(item => {
-      // Usar created_at en vez de updated_at, ya que updated_at no existe en el tipo
-      if (
-        !latestByType[item.dollar_type] ||
-        new Date(item.created_at ?? 0) > new Date(latestByType[item.dollar_type].created_at ?? 0)
-      ) {
+      if (!latestByType[item.dollar_type] || 
+          new Date(item.date) > new Date(latestByType[item.dollar_type].date)) {
         latestByType[item.dollar_type] = item;
       }
     });
+    
     // Convertir a array
     const latestRates = Object.values(latestByType);
     
@@ -209,17 +207,24 @@ async function getLatestDollar(dollarTypeParam?: string, includeVariations: bool
     if (includeVariations) {
       const ratesWithVariations = await Promise.all(
         latestRates.map(async (rate) => {
-          // Obtener el cierre del día anterior
-          const yesterday = new Date();
+          // Obtener el cierre del día anterior (último registro del día anterior)
+          const today = new Date(rate.date);
+          const yesterday = new Date(today);
           yesterday.setDate(yesterday.getDate() - 1);
-          yesterday.setHours(23, 59, 59, 999);
+          
+          // Inicio y fin del día anterior
+          const yesterdayStart = new Date(yesterday);
+          yesterdayStart.setHours(0, 0, 0, 0);
+          const yesterdayEnd = new Date(yesterday);
+          yesterdayEnd.setHours(23, 59, 59, 999);
           
           const { data: yesterdayData } = await supabase
             .from('dollar_rates')
             .select('*')
             .eq('dollar_type', rate.dollar_type)
-            .lte('updated_at', yesterday.toISOString())
-            .order('updated_at', { ascending: false })
+            .gte('date', yesterdayStart.toISOString())
+            .lte('date', yesterdayEnd.toISOString())
+            .order('date', { ascending: false })
             .limit(1)
             .single();
           
@@ -240,7 +245,8 @@ async function getLatestDollar(dollarTypeParam?: string, includeVariations: bool
             spread: Number(((rate.sell_price - rate.buy_price) / rate.buy_price * 100).toFixed(2)),
             buy_variation: buyVariation !== null ? Number(buyVariation.toFixed(2)) : null,
             sell_variation: sellVariation !== null ? Number(sellVariation.toFixed(2)) : null,
-            last_updated: rate.updated_at
+            last_updated: rate.date, // Ahora date incluye la hora
+            minutes_ago: Math.floor((Date.now() - new Date(rate.date).getTime()) / 60000)
           };
         })
       );
@@ -256,7 +262,8 @@ async function getLatestDollar(dollarTypeParam?: string, includeVariations: bool
       buy_price: Number(rate.buy_price),
       sell_price: Number(rate.sell_price),
       spread: Number(((rate.sell_price - rate.buy_price) / rate.buy_price * 100).toFixed(2)),
-      last_updated: rate.updated_at
+      last_updated: rate.date,
+      minutes_ago: Math.floor((Date.now() - new Date(rate.date).getTime()) / 60000)
     }));
     
     return { data: transformedData, error: null };
@@ -288,7 +295,7 @@ async function getDollarMetadata() {
     const { data: dateRangeData, error: dateRangeError } = await supabase
       .from('dollar_rates')
       .select('date, updated_at')
-      .order('updated_at', { ascending: false })
+      .order('date', { ascending: false })
       .limit(1);
     
     if (dateRangeError) {
@@ -298,7 +305,7 @@ async function getDollarMetadata() {
     const { data: firstDateData } = await supabase
       .from('dollar_rates')
       .select('date, updated_at')
-      .order('updated_at', { ascending: true })
+      .order('date', { ascending: true })
       .limit(1);
     
     // Contar registros por tipo
@@ -320,10 +327,10 @@ async function getDollarMetadata() {
           count: typeCounts[type] || 0
         })),
         date_range: {
-          first_date: Array.isArray(firstDateData) && firstDateData[0] && 'date' in firstDateData[0] ? (firstDateData[0] as any).date || null : null,
-          last_date: Array.isArray(dateRangeData) && dateRangeData[0] && 'date' in dateRangeData[0] ? (dateRangeData[0] as any).date || null : null,
-          first_update: Array.isArray(firstDateData) && firstDateData[0] && 'updated_at' in firstDateData[0] ? (firstDateData[0] as any).updated_at || null : null,
-          last_update: Array.isArray(dateRangeData) && dateRangeData[0] && 'updated_at' in dateRangeData[0] ? (dateRangeData[0] as any).updated_at || null : null
+          first_date: firstDateData && Array.isArray(firstDateData) && firstDateData[0] && 'date' in firstDateData[0] ? firstDateData[0].date : null,
+          last_date: dateRangeData && Array.isArray(dateRangeData) && dateRangeData[0] && 'date' in dateRangeData[0] ? dateRangeData[0].date : null,
+          first_update: firstDateData && Array.isArray(firstDateData) && firstDateData[0] && 'updated_at' in firstDateData[0] ? firstDateData[0].updated_at : null,
+          last_update: dateRangeData && Array.isArray(dateRangeData) && dateRangeData[0] && 'updated_at' in dateRangeData[0] ? dateRangeData[0].updated_at : null
         },
         metadata: {
           data_source: 'dolarapi.com',
@@ -381,8 +388,7 @@ async function getHistoricalDollar(params: {
     if (endDate) query = query.lte('date', endDate);
     
     // Ordenar y paginar
-    query = query.order('date', { ascending: order === 'asc' })
-      .order('dollar_type');
+    query = query.order('date', { ascending: order === 'asc' });
     
     const offset = (page - 1) * limit;
     query = query.range(offset, offset + limit - 1);
@@ -402,9 +408,9 @@ async function getHistoricalDollar(params: {
       buy_price: Number(item.buy_price),
       sell_price: Number(item.sell_price),
       spread: Number(((item.sell_price - item.buy_price) / item.buy_price * 100).toFixed(2)),
-      last_updated: item.created_at // Corregido: usar 'created_at' en vez de 'updated_at'
+      last_updated: item.date
     }));
-
+    
     // Calcular estadísticas
     const stats = calculateDollarStats(transformedData);
     

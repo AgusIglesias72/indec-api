@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
       // Actualizar datos del dólar
       result = await updateDollarData();
       
-      console.info(`✅ Actualización del dólar completada: ${result.newRecords} nuevos registros, ${result.updatedRecords} actualizados`);
+      console.info(`✅ Actualización del dólar completada: ${result.newRecords} nuevos registros, ${result.duplicatesSkipped} omitidos`);
       
       // Registrar la ejecución exitosa
       await logCronExecution(startTime, 'success', result);
@@ -78,7 +78,6 @@ export async function GET(request: NextRequest) {
         execution_time: new Date().toISOString(),
         data_source: 'dolarapi.com',
         new_records: result.newRecords,
-        updated_records: result.updatedRecords,
         duplicates_skipped: result.duplicatesSkipped,
         summary: result.message,
         details: {
@@ -95,7 +94,7 @@ export async function GET(request: NextRequest) {
       await logCronExecution(startTime, 'error', { 
         error: (error as Error).message,
         newRecords: 0,
-        updatedRecords: 0
+        duplicatesSkipped: 0
       });
       
       return NextResponse.json({
@@ -145,7 +144,6 @@ async function updateDollarData() {
       console.warn('⚠️ No se obtuvieron datos del dólar');
       return {
         newRecords: 0,
-        updatedRecords: 0,
         duplicatesSkipped: 0,
         message: 'No hay datos disponibles en la API',
         processedTypes: [],
@@ -157,7 +155,6 @@ async function updateDollarData() {
     
     // 2. Procesar cada tipo de dólar
     let newRecords = 0;
-    let updatedRecords = 0;
     let duplicatesSkipped = 0;
     const processedTypes: string[] = [];
     const errors: string[] = [];
@@ -174,72 +171,51 @@ async function updateDollarData() {
         
         // Convertir la fecha de actualización a timestamp ISO
         const updatedAt = new Date(dollar.fechaActualizacion).toISOString();
-        const date = new Date(dollar.fechaActualizacion).toISOString().split('T')[0];
         
-        // Verificar si ya existe un registro con la misma fecha de actualización
-        const { data: existingRecord } = await supabase
+        // Verificar el último registro para este tipo de dólar
+        const { data: lastRecord } = await supabase
           .from('dollar_rates')
-          .select('id, updated_at')
+          .select('id, buy_price, sell_price, updated_at')
           .eq('dollar_type', dollarType)
-          .eq('updated_at', updatedAt)
-          .single();
-        
-        if (existingRecord) {
-          console.info(`⏭️ Registro duplicado omitido: ${dollarType} - ${updatedAt}`);
-          duplicatesSkipped++;
-          continue;
-        }
-        
-        // Buscar si existe un registro para actualizar (mismo tipo y fecha)
-        const { data: recordToUpdate } = await supabase
-          .from('dollar_rates')
-          .select('id')
-          .eq('dollar_type', dollarType)
-          .eq('date', date)
           .order('updated_at', { ascending: false })
           .limit(1)
           .single();
         
-        // Preparar datos para insertar/actualizar
+        // Si existe y los valores son idénticos, omitir
+        if (
+          lastRecord &&
+          'buy_price' in lastRecord &&
+          'sell_price' in lastRecord &&
+          'updated_at' in lastRecord &&
+          lastRecord.buy_price === dollar.compra &&
+          lastRecord.sell_price === dollar.venta &&
+          new Date(lastRecord.updated_at).toISOString() === updatedAt
+        ) {
+          console.info(`⏭️ Sin cambios: ${dollarType} - ${updatedAt}`);
+          duplicatesSkipped++;
+          continue;
+        }
+        
+        // Usar la fecha de actualización directamente como date (con hora)
         const dollarRecord = {
           dollar_type: dollarType,
-          date: date,
+          date: updatedAt, // Ahora date incluye fecha Y hora
           buy_price: dollar.compra,
           sell_price: dollar.venta,
           updated_at: updatedAt,
-          created_at: recordToUpdate ? undefined : new Date().toISOString()
+          created_at: new Date().toISOString()
         };
         
-        if (recordToUpdate) {
-          // Actualizar registro existente
-          const { error } = await supabase
-            .from('dollar_rates')
-            .update({
-              buy_price: dollarRecord.buy_price,
-              sell_price: dollarRecord.sell_price,
-              updated_at: dollarRecord.updated_at
-            })
-            .eq('id', recordToUpdate.id);
-          
-          if (error) {
-            throw error;
-          }
-          
-          updatedRecords++;
-          console.info(`📝 Actualizado: ${dollarType} - ${date}`);
-        } else {
-          // Insertar nuevo registro
-          const { error } = await supabase
-            .from('dollar_rates')
-            .insert(dollarRecord);
-          
-          if (error) {
-            throw error;
-          }
-          
-          newRecords++;
-          console.info(`✨ Nuevo registro: ${dollarType} - ${date}`);
+        const { error } = await supabase
+          .from('dollar_rates')
+          .insert(dollarRecord);
+        
+        if (error) {
+          throw error;
         }
+        
+        newRecords++;
+        console.info(`✨ Nuevo registro: ${dollarType} - ${updatedAt}`);
         
         processedTypes.push(dollarType);
         
@@ -249,11 +225,10 @@ async function updateDollarData() {
       }
     }
     
-    console.info(`✅ Procesamiento completado: ${newRecords} nuevos, ${updatedRecords} actualizados, ${duplicatesSkipped} omitidos`);
+    console.info(`✅ Procesamiento completado: ${newRecords} nuevos, ${duplicatesSkipped} omitidos`);
     
     return {
       newRecords,
-      updatedRecords,
       duplicatesSkipped,
       message: 'Datos del dólar actualizados correctamente',
       processedTypes: [...new Set(processedTypes)],
@@ -278,10 +253,10 @@ async function logCronExecution(startTime: string, status: 'success' | 'error', 
         dataSource: 'dolarapi.com',
         startTime,
         endTime: new Date().toISOString(),
-        recordsProcessed: (result.newRecords || 0) + (result.updatedRecords || 0),
+        recordsProcessed: result.newRecords || 0,
         status,
         details: status === 'success' 
-          ? `Procesados: ${result.newRecords} nuevos, ${result.updatedRecords} actualizados, ${result.duplicatesSkipped} omitidos. Tipos: ${result.processedTypes?.join(', ') || 'N/A'}`
+          ? `Procesados: ${result.newRecords} nuevos, ${result.duplicatesSkipped} omitidos. Tipos: ${result.processedTypes?.join(', ') || 'N/A'}`
           : `Error: ${result.error || 'Error desconocido'}`
       }],
       status

@@ -109,6 +109,7 @@ export type Database = {
           dollar_type: string
           id: string
           sell_price: number
+          updated_at: string
         }
         Insert: {
           buy_price: number
@@ -117,6 +118,7 @@ export type Database = {
           dollar_type: string
           id?: string
           sell_price: number
+          updated_at?: string
         }
         Update: {
           buy_price?: number
@@ -125,6 +127,7 @@ export type Database = {
           dollar_type?: string
           id?: string
           sell_price?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -829,6 +832,46 @@ export type Database = {
           variation_yoy_activity_rate: number | null
           variation_yoy_employment_rate: number | null
           variation_yoy_unemployment_rate: number | null
+        }
+        Relationships: []
+      }
+      v_dollar_daily_closing: {
+        Row: {
+          buy_price: number | null
+          closing_date: string | null
+          closing_timestamp: string | null
+          created_at: string | null
+          dollar_type: string | null
+          id: string | null
+          sell_price: number | null
+          spread: number | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
+      v_dollar_latest: {
+        Row: {
+          buy_price: number | null
+          created_at: string | null
+          date: string | null
+          dollar_type: string | null
+          sell_price: number | null
+          spread: number | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
+      v_dollar_with_variations: {
+        Row: {
+          buy_price: number | null
+          buy_variation: number | null
+          date: string | null
+          dollar_type: string | null
+          sell_price: number | null
+          sell_variation: number | null
+          updated_at: string | null
+          yesterday_buy: number | null
+          yesterday_sell: number | null
         }
         Relationships: []
       }

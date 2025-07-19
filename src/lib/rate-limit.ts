@@ -13,7 +13,7 @@ export interface RateLimitResult {
 // Crear cliente de Supabase para rate limiting
 function createRateLimitSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseKey) {
     console.error('Missing Supabase environment variables for rate limiting')
@@ -114,7 +114,8 @@ export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult>
       }
     }
 
-    console.log('Checking API key:', apiKey.substring(0, 10) + '...')
+//    console.log('Checking API key:', apiKey.substring(0, 10) + '...')
+    console.log('Checking API key:', apiKey)
 
     // Crear cliente de Supabase
     const supabase = createRateLimitSupabaseClient()
