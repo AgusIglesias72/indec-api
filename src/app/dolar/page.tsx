@@ -67,8 +67,12 @@ function ModernDollarRateCard({ dollarType, title, index }: ModernDollarRateCard
     fetchData();
   }, [dollarType]);
 
-  // Formatear valores monetarios
-  const formatCurrency = (value: number) => {
+  // Formatear valores monetarios con verificación de valores nulos
+  const formatCurrency = (value: number | undefined | null) => {
+    if (value === undefined || value === null) {
+      return "N/A";
+    }
+    
     return value.toLocaleString('es-AR', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
@@ -83,6 +87,14 @@ function ModernDollarRateCard({ dollarType, title, index }: ModernDollarRateCard
   const variation = getRandomVariation();
   const isPositive = variation > 0;
   const isNegative = variation < 0;
+
+  // Calcular spread de forma segura
+  const calculateSpread = (buyPrice: number | undefined | null, sellPrice: number | undefined | null): string => {
+    if (!buyPrice || !sellPrice || buyPrice === 0) {
+      return "N/A";
+    }
+    return (((sellPrice - buyPrice) / buyPrice) * 100).toFixed(2);
+  };
 
   // Renderizar skeleton mientras carga
   if (loading) {
@@ -128,7 +140,7 @@ function ModernDollarRateCard({ dollarType, title, index }: ModernDollarRateCard
         <div className="relative bg-white rounded-2xl p-6 shadow-lg border border-red-100 h-full">
           <div className="text-center text-red-600">
             <p className="font-medium">{title}</p>
-            <p className="text-sm mt-1">{error}</p>
+            <p className="text-sm mt-1">{error || 'No hay datos disponibles'}</p>
           </div>
         </div>
       </motion.div>
@@ -173,26 +185,28 @@ function ModernDollarRateCard({ dollarType, title, index }: ModernDollarRateCard
 
         {/* Prices grid */}
         <div className="grid grid-cols-2 gap-3 mb-4">
-          {dollarRate.buy_price && (
+          {dollarRate.buy_price !== undefined && dollarRate.buy_price !== null && (
             <div className="bg-green-50/50 rounded-xl p-3 border border-green-200">
               <p className="text-xs font-medium text-green-800 mb-1">Compra</p>
               <p className="text-lg font-bold text-green-700">${formatCurrency(dollarRate.buy_price)}</p>
             </div>
           )}
           
-          <div className={`bg-green-50/50 rounded-xl p-3 border border-green-200 ${!dollarRate.buy_price ? 'col-span-2' : ''}`}>
+          <div className={`bg-green-50/50 rounded-xl p-3 border border-green-200 ${
+            (!dollarRate.buy_price || dollarRate.buy_price === null) ? 'col-span-2' : ''
+          }`}>
             <p className="text-xs font-medium text-green-800 mb-1">Venta</p>
             <p className="text-lg font-bold text-green-700">${formatCurrency(dollarRate.sell_price)}</p>
           </div>
         </div>
 
         {/* Spread calculation (only if both buy and sell exist) */}
-        {dollarRate.buy_price && (
+        {dollarRate.buy_price !== undefined && dollarRate.buy_price !== null && dollarRate.sell_price !== undefined && dollarRate.sell_price !== null && (
           <div className="pt-3 border-t border-green-100">
             <div className="flex justify-between items-center">
               <span className="text-xs text-gray-600">Spread</span>
               <span className="text-sm font-medium text-gray-900">
-                {(((dollarRate.sell_price - dollarRate.buy_price) / dollarRate.buy_price) * 100).toFixed(2)}%
+                {calculateSpread(dollarRate.buy_price, dollarRate.sell_price)}%
               </span>
             </div>
           </div>

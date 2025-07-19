@@ -14,19 +14,18 @@ export interface DollarRateData {
 }
 
 export interface DollarRatesResponse {
+  success: boolean;
+  type: string;
   data: DollarRateData[];
-  metadata: {
-    count: number;
-    filtered_by: Record<string, any>;
+  meta?: {
+    type: string;
+    timestamp: string;
   };
-}
-
-export interface DollarLatestResponse {
-  data: DollarRateData[];
-  metadata: {
+  metadata?: {
     count: number;
-    last_updated: string;
-    dollar_type: string;
+    filtered_by?: Record<string, any>;
+    last_updated?: string;
+    dollar_type?: string;
   };
 }
 
@@ -41,8 +40,8 @@ export async function getLatestDollarRates(): Promise<DollarRateData[]> {
       throw new Error(`Error ${response.status}: ${response.statusText}`);
     }
     
-    const result = await response.json() as DollarLatestResponse;
-    return result.data;
+    const result = await response.json() as DollarRatesResponse;
+    return result.data || [];
   } catch (error) {
     console.error('Error al obtener cotizaciones de dólar:', error);
     return [];
@@ -60,7 +59,14 @@ export async function getLatestDollarRate(type: DollarType): Promise<DollarRateD
       throw new Error(`Error ${response.status}: ${response.statusText}`);
     }
     
-    return await response.json() as DollarRateData;
+    const result = await response.json() as DollarRatesResponse;
+    
+    // La API devuelve un array de datos, tomamos el primero
+    if (result.data && result.data.length > 0) {
+      return result.data[0];
+    }
+    
+    return null;
   } catch (error) {
     console.error(`Error al obtener cotización del dólar ${type}:`, error);
     return null;
@@ -79,7 +85,8 @@ export async function getDollarRatesHistory(
     // Construir parámetros de consulta
     const typeParam = Array.isArray(type) ? type.join(',') : type;
     
-    let url = `/api/dollar?type=${typeParam}`;
+    // Usar 'historical' como tipo y 'dollar_type' para el tipo de dólar
+    let url = `/api/dollar?type=historical&dollar_type=${typeParam}`;
     if (startDate) url += `&start_date=${startDate}`;
     if (endDate) url += `&end_date=${endDate}`;
     
@@ -90,7 +97,7 @@ export async function getDollarRatesHistory(
     }
     
     const result = await response.json() as DollarRatesResponse;
-    return result.data;
+    return result.data || [];
   } catch (error) {
     console.error('Error al obtener historial de cotizaciones:', error);
     return [];
