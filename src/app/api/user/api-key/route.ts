@@ -1,7 +1,19 @@
 // src/app/api/user/api-key/route.ts
 import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
-import { createServerComponentClient } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
+
+// Crear cliente de Supabase para API routes
+function createSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Missing Supabase environment variables')
+  }
+
+  return createClient(supabaseUrl, supabaseKey)
+}
 
 export async function GET() {
   try {
@@ -11,7 +23,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const supabase = createServerComponentClient()
+    const supabase = createSupabaseClient()
 
     // Get user's API key
     const { data, error } = await supabase
@@ -22,6 +34,12 @@ export async function GET() {
 
     if (error) {
       console.error('Error fetching API key:', error)
+      
+      // Si el usuario no existe, devolver null en lugar de error
+      if (error.code === 'PGRST116') {
+        return NextResponse.json({ apiKey: null })
+      }
+      
       return NextResponse.json({ error: 'Error fetching API key' }, { status: 500 })
     }
 
@@ -40,7 +58,41 @@ export async function POST() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const supabase = createServerComponentClient()
+    const supabase = createSupabaseClient()
+
+    // Primero, verificar si el usuario existe
+    const { data: existingUser, error: checkError } = await supabase
+      .from('users')
+      .select('id, clerk_user_id')
+      .eq('clerk_user_id', userId)
+      .single()
+
+    // Si el usuario no existe, primero debemos crearlo
+    if (checkError && checkError.code === 'PGRST116') {
+      // Obtener información del usuario de Clerk
+      const { userId, sessionClaims } = await auth();
+      const user = sessionClaims;
+
+      const { error: insertError } = await supabase
+        .from('users')
+        .insert({
+          clerk_user_id: userId,
+          email: Array.isArray(user?.emailAddresses) && user?.emailAddresses[0]?.emailAddress
+            ? user.emailAddresses[0].emailAddress
+            : '',
+          name: user?.firstName && user?.lastName
+            ? `${user.firstName} ${user.lastName}`
+            : user?.username || '',
+          plan_type: 'free',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+
+      if (insertError) {
+        console.error('Error creating user:', insertError)
+        return NextResponse.json({ error: 'Error creating user' }, { status: 500 })
+      }
+    }
 
     // Generate new API key
     const { data: apiKeyData, error: rpcError } = await supabase.rpc('generate_api_key')

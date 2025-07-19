@@ -5,7 +5,7 @@ import { Database } from '@/types/supabase';
 import { withRateLimit } from '@/lib/rate-limit';
 
 // Configurar runtime
-export const runtime = 'edge';
+// export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 // Inicializar cliente Supabase
