@@ -333,6 +333,8 @@ export default function NewsletterSignupSection() {
                         }}
                         onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
                         placeholder="tu@email.com"
+                        suppressHydrationWarning
+
                         className="w-full pl-12 pr-4 py-4 bg-white/10  border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                       />
                     </div>
@@ -342,6 +344,8 @@ export default function NewsletterSignupSection() {
                       className="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all duration-300 disabled:opacity-70 flex items-center justify-center gap-2 min-w-[140px] cursor-pointer disabled:cursor-not-allowed"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
+                      suppressHydrationWarning
+
                     >
                       {isSubmitting ? (
                         <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />

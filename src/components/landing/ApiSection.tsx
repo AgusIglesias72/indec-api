@@ -245,6 +245,8 @@ export default function APISection() {
                     }`}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    suppressHydrationWarning
+
                   >
                     <IconComponent className={`h-4 w-4 ${example.color}`} />
                     <span>{example.title}</span>

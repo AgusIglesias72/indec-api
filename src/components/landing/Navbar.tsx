@@ -106,7 +106,6 @@ export default function NavBar() {
               >
                 <Link href="/contacto" className="flex items-center gap-2">
                   <Mail className="h-4 w-4" />
-                  Contacto
                 </Link>
               </Button>
             </div>
@@ -143,13 +142,12 @@ export default function NavBar() {
           <div className="hidden md:flex md:items-center md:gap-2">
             <Button 
               asChild
-              variant="outline" 
+              variant="fill" 
               size="sm"
-              className="font-medium border-indec-blue text-indec-blue hover:bg-indec-blue hover:text-white transition-colors"
+              className="font-medium text-indec-blue hover:bg-indec-blue hover:text-white transition-colors border-none"
             >
               <Link href="/contacto" className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
-                Contacto
               </Link>
             </Button>
             

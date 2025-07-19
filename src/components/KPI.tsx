@@ -24,6 +24,7 @@ interface DollarData {
   buy_price: number;
   sell_price: number;
   spread: number;
+  sell_variation?: number;
   dollar_type: string;
   date: string;
 }
@@ -52,47 +53,49 @@ const HeroWithMetrics = () => {
   const [yearlyVariation, setYearlyVariation] = useState<number | null>(null);
 
   // Función para obtener datos del dólar oficial
-  const fetchDollarData = async () => {
-    try {
-      setLoadingDollar(true);
-      const response = await fetch('/api/dollar?type=latest&dollar_type=OFICIAL');
-      
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-      
-      const result = await response.json();
-
-      let oficialData = null;
-      
-      // Manejar diferentes estructuras de respuesta
-      if (result.data && Array.isArray(result.data)) {
-        oficialData = result.data.find((d: any) => d.dollar_type === 'OFICIAL');
-      } else if (result.dollar_type === 'OFICIAL') {
-        oficialData = result;
-      } else if (result.data && result.data.dollar_type === 'OFICIAL') {
-        oficialData = result.data;
-      }
-      
-      if (oficialData) {
-        setDollarData(oficialData);
-      } else {
-        throw new Error('No se encontraron datos del dólar oficial');
-      }
-    } catch (error) {
-      console.error('Error fetching dollar data:', error);
-      // Datos de fallback en caso de error
-      setDollarData({
-        buy_price: 1135,
-        sell_price: 1185,
-        spread: 4.41,
-        dollar_type: "OFICIAL",
-        date: new Date().toISOString()
-      });
-    } finally {
-      setLoadingDollar(false);
+// Función para obtener datos del dólar oficial
+const fetchDollarData = async () => {
+  try {
+    setLoadingDollar(true);
+    const response = await fetch('/api/dollar?type=latest&dollar_type=OFICIAL&include_variations=true');
+    
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
     }
-  };
+    
+    const result = await response.json();
+
+    let oficialData = null;
+    
+    // Manejar diferentes estructuras de respuesta
+    if (result.data && Array.isArray(result.data)) {
+      oficialData = result.data.find((d: any) => d.dollar_type === 'OFICIAL');
+    } else if (result.dollar_type === 'OFICIAL') {
+      oficialData = result;
+    } else if (result.data && result.data.dollar_type === 'OFICIAL') {
+      oficialData = result.data;
+    }
+    
+    if (oficialData) {
+      setDollarData(oficialData);
+    } else {
+      throw new Error('No se encontraron datos del dólar oficial');
+    }
+  } catch (error) {
+    console.error('Error fetching dollar data:', error);
+    // Datos de fallback en caso de error
+    setDollarData({
+      buy_price: 1135,
+      sell_price: 1185,
+      spread: 4.41,
+      sell_variation: 0,
+      dollar_type: "OFICIAL",
+      date: new Date().toISOString()
+    });
+  } finally {
+    setLoadingDollar(false);
+  }
+};
 
   // Función para obtener datos del riesgo país con variaciones calculadas
   const fetchRiskCountryData = async () => {
@@ -218,7 +221,7 @@ const HeroWithMetrics = () => {
   const getChangeIcon = (value: number) => {
     if (value > 0) return <ArrowUpRight className="h-4 w-4" />;
     if (value < 0) return <ArrowDownRight className="h-4 w-4" />;
-    return <Minus className="h-4 w-4" />;
+    return <Minus className="h-2 w-2" />;
   };
 
   const getEMAEChangeColor = (value: number) => {
@@ -336,9 +339,21 @@ const HeroWithMetrics = () => {
                     <span>Venta:</span>
                     <span className="font-medium">${loadingDollar ? "..." : formatNumber(dollarData?.sell_price || 0, 0)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Spread:</span>
-                    <span className="font-medium">{loadingDollar ? "..." : `${formatNumber(dollarData?.spread || 0, 1)}%`}</span>
+                  <div className="flex justify-between items-center">
+                    <span>Variación:</span>
+                    <span className={`font-medium flex items-center ${
+                      !dollarData?.sell_variation ? "text-gray-600" :
+                      dollarData.sell_variation > 0 ? "text-red-600" :
+                      dollarData.sell_variation < 0 ? "text-green-600" :
+                      "text-gray-600"
+                    }`}>
+                      {loadingDollar ? "..." : (
+                        <>
+                          {getChangeIcon(dollarData?.sell_variation || 0)}
+                          {formatNumber(Math.abs(dollarData?.sell_variation || 0), 1)}%
+                        </>
+                      )}
+                    </span>
                   </div>
                 </div>
                 
