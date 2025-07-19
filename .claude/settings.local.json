@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:docs.anthropic.com)",
+      "Bash(claude mcp add:*)",
+      "Bash(claude mcp:*)",
+      "Bash(curl:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(python:*)",
+      "Bash(node:*)",
+      "Bash(del:*)",
+      "Bash(rm:*)",
+      "Bash(npm install:*)",
+      "Bash(npm update:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run build:*)"
+    ],
+    "deny": []
+  }
+}

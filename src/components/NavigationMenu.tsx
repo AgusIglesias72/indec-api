@@ -84,27 +84,21 @@ export function MainNavigation() {
         </NavigationMenuItem>
 
         <NavigationMenuItem>
-          <Link href="/dolar" legacyBehavior passHref>
-            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+            <NavigationMenuLink className={navigationMenuTriggerStyle()} href="/dolar">
               Dólar
             </NavigationMenuLink>
-          </Link>
         </NavigationMenuItem>
 
         <NavigationMenuItem>
-          <Link href="/calendario" legacyBehavior passHref>
-            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+            <NavigationMenuLink className={navigationMenuTriggerStyle()} href="/calendario">
               Calendario INDEC
             </NavigationMenuLink>
-          </Link>
         </NavigationMenuItem>
         
         <NavigationMenuItem>
-          <Link href="/documentacion" legacyBehavior passHref>
-            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+            <NavigationMenuLink className={navigationMenuTriggerStyle()} href="/documentacion">
               API Docs
             </NavigationMenuLink>
-          </Link>
         </NavigationMenuItem>
       </NavigationMenuList>
     </NavigationMenu>
