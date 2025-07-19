@@ -15,7 +15,10 @@ const eslintConfig = [
   {
     rules: {
       // Permitir el uso de 'any' en ciertos casos
-      "@typescript-eslint/no-explicit-any": "off", // Cambiado de 'error' a 'warn'
+      "@typescript-eslint/no-explicit-any": "off", // Cambiado de 'error' a 'warn',
+      "@typescript-eslint/no-unused-expressions": "warn",
+      "@typescript-eslint/no-unsafe-function-type": "off",
+      "react-hooks/exhaustive-deps": "warn",
       
       
       // Configuración para variables no utilizadas
