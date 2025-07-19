@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { DollarSign, TrendingUp, BarChart3, Clock, RefreshCw, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { getLatestDollarRate } from '@/services/api-dollar';
+import { getLatestDollarRates } from '@/services/api-dollar';
 import { DollarRateData } from '@/types/dollar';
 import { DollarType } from '@/types/dollar';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,6 +13,7 @@ import EnhancedDollarChart from '@/components/EnhancedDollarChart';
 interface ExtendedDollarRateData extends DollarRateData {
   buy_variation?: number;
   sell_variation?: number;
+  minutes_ago?: number;
 }
 
 // Componente Hero Section
@@ -38,42 +39,34 @@ function HeroSection({ title, subtitle }: { title: string; subtitle: string }) {
   );
 }
 
+// Función para formatear tiempo relativo
+function formatTimeAgo(minutes: number): string {
+  if (minutes < 1) return 'Hace menos de 1 minuto';
+  if (minutes === 1) return 'Hace 1 minuto';
+  if (minutes < 60) return `Hace ${minutes} minutos`;
+  
+  const hours = Math.floor(minutes / 60);
+  if (hours === 1) return 'Hace 1 hora';
+  if (hours < 24) return `Hace ${hours} horas`;
+  
+  const days = Math.floor(hours / 24);
+  if (days === 1) return 'Ayer';
+  if (days < 7) return `Hace ${days} días`;
+  
+  return 'Hace más de una semana';
+}
+
 // Componente para cards individuales de dólar modernas
 interface ModernDollarRateCardProps {
   dollarType: DollarType;
   title: string;
   index: number;
+  data: ExtendedDollarRateData | null;
+  loading: boolean;
+  error: string | null;
 }
 
-function ModernDollarRateCard({ dollarType, title, index }: ModernDollarRateCardProps) {
-  const [dollarRate, setDollarRate] = useState<ExtendedDollarRateData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Cargar datos
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const data = await getLatestDollarRate(dollarType) as ExtendedDollarRateData;
-      
-      if (data) {
-        setDollarRate(data);
-        setError(null);
-      } else {
-        setError('No se encontraron datos');
-      }
-    } catch (err) {
-      console.error(`Error al cargar cotización de ${dollarType}:`, err);
-      setError('Error al cargar datos');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, [dollarType]);
-
+function ModernDollarRateCard({ dollarType, title, index, data, loading, error }: ModernDollarRateCardProps) {
   // Formatear valores monetarios con verificación de valores nulos
   const formatCurrency = (value: number | undefined | null) => {
     if (value === undefined || value === null) {
@@ -106,17 +99,9 @@ function ModernDollarRateCard({ dollarType, title, index }: ModernDollarRateCard
     return 0;
   };
 
-  const variation = calculateVariation(dollarRate);
+  const variation = calculateVariation(data);
   const isPositive = variation > 0;
   const isNegative = variation < 0;
-
-  // Calcular spread de forma segura
-  const calculateSpread = (buyPrice: number | undefined | null, sellPrice: number | undefined | null): string => {
-    if (!buyPrice || !sellPrice || buyPrice === 0) {
-      return "N/A";
-    }
-    return (((sellPrice - buyPrice) / buyPrice) * 100).toFixed(2);
-  };
 
   // Renderizar skeleton mientras carga
   if (loading) {
@@ -150,7 +135,7 @@ function ModernDollarRateCard({ dollarType, title, index }: ModernDollarRateCard
   }
 
   // Renderizar error
-  if (error || !dollarRate) {
+  if (error || !data) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -207,32 +192,31 @@ function ModernDollarRateCard({ dollarType, title, index }: ModernDollarRateCard
 
         {/* Prices grid */}
         <div className="grid grid-cols-2 gap-3 mb-4">
-          {dollarRate.buy_price !== undefined && dollarRate.buy_price !== null && (
+          {data.buy_price !== undefined && data.buy_price !== null && (
             <div className="bg-green-50/50 rounded-xl p-3 border border-green-200">
               <p className="text-xs font-medium text-green-800 mb-1">Compra</p>
-              <p className="text-lg font-bold text-green-700">${formatCurrency(dollarRate.buy_price)}</p>
+              <p className="text-lg font-bold text-green-700">${formatCurrency(data.buy_price)}</p>
             </div>
           )}
           
           <div className={`bg-green-50/50 rounded-xl p-3 border border-green-200 ${
-            (!dollarRate.buy_price || dollarRate.buy_price === null) ? 'col-span-2' : ''
+            (!data.buy_price || data.buy_price === null) ? 'col-span-2' : ''
           }`}>
             <p className="text-xs font-medium text-green-800 mb-1">Venta</p>
-            <p className="text-lg font-bold text-green-700">${formatCurrency(dollarRate.sell_price)}</p>
+            <p className="text-lg font-bold text-green-700">${formatCurrency(data.sell_price)}</p>
           </div>
         </div>
 
-        {/* Spread calculation (only if both buy and sell exist) */}
-        {dollarRate.buy_price !== undefined && dollarRate.buy_price !== null && dollarRate.sell_price !== undefined && dollarRate.sell_price !== null && (
-          <div className="pt-3 border-t border-green-100">
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-gray-600">Spread</span>
-              <span className="text-sm font-medium text-gray-900">
-                {calculateSpread(dollarRate.buy_price, dollarRate.sell_price)}%
-              </span>
-            </div>
+        {/* Update time info */}
+        <div className="pt-3 border-t border-green-100">
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-gray-600">Actualizado</span>
+            <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              {formatTimeAgo(data.minutes_ago || 0)}
+            </span>
           </div>
-        )}
+        </div>
       </div>
     </motion.div>
   );
@@ -375,6 +359,53 @@ const dollarTypes = {
 
 // Componente principal
 export default function ModernCotizacionesPage() {
+  const [dollarRates, setDollarRates] = useState<Record<DollarType, ExtendedDollarRateData | null>>({} as any);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Cargar todos los datos de una vez
+  const fetchAllRates = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/dollar?type=latest&include_variations=true');
+      
+      if (!response.ok) {
+        throw new Error('Error al cargar cotizaciones');
+      }
+      
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        // Convertir array a objeto indexado por tipo
+        const ratesMap: Record<DollarType, ExtendedDollarRateData> = {} as any;
+        result.data.forEach((rate: ExtendedDollarRateData) => {
+          if (rate.dollar_type) {
+            ratesMap[rate.dollar_type as DollarType] = rate;
+          }
+        });
+        
+        setDollarRates(ratesMap);
+        setError(null);
+      } else {
+        setError('No se encontraron datos');
+      }
+    } catch (err) {
+      console.error('Error al cargar cotizaciones:', err);
+      setError('Error al cargar datos');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllRates();
+    
+    // Actualizar cada 5 minutos
+    const interval = setInterval(fetchAllRates, 5 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="relative min-h-screen">
       <HeroSection 
@@ -402,6 +433,9 @@ export default function ModernCotizacionesPage() {
                 dollarType={dollar.type}
                 title={dollar.name}
                 index={index}
+                data={dollarRates[dollar.type] || null}
+                loading={loading}
+                error={error}
               />
             ))}
           </div>
@@ -417,6 +451,9 @@ export default function ModernCotizacionesPage() {
                 dollarType={dollar.type}
                 title={dollar.name}
                 index={index + 3}
+                data={dollarRates[dollar.type] || null}
+                loading={loading}
+                error={error}
               />
             ))}
           </div>

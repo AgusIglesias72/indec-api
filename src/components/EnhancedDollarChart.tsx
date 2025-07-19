@@ -16,7 +16,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getDollarRatesHistory, DollarRateData } from '@/services/api-dollar';
+import { getDollarRatesHistory } from '@/services/api-dollar';
+import { DollarRateData } from '@/types/dollar';
 import { DollarType } from '@/types/dollar';
 import { RefreshCw } from "lucide-react";
 
@@ -179,12 +180,15 @@ export default function EnhancedDollarChart({
       if (historicalData && historicalData.length > 0) {
         // Agrupar por fecha para el gráfico
         const groupedByDate = historicalData.reduce((acc, item) => {
-          if (!acc[item.date]) {
-            acc[item.date] = { date: item.date };
+          // Usar solo la fecha sin hora para agrupar cierres diarios
+          const dateOnly = item.date.split('T')[0];
+          
+          if (!acc[dateOnly]) {
+            acc[dateOnly] = { date: dateOnly };
           }
           
-          // Solo guardar el precio de venta por simplicidad
-          acc[item.date][`${item.dollar_type}_sell`] = item.sell_price;
+          // Usar solo el precio de venta
+          acc[dateOnly][item.dollar_type] = item.sell_price;
           
           return acc;
         }, {} as Record<string, any>);
@@ -232,8 +236,8 @@ export default function EnhancedDollarChart({
         <div className={`p-3 border rounded-md shadow-md ${darkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200'}`}>
           <p className="font-medium mb-2">{formattedDate}</p>
           {payload.map((entry: any, index: number) => {
-            // Extraer tipo de dólar del nombre del dataKey
-            const dollarType = entry.dataKey.split('_')[0];
+            // El dataKey ahora es directamente el tipo de dólar
+            const dollarType = entry.dataKey;
             const dollarInfo = dollarTypes.find(d => d.type === dollarType);
             const displayName = dollarInfo?.label || dollarType;
             
@@ -243,8 +247,12 @@ export default function EnhancedDollarChart({
                   className="w-3 h-3 rounded-full" 
                   style={{ backgroundColor: dollarInfo?.color || '#000000' }}
                 />
-                <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{displayName}:</span>
-                <span className="text-sm font-medium">${entry.value.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</span>
+                <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  {displayName}:
+                </span>
+                <span className="font-medium">
+                  ${entry.value?.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
               </div>
             );
           })}
@@ -257,95 +265,105 @@ export default function EnhancedDollarChart({
   // Formatear fechas para el eje X
   const formatXAxis = (dateStr: string) => {
     const date = new Date(dateStr);
-    
-    // Nombres de meses abreviados en español
-    const monthNames = [
-      "Ene", "Feb", "Mar", "Abr", "May", "Jun",
-      "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
-    ];
-    
-    // Formato: "19 Mar"
-    return `${date.getDate()} ${monthNames[date.getMonth()]}`;
+    return date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' });
   };
 
-  // Renderizar componente
+  // Formatear valores del eje Y
+  const formatYAxis = (value: number) => {
+    return `$${value.toLocaleString('es-AR')}`;
+  };
+
   return (
-    <Card className={`${className} ${darkMode ? 'bg-gray-900 text-white border-gray-800' : ''}`}>
-      <CardHeader className={darkMode ? 'border-gray-800' : ''}>
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+    <Card className={`${className} ${darkMode ? 'bg-gray-900 border-gray-800' : ''}`}>
+      <CardHeader className="space-y-4">
+        <div className="flex items-center justify-between">
           <div>
             <CardTitle className={darkMode ? 'text-white' : ''}>{title}</CardTitle>
             <CardDescription className={darkMode ? 'text-gray-400' : ''}>{description}</CardDescription>
           </div>
-          <Tabs 
-            value={timeRange} 
-            onValueChange={setTimeRange}
-            className="w-full md:w-auto"
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchData}
+            disabled={isRefreshing}
+            className={darkMode ? 'border-gray-700 hover:bg-gray-800' : ''}
           >
-            <TabsList className={darkMode ? 'bg-gray-800' : ''}>
-              {timeRanges.map(range => (
-                <TabsTrigger 
-                  key={range.id} 
-                  value={range.id}
-                  className={`text-xs md:text-sm ${darkMode ? 'data-[state=active]:bg-gray-700 data-[state=active]:text-white' : ''}`}
-                >
-                  {range.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Actualizar
+          </Button>
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="mb-4 flex flex-wrap gap-2">
-          {dollarTypes.map(dollarType => (
+
+        {/* Selector de rango de tiempo */}
+        <Tabs value={timeRange} onValueChange={setTimeRange} className="w-full">
+          <TabsList className={`grid w-full grid-cols-4 ${darkMode ? 'bg-gray-800' : ''}`}>
+            {timeRanges.map((range) => (
+              <TabsTrigger 
+                key={range.id} 
+                value={range.id}
+                className={darkMode ? 'data-[state=active]:bg-gray-700' : ''}
+              >
+                {range.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+
+        {/* Selector de tipos de dólar */}
+        <div className="flex flex-wrap gap-2">
+          {dollarTypes.map((dollarType) => (
             <Button
               key={dollarType.type}
               variant={selectedTypes.includes(dollarType.type) ? "default" : "outline"}
+              size="sm"
               onClick={() => toggleDollarType(dollarType.type)}
-              className="text-xs md:text-sm py-1 h-8"
+              className={`transition-all ${
+                selectedTypes.includes(dollarType.type)
+                  ? ''
+                  : darkMode ? 'border-gray-700 hover:bg-gray-800' : ''
+              }`}
               style={{
                 backgroundColor: selectedTypes.includes(dollarType.type) ? dollarType.color : 'transparent',
-                borderColor: dollarType.color,
-                color: selectedTypes.includes(dollarType.type) ? 'white' : dollarType.color
+                borderColor: selectedTypes.includes(dollarType.type) ? dollarType.color : undefined
               }}
             >
               {dollarType.label}
             </Button>
           ))}
         </div>
-        
-        <div style={{ width: '100%', height }}>
-          {loading ? (
-            <div className="flex items-center justify-center h-full">
-              <Skeleton className={`w-full h-full ${darkMode ? 'bg-gray-800' : ''}`} />
-            </div>
-          ) : error ? (
-            <div className="flex flex-col items-center justify-center h-full text-indec-gray-dark">
-              <p className="mb-4">{error}</p>
-              <Button 
-                onClick={fetchData} 
-                variant="outline" 
-                size="sm" 
-                className={darkMode ? 'border-gray-700 hover:bg-gray-800' : ''}
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Reintentar
-              </Button>
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height="100%">
+      </CardHeader>
+
+      <CardContent className="p-0">
+        {loading ? (
+          <div className="w-full h-[400px] p-6">
+            <Skeleton className="w-full h-full" />
+          </div>
+        ) : error ? (
+          <div className="w-full h-[400px] flex items-center justify-center">
+            <p className={`text-center ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{error}</p>
+          </div>
+        ) : data.length === 0 ? (
+          <div className="w-full h-[400px] flex items-center justify-center">
+            <p className={`text-center ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              No hay datos disponibles para el período seleccionado
+            </p>
+          </div>
+        ) : (
+          <div className="w-full p-6">
+            <ResponsiveContainer width="100%" height={height}>
               <AreaChart
                 data={data}
-                margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
               >
-                {/* Definir gradientes para las áreas */}
+                {/* Definir gradientes */}
                 <defs>
-                  {dollarTypes.map(dollarType => (
+                  {dollarTypes.map((dollarType) => (
                     <linearGradient 
                       key={dollarType.gradient.id} 
                       id={dollarType.gradient.id} 
-                      x1="0" y1="0" x2="0" y2="1"
+                      x1="0" 
+                      y1="0" 
+                      x2="0" 
+                      y2="1"
                     >
                       {dollarType.gradient.colors.map((color, index) => (
                         <stop 
@@ -358,70 +376,67 @@ export default function EnhancedDollarChart({
                     </linearGradient>
                   ))}
                 </defs>
-                
+
                 <CartesianGrid 
                   strokeDasharray="3 3" 
+                  stroke={darkMode ? '#374151' : '#e5e7eb'}
                   vertical={false}
-                  stroke={darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'} 
-                />
-                <XAxis 
-                  dataKey="date" 
-                  tickFormatter={formatXAxis} 
-                  tick={{ fontSize: 12, fill: darkMode ? '#cbd5e1' : '#64748b' }}
-                  tickMargin={10}
-                  stroke={darkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'}
-                />
-                <YAxis 
-                  orientation="right"
-                  tickFormatter={(value) => `$${value.toFixed(0)}`} 
-                  tick={{ fontSize: 12, fill: darkMode ? '#cbd5e1' : '#64748b' }}
-                  domain={['auto', 'auto']}
-                  stroke={darkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend 
-                  wrapperStyle={{ paddingTop: 20 }}
-                  formatter={(value, entry, index) => (
-                    <span style={{ color: darkMode ? '#cbd5e1' : '#64748b' }}>{value}</span>
-                  )}
                 />
                 
-                {/* Renderizar áreas para cada tipo de dólar seleccionado */}
-                {selectedTypes.map(type => {
-                  const dollarInfo = dollarTypes.find(d => d.type === type);
-                  return (
-                    <Area 
-                      key={type}
-                      type="monotone" 
-                      dataKey={`${type}_sell`}
-                      name={dollarInfo?.label || type}
-                      stroke={dollarInfo?.color}
+                <XAxis 
+                  dataKey="date" 
+                  tickFormatter={formatXAxis}
+                  stroke={darkMode ? '#9ca3af' : '#6b7280'}
+                  tick={{ fontSize: 12 }}
+                />
+                
+                <YAxis 
+                  tickFormatter={formatYAxis}
+                  stroke={darkMode ? '#9ca3af' : '#6b7280'}
+                  tick={{ fontSize: 12 }}
+                />
+                
+                <Tooltip 
+                  content={<CustomTooltip />}
+                  cursor={{ 
+                    stroke: darkMode ? '#6b7280' : '#d1d5db',
+                    strokeWidth: 1
+                  }}
+                />
+                
+                <Legend 
+                  verticalAlign="bottom" 
+                  height={36}
+                  iconType="line"
+                  wrapperStyle={{
+                    paddingTop: '20px',
+                    fontSize: '14px'
+                  }}
+                />
+
+                {/* Renderizar áreas para tipos seleccionados */}
+                {dollarTypes
+                  .filter(dollarType => selectedTypes.includes(dollarType.type))
+                  .map((dollarType) => (
+                    <Area
+                      key={dollarType.type}
+                      type="monotone"
+                      dataKey={dollarType.type}
+                      name={dollarType.label}
+                      stroke={dollarType.color}
                       strokeWidth={2}
                       fillOpacity={1}
-                      fill={`url(#${dollarInfo?.gradient.id})`}
-                      activeDot={{ r: 6, strokeWidth: 1, stroke: '#fff' }}
+                      fill={`url(#${dollarType.gradient.id})`}
                     />
-                  );
-                })}
+                  ))}
               </AreaChart>
             </ResponsiveContainer>
-          )}
-        </div>
+          </div>
+        )}
       </CardContent>
-      <CardFooter className={`flex justify-between ${darkMode ? 'text-gray-400' : ''}`}>
-        <div className="text-xs">
-          Fuente: Argentina Datos API
-        </div>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className={`h-8 ${darkMode ? 'text-gray-300 hover:bg-gray-800' : ''}`}
-          onClick={fetchData}
-          disabled={isRefreshing}
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Actualizar
-        </Button>
+
+      <CardFooter className={`text-sm ${darkMode ? 'text-gray-500 border-gray-800' : 'text-gray-600'}`}>
+        <p>Los datos se actualizan automáticamente durante los días hábiles. Fuente: Argentina Datos API</p>
       </CardFooter>
     </Card>
   );

@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
       // Actualizar datos del dólar
       result = await updateDollarData();
       
-      console.info(`✅ Actualización del dólar completada: ${result.newRecords} nuevos registros, ${result.duplicatesSkipped} omitidos`);
+      console.info(`✅ Actualización del dólar completada: ${result.newRecords} nuevos registros (${result.intradayUpdates} intradiarios), ${result.duplicatesSkipped} omitidos, ${result.replicatedRecords} replicados`);
       
       // Registrar la ejecución exitosa
       await logCronExecution(startTime, 'success', result);
@@ -78,7 +78,9 @@ export async function GET(request: NextRequest) {
         execution_time: new Date().toISOString(),
         data_source: 'dolarapi.com',
         new_records: result.newRecords,
+        intraday_updates: result.intradayUpdates,
         duplicates_skipped: result.duplicatesSkipped,
+        replicated_records: result.replicatedRecords,
         summary: result.message,
         details: {
           processed_types: result.processedTypes,
@@ -94,7 +96,9 @@ export async function GET(request: NextRequest) {
       await logCronExecution(startTime, 'error', { 
         error: (error as Error).message,
         newRecords: 0,
-        duplicatesSkipped: 0
+        duplicatesSkipped: 0,
+        replicatedRecords: 0,
+        intradayUpdates: 0
       });
       
       return NextResponse.json({
@@ -120,6 +124,12 @@ export async function GET(request: NextRequest) {
 
 /**
  * Actualiza los datos del dólar desde la API externa
+ * 
+ * Comportamiento:
+ * - Guarda SIEMPRE que haya una nueva fechaActualizacion, aunque los precios sean iguales
+ * - Solo omite si la fechaActualizacion es exactamente igual a la última guardada
+ * - Para mercados cerrados (fecha anterior), replica los valores con timestamp actual
+ * - Permite tracking completo de actualizaciones, incluso cuando los precios no cambian
  */
 async function updateDollarData() {
   console.info('📊 Iniciando descarga de datos del dólar desde dolarapi.com...');
@@ -145,6 +155,8 @@ async function updateDollarData() {
       return {
         newRecords: 0,
         duplicatesSkipped: 0,
+        replicatedRecords: 0,
+        intradayUpdates: 0,
         message: 'No hay datos disponibles en la API',
         processedTypes: [],
         errors: []
@@ -153,9 +165,17 @@ async function updateDollarData() {
     
     console.info(`📥 Obtenidos ${dollarData.length} tipos de dólar desde la API`);
     
-    // 2. Procesar cada tipo de dólar
+    // 2. Obtener la fecha actual en Argentina
+    const nowArgentina = new Date().toLocaleString("en-US", {timeZone: "America/Argentina/Buenos_Aires"});
+    const todayArgentina = new Date(nowArgentina);
+    todayArgentina.setHours(0, 0, 0, 0);
+    const todayISO = todayArgentina.toISOString();
+    
+    // 3. Procesar cada tipo de dólar
     let newRecords = 0;
     let duplicatesSkipped = 0;
+    let replicatedRecords = 0;
+    let intradayUpdates = 0;
     const processedTypes: string[] = [];
     const errors: string[] = [];
     
@@ -170,52 +190,113 @@ async function updateDollarData() {
         }
         
         // Convertir la fecha de actualización a timestamp ISO
-        const updatedAt = new Date(dollar.fechaActualizacion).toISOString();
+        const apiUpdatedAt = new Date(dollar.fechaActualizacion);
+        const apiDateOnly = new Date(apiUpdatedAt);
+        apiDateOnly.setHours(0, 0, 0, 0);
         
-        // Verificar el último registro para este tipo de dólar
+        // Verificar el último registro de este tipo de dólar
         const { data: lastRecord } = await supabase
           .from('dollar_rates')
-          .select('id, buy_price, sell_price, updated_at')
+          .select('id, buy_price, sell_price, date, updated_at')
           .eq('dollar_type', dollarType)
-          .order('updated_at', { ascending: false })
+          .order('date', { ascending: false })
           .limit(1)
           .single();
         
-        // Si existe y los valores son idénticos, omitir
-        if (
-          lastRecord &&
-          'buy_price' in lastRecord &&
-          'sell_price' in lastRecord &&
-          'updated_at' in lastRecord &&
-          lastRecord.buy_price === dollar.compra &&
-          lastRecord.sell_price === dollar.venta &&
-          new Date(lastRecord.updated_at).toISOString() === updatedAt
-        ) {
-          console.info(`⏭️ Sin cambios: ${dollarType} - ${updatedAt}`);
-          duplicatesSkipped++;
-          continue;
+        // Si existe un registro previo, verificar si la fecha de actualización cambió
+        if (lastRecord) {
+          // Comparar la fecha de actualización de la API con la última guardada
+          const lastUpdateTime = new Date(lastRecord.updated_at).getTime();
+          const apiUpdateTime = apiUpdatedAt.getTime();
+          
+          // Solo omitir si la fecha de actualización es exactamente la misma
+          if (lastUpdateTime === apiUpdateTime) {
+            console.info(`⏭️ Sin nueva actualización para: ${dollarType} (última: ${lastRecord.updated_at})`);
+            duplicatesSkipped++;
+            continue;
+          }
         }
         
-        // Usar la fecha de actualización directamente como date (con hora)
-        const dollarRecord = {
-          dollar_type: dollarType,
-          date: updatedAt, // Ahora date incluye fecha Y hora
-          buy_price: dollar.compra,
-          sell_price: dollar.venta,
-          updated_at: updatedAt,
-          created_at: new Date().toISOString()
-        };
-        
-        const { error } = await supabase
-          .from('dollar_rates')
-          .insert(dollarRecord);
-        
-        if (error) {
-          throw error;
+        // Si la fecha de la API es de hoy, usar los datos actuales
+        if (apiDateOnly.getTime() === todayArgentina.getTime()) {
+          const dollarRecord = {
+            dollar_type: dollarType,
+            date: apiUpdatedAt.toISOString(),
+            buy_price: dollar.compra,
+            sell_price: dollar.venta,
+            updated_at: apiUpdatedAt.toISOString(),
+            created_at: new Date().toISOString()
+          };
+          
+          const { error } = await supabase
+            .from('dollar_rates')
+            .insert(dollarRecord);
+          
+          if (error) {
+            throw error;
+          }
+          
+          newRecords++;
+          
+          // Determinar el tipo de actualización
+          if (lastRecord) {
+            const priceChanged = lastRecord.buy_price !== dollar.compra || lastRecord.sell_price !== dollar.venta;
+            const isSameDay = new Date(lastRecord.date).toDateString() === apiDateOnly.toDateString();
+            
+            if (isSameDay) {
+              intradayUpdates++;
+              if (priceChanged) {
+                console.info(`📈 Actualización intradiaria con cambio: ${dollarType} - ${apiUpdatedAt.toISOString()} (${lastRecord.buy_price}/${lastRecord.sell_price} → ${dollar.compra}/${dollar.venta})`);
+              } else {
+                console.info(`📊 Actualización intradiaria sin cambio de precio: ${dollarType} - ${apiUpdatedAt.toISOString()} (mantiene ${dollar.compra}/${dollar.venta})`);
+              }
+            } else {
+              console.info(`✨ Nuevo registro del día: ${dollarType} - ${apiUpdatedAt.toISOString()}`);
+            }
+          } else {
+            console.info(`✨ Primer registro: ${dollarType} - ${apiUpdatedAt.toISOString()}`);
+          }        } else {
+          // Si la fecha de la API es anterior (mercados cerrados)
+          console.info(`📋 ${dollarType}: Mercado cerrado (última actualización: ${apiUpdatedAt.toISOString()})`);
+          
+          // Verificar si ya creamos un registro de continuidad hoy
+          const todayStart = new Date(todayArgentina);
+          const { data: todayRecords } = await supabase
+            .from('dollar_rates')
+            .select('date')
+            .eq('dollar_type', dollarType)
+            .gte('date', todayStart.toISOString())
+            .order('date', { ascending: false });
+          
+          if (todayRecords && todayRecords.length > 0) {
+            console.info(`⏭️ Ya existe registro de hoy para: ${dollarType} (mercado cerrado)`);
+            duplicatesSkipped++;
+            continue;
+          }
+          
+          // Crear UN registro de continuidad por día para mercados cerrados
+          const nowISO = new Date().toISOString();
+          
+          const replicatedRecord = {
+            dollar_type: dollarType,
+            date: nowISO,
+            buy_price: dollar.compra,
+            sell_price: dollar.venta,
+            updated_at: nowISO,
+            created_at: nowISO
+          };
+          
+          const { error } = await supabase
+            .from('dollar_rates')
+            .insert(replicatedRecord);
+          
+          if (error) {
+            throw error;
+          }
+          
+          replicatedRecords++;
+          console.info(`📋 Registro de continuidad diario creado: ${dollarType} - valores del ${apiUpdatedAt.toLocaleDateString()} (${dollar.compra}/${dollar.venta})`);
         }
-        
-        newRecords++;
-        console.info(`✨ Nuevo registro: ${dollarType} - ${updatedAt}`);
         
         processedTypes.push(dollarType);
         
@@ -225,11 +306,13 @@ async function updateDollarData() {
       }
     }
     
-    console.info(`✅ Procesamiento completado: ${newRecords} nuevos, ${duplicatesSkipped} omitidos`);
+    console.info(`✅ Procesamiento completado: ${newRecords} nuevos (${intradayUpdates} actualizaciones intradiarias), ${duplicatesSkipped} omitidos, ${replicatedRecords} replicados`);
     
     return {
       newRecords,
       duplicatesSkipped,
+      replicatedRecords,
+      intradayUpdates,
       message: 'Datos del dólar actualizados correctamente',
       processedTypes: [...new Set(processedTypes)],
       errors
@@ -256,7 +339,7 @@ async function logCronExecution(startTime: string, status: 'success' | 'error', 
         recordsProcessed: result.newRecords || 0,
         status,
         details: status === 'success' 
-          ? `Procesados: ${result.newRecords} nuevos, ${result.duplicatesSkipped} omitidos. Tipos: ${result.processedTypes?.join(', ') || 'N/A'}`
+          ? `Procesados: ${result.newRecords} nuevos (${result.intradayUpdates || 0} intradiarios), ${result.duplicatesSkipped} omitidos, ${result.replicatedRecords} replicados. Tipos: ${result.processedTypes?.join(', ') || 'N/A'}`
           : `Error: ${result.error || 'Error desconocido'}`
       }],
       status

@@ -1,56 +1,7 @@
 // services/api-dollar.ts
 import { DollarType, DollarRateData } from '@/types/dollar';
 
-const API_BASE_URL = 'https://argenstats.com/api';
-
-export async function getLatestDollarRate(dollarType: DollarType): Promise<DollarRateData | null> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/dollar`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const result = await response.json();
-    
-    if (result.success && result.data) {
-      // Buscar el tipo de dólar específico en la respuesta
-      const dollarData = result.data.find(
-        (item: DollarRateData) => item.dollar_type === dollarType
-      );
-      
-      return dollarData || null;
-    }
-    
-    return null;
-  } catch (error) {
-    console.error('Error fetching dollar rate:', error);
-    return null;
-  }
-}
-
-// También podrías agregar una función para obtener todos los tipos de una vez
-export async function getAllDollarRates(): Promise<DollarRateData[]> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/dollar`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const result = await response.json();
-    
-    if (result.success && result.data) {
-      return result.data;
-    }
-    
-    return [];
-  } catch (error) {
-    console.error('Error fetching dollar rates:', error);
-    return [];
-  }
-}
-
+const API_BASE_URL = '';
 
 export interface DollarRatesResponse {
   success: boolean;
@@ -73,7 +24,7 @@ export interface DollarRatesResponse {
  */
 export async function getLatestDollarRates(): Promise<DollarRateData[]> {
   try {
-    const response = await fetch('/api/dollar?type=latest');
+    const response = await fetch('/api/dollar?type=latest&include_variations=true');
     
     if (!response.ok) {
       throw new Error(`Error ${response.status}: ${response.statusText}`);
@@ -87,9 +38,9 @@ export async function getLatestDollarRates(): Promise<DollarRateData[]> {
   }
 }
 
-
 /**
- * Obtiene datos históricos de cotizaciones de dólar
+ * Obtiene datos históricos de cotizaciones de dólar (CIERRES DIARIOS)
+ * Usa el tipo 'daily' para obtener solo un valor por día
  */
 export async function getDollarRatesHistory(
   type: DollarType | DollarType[],
@@ -100,10 +51,11 @@ export async function getDollarRatesHistory(
     // Construir parámetros de consulta
     const typeParam = Array.isArray(type) ? type.join(',') : type;
     
-    // Usar 'historical' como tipo y 'dollar_type' para el tipo de dólar
-    let url = `/api/dollar?type=historical&dollar_type=${typeParam}`;
+    // Usar 'daily' para obtener cierres diarios
+    let url = `/api/dollar?type=daily&dollar_type=${typeParam}`;
     if (startDate) url += `&start_date=${startDate}`;
     if (endDate) url += `&end_date=${endDate}`;
+    url += '&limit=1000'; // Asegurar que obtenemos todos los datos
     
     const response = await fetch(url);
     

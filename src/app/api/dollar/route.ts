@@ -5,7 +5,6 @@ import { Database } from '@/types/supabase';
 import { withRateLimit } from '@/lib/rate-limit';
 
 // Configurar runtime
-// export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 // Inicializar cliente Supabase
@@ -22,17 +21,6 @@ const supabase = createClient<Database>(supabaseUrl, supabaseKey);
 const DEFAULT_LIMIT = 100;
 const MAX_LIMIT = 1000;
 
-// Mapeo de tipos de dólar
-const DOLLAR_TYPE_MAP: Record<string, string> = {
-  'oficial': 'OFICIAL',
-  'blue': 'BLUE',
-  'bolsa': 'MEP',
-  'contadoconliqui': 'CCL',
-  'mayorista': 'MAYORISTA',
-  'cripto': 'CRYPTO',
-  'tarjeta': 'TARJETA'
-};
-
 const DOLLAR_DESCRIPTIONS: Record<string, string> = {
   'OFICIAL': 'Dólar Oficial',
   'BLUE': 'Dólar Blue (informal)',
@@ -43,13 +31,53 @@ const DOLLAR_DESCRIPTIONS: Record<string, string> = {
   'TARJETA': 'Dólar Tarjeta/Turista'
 };
 
+// Tipos de respuesta de las views
+interface DollarRateRow {
+  id?: string | null;
+  dollar_type: string | null;
+  date: string | null;
+  buy_price: number | null;
+  sell_price: number | null;
+  updated_at: string | null;
+  created_at: string | null;
+}
+
+interface DollarLatestRow {
+  dollar_type: string | null;
+  date: string | null;
+  buy_price: number | null;
+  sell_price: number | null;
+  spread: number | null;
+  updated_at: string | null;
+  created_at: string | null;
+}
+
+interface DollarWithVariationsRow extends DollarLatestRow {
+  yesterday_buy: number | null;
+  yesterday_sell: number | null;
+  buy_variation: number | null;
+  sell_variation: number | null;
+}
+
+interface DollarDailyClosingRow {
+  id: string | null;
+  dollar_type: string | null;
+  closing_date: string | null;
+  closing_timestamp: string | null;
+  buy_price: number | null;
+  sell_price: number | null;
+  spread: number | null;
+  updated_at: string | null;
+  created_at: string | null;
+}
+
 /**
  * GET /api/dollar
  * 
  * Endpoint unificado para datos del dólar
  * 
  * Query Parameters:
- * - type: 'latest' | 'historical' | 'metadata' (default: 'latest')
+ * - type: 'latest' | 'historical' | 'daily' | 'metadata' (default: 'latest')
  * - dollar_type: string (código del tipo de dólar, separado por comas para múltiples)
  * - start_date: string (YYYY-MM-DD)
  * - end_date: string (YYYY-MM-DD)
@@ -57,7 +85,7 @@ const DOLLAR_DESCRIPTIONS: Record<string, string> = {
  * - page: number
  * - order: 'asc' | 'desc' (default: 'desc')
  * - format: 'json' | 'csv' (default: 'json')
- * - include_variations: boolean (default: true)
+ * - include_variations: boolean (default: true para latest)
  */
 async function handler(request: NextRequest) {
   try {
@@ -75,7 +103,7 @@ async function handler(request: NextRequest) {
     const includeVariations = searchParams.get('include_variations')?.toLowerCase() !== 'false';
     
     // Validar tipo
-    const validTypes = ['latest', 'historical', 'metadata'];
+    const validTypes = ['latest', 'historical', 'daily', 'metadata'];
     if (!validTypes.includes(type)) {
       return NextResponse.json({
         success: false,
@@ -88,7 +116,18 @@ async function handler(request: NextRequest) {
     let result;
     switch (type) {
       case 'latest':
-        result = await getLatestDollar(dollarTypeParam, includeVariations);
+        result = await getLatestDollarFromView(dollarTypeParam, includeVariations);
+        break;
+        
+      case 'daily':
+        result = await getDailyClosingFromView({
+          dollarType: dollarTypeParam,
+          startDate: startDate ?? undefined,
+          endDate: endDate ?? undefined,
+          limit,
+          page,
+          order: order as 'asc' | 'desc'
+        });
         break;
         
       case 'metadata':
@@ -98,13 +137,12 @@ async function handler(request: NextRequest) {
       case 'historical':
       default:
         result = await getHistoricalDollar({
-          dollarType: dollarTypeParam ?? undefined,
+          dollarType: dollarTypeParam,
           startDate: startDate ?? undefined,
           endDate: endDate ?? undefined,
           limit,
           page,
-          order: order as 'asc' | 'desc',
-          includeVariations
+          order: order as 'asc' | 'desc'
         });
         break;
     }
@@ -115,14 +153,16 @@ async function handler(request: NextRequest) {
     }
     
     // Formato CSV si se solicita
-    if (format === 'csv' && type === 'historical' && Array.isArray(result.data)) {
-      return respondWithCSV(result.data, 'dollar_rates.csv');
+    if (format === 'csv' && (type === 'historical' || type === 'daily') && Array.isArray(result.data)) {
+      return respondWithCSV(result.data, `dollar_${type}.csv`);
     }
     
     // Respuesta JSON con caché
     const headers = new Headers({
       'Content-Type': 'application/json',
-      'Cache-Control': 'public, max-age=300, stale-while-revalidate=600' // 5 minutos
+      'Cache-Control': type === 'metadata' 
+        ? 'public, max-age=3600, stale-while-revalidate=7200' // 1 hora para metadata
+        : 'public, max-age=300, stale-while-revalidate=600' // 5 minutos para datos
     });
     
     return new NextResponse(JSON.stringify({
@@ -156,16 +196,16 @@ async function handler(request: NextRequest) {
 }
 
 /**
- * Obtener el último valor de cada tipo de dólar con variaciones
+ * Obtener el último valor de cada tipo de dólar usando la view optimizada
  */
-async function getLatestDollar(dollarTypeParam?: string, includeVariations: boolean = true) {
+async function getLatestDollarFromView(dollarTypeParam?: string, includeVariations: boolean = true) {
   try {
-    // Obtener los últimos valores
-    let query = supabase
-      .from('dollar_rates')
-      .select('*');
+    // Usar la view con variaciones si se requieren
+    const viewName = includeVariations ? 'v_dollar_with_variations' : 'v_dollar_latest';
     
-    // Si se especifica tipo de dólar
+    let query = supabase.from(viewName).select('*');
+    
+    // Filtrar por tipo si se especifica
     if (dollarTypeParam) {
       if (dollarTypeParam.includes(',')) {
         const types = dollarTypeParam.split(',').map(t => t.trim());
@@ -175,96 +215,43 @@ async function getLatestDollar(dollarTypeParam?: string, includeVariations: bool
       }
     }
     
-    // Obtener los datos más recientes por tipo
-    const { data: latestData, error } = await query
-      .order('date', { ascending: false })
-      .order('dollar_type');
+    const { data, error } = await query.order('dollar_type');
     
     if (error) {
       return { error, data: null };
     }
     
-    if (!latestData || latestData.length === 0) {
+    if (!data || data.length === 0) {
       return { 
         error: new Error('No se encontraron datos de dólar'),
         data: null 
       };
     }
     
-    // Agrupar por tipo de dólar y obtener el más reciente de cada uno
-    const latestByType: Record<string, any> = {};
-    latestData.forEach(item => {
-      if (!latestByType[item.dollar_type] || 
-          new Date(item.date) > new Date(latestByType[item.dollar_type].date)) {
-        latestByType[item.dollar_type] = item;
-      }
-    });
-    
-    // Convertir a array
-    const latestRates = Object.values(latestByType);
-    
-    // Si se requieren variaciones, calcularlas
-    if (includeVariations) {
-      const ratesWithVariations = await Promise.all(
-        latestRates.map(async (rate) => {
-          // Obtener el cierre del día anterior (último registro del día anterior)
-          const today = new Date(rate.date);
-          const yesterday = new Date(today);
-          yesterday.setDate(yesterday.getDate() - 1);
-          
-          // Inicio y fin del día anterior
-          const yesterdayStart = new Date(yesterday);
-          yesterdayStart.setHours(0, 0, 0, 0);
-          const yesterdayEnd = new Date(yesterday);
-          yesterdayEnd.setHours(23, 59, 59, 999);
-          
-          const { data: yesterdayData } = await supabase
-            .from('dollar_rates')
-            .select('*')
-            .eq('dollar_type', rate.dollar_type)
-            .gte('date', yesterdayStart.toISOString())
-            .lte('date', yesterdayEnd.toISOString())
-            .order('date', { ascending: false })
-            .limit(1)
-            .single();
-          
-          let buyVariation = null;
-          let sellVariation = null;
-          
-          if (yesterdayData) {
-            buyVariation = ((rate.buy_price - yesterdayData.buy_price) / yesterdayData.buy_price * 100);
-            sellVariation = ((rate.sell_price - yesterdayData.sell_price) / yesterdayData.sell_price * 100);
-          }
-          
-          return {
-            date: rate.date,
-            dollar_type: rate.dollar_type,
-            dollar_name: DOLLAR_DESCRIPTIONS[rate.dollar_type] || rate.dollar_type,
-            buy_price: Number(rate.buy_price),
-            sell_price: Number(rate.sell_price),
-            spread: Number(((rate.sell_price - rate.buy_price) / rate.buy_price * 100).toFixed(2)),
-            buy_variation: buyVariation !== null ? Number(buyVariation.toFixed(2)) : null,
-            sell_variation: sellVariation !== null ? Number(sellVariation.toFixed(2)) : null,
-            last_updated: rate.date, // Ahora date incluye la hora
-            minutes_ago: Math.floor((Date.now() - new Date(rate.date).getTime()) / 60000)
-          };
-        })
-      );
+    // Transformar datos según la view utilizada
+    const transformedData = (data as (DollarLatestRow | DollarWithVariationsRow)[]).map(item => {
+      const baseData = {
+        date: item.date || '',
+        dollar_type: item.dollar_type || '',
+        dollar_name: (item.dollar_type && DOLLAR_DESCRIPTIONS[item.dollar_type]) || item.dollar_type || '',
+        buy_price: Number(item.buy_price || 0),
+        sell_price: Number(item.sell_price || 0),
+        spread: (item.spread !== null && item.spread !== undefined) ? Number(item.spread) : Number((((item.sell_price || 0) - (item.buy_price || 0)) / (item.buy_price || 1) * 100).toFixed(2)),
+        last_updated: item.date || '',
+        minutes_ago: Math.floor((Date.now() - new Date(item.date || Date.now()).getTime()) / 60000)
+      };
       
-      return { data: ratesWithVariations, error: null };
-    }
-    
-    // Sin variaciones
-    const transformedData = latestRates.map(rate => ({
-      date: rate.date,
-      dollar_type: rate.dollar_type,
-      dollar_name: DOLLAR_DESCRIPTIONS[rate.dollar_type] || rate.dollar_type,
-      buy_price: Number(rate.buy_price),
-      sell_price: Number(rate.sell_price),
-      spread: Number(((rate.sell_price - rate.buy_price) / rate.buy_price * 100).toFixed(2)),
-      last_updated: rate.date,
-      minutes_ago: Math.floor((Date.now() - new Date(rate.date).getTime()) / 60000)
-    }));
+      // Agregar variaciones si están disponibles
+      if (includeVariations && 'buy_variation' in item) {
+        return {
+          ...baseData,
+          buy_variation: (item.buy_variation !== null && item.buy_variation !== undefined) ? Number(item.buy_variation) : 0,
+          sell_variation: (item.sell_variation !== null && item.sell_variation !== undefined) ? Number(item.sell_variation) : 0
+        };
+      }
+      
+      return baseData;
+    });
     
     return { data: transformedData, error: null };
     
@@ -274,104 +261,22 @@ async function getLatestDollar(dollarTypeParam?: string, includeVariations: bool
 }
 
 /**
- * Obtener metadata del dólar
+ * Obtener cierres diarios usando la view optimizada
  */
-async function getDollarMetadata() {
-  try {
-    // Obtener tipos únicos de dólar
-    const { data: typesData, error: typesError } = await supabase
-      .from('dollar_rates')
-      .select('dollar_type')
-      .order('dollar_type');
-    
-    if (typesError) {
-      return { error: typesError, data: null };
-    }
-    
-    // Obtener tipos únicos
-    const uniqueTypes = [...new Set(typesData?.map(item => item.dollar_type) || [])];
-    
-    // Obtener rango de fechas
-    const { data: dateRangeData, error: dateRangeError } = await supabase
-      .from('dollar_rates')
-      .select('date, updated_at')
-      .order('date', { ascending: false })
-      .limit(1);
-    
-    if (dateRangeError) {
-      return { error: dateRangeError, data: null };
-    }
-    
-    const { data: firstDateData } = await supabase
-      .from('dollar_rates')
-      .select('date, updated_at')
-      .order('date', { ascending: true })
-      .limit(1);
-    
-    // Contar registros por tipo
-    const typeCounts: Record<string, number> = {};
-    for (const type of uniqueTypes) {
-      const { count } = await supabase
-        .from('dollar_rates')
-        .select('*', { count: 'exact', head: true })
-        .eq('dollar_type', type);
-      
-      typeCounts[type] = count || 0;
-    }
-    
-    return {
-      data: {
-        dollar_types: uniqueTypes.map(type => ({
-          code: type,
-          name: DOLLAR_DESCRIPTIONS[type] || type,
-          count: typeCounts[type] || 0
-        })),
-        date_range: {
-          first_date: firstDateData && Array.isArray(firstDateData) && firstDateData[0] && 'date' in firstDateData[0] ? firstDateData[0].date : null,
-          last_date: dateRangeData && Array.isArray(dateRangeData) && dateRangeData[0] && 'date' in dateRangeData[0] ? dateRangeData[0].date : null,
-          first_update: firstDateData && Array.isArray(firstDateData) && firstDateData[0] && 'updated_at' in firstDateData[0] ? firstDateData[0].updated_at : null,
-          last_update: dateRangeData && Array.isArray(dateRangeData) && dateRangeData[0] && 'updated_at' in dateRangeData[0] ? dateRangeData[0].updated_at : null
-        },
-        metadata: {
-          data_source: 'dolarapi.com',
-          last_updated: new Date().toISOString(),
-          available_formats: ['json', 'csv'],
-          endpoints: {
-            main: '/api/dollar',
-            params: {
-              type: ['latest', 'historical', 'metadata'],
-              dollar_types: uniqueTypes
-            }
-          },
-          refresh_frequency: 'Every 5 minutes'
-        }
-      },
-      error: null
-    };
-    
-  } catch (error) {
-    return { error: error as Error, data: null };
-  }
-}
-
-/**
- * Obtener datos históricos del dólar
- */
-async function getHistoricalDollar(params: {
+async function getDailyClosingFromView(params: {
   dollarType?: string;
   startDate?: string;
   endDate?: string;
   limit: number;
   page: number;
   order: 'asc' | 'desc';
-  includeVariations: boolean;
 }) {
-  const { dollarType, startDate, endDate, limit, page, order, includeVariations } = params;
+  const { dollarType, startDate, endDate, limit, page, order } = params;
   
   try {
-    // Construir query
+    // Usar la view de cierre diario
     let query = supabase
-      .from('dollar_rates')
+      .from('v_dollar_daily_closing')
       .select('*', { count: 'exact' });
     
     // Filtros
@@ -384,11 +289,12 @@ async function getHistoricalDollar(params: {
       }
     }
     
-    if (startDate) query = query.gte('date', startDate);
-    if (endDate) query = query.lte('date', endDate);
+    if (startDate) query = query.gte('closing_date', startDate);
+    if (endDate) query = query.lte('closing_date', endDate);
     
     // Ordenar y paginar
-    query = query.order('date', { ascending: order === 'asc' });
+    query = query.order('closing_date', { ascending: order === 'asc' });
+    query = query.order('dollar_type');
     
     const offset = (page - 1) * limit;
     query = query.range(offset, offset + limit - 1);
@@ -401,14 +307,15 @@ async function getHistoricalDollar(params: {
     }
     
     // Transformar datos
-    const transformedData = (data || []).map(item => ({
-      date: item.date,
-      dollar_type: item.dollar_type,
-      dollar_name: DOLLAR_DESCRIPTIONS[item.dollar_type] || item.dollar_type,
-      buy_price: Number(item.buy_price),
-      sell_price: Number(item.sell_price),
-      spread: Number(((item.sell_price - item.buy_price) / item.buy_price * 100).toFixed(2)),
-      last_updated: item.date
+    const transformedData = ((data || []) as DollarDailyClosingRow[]).map(item => ({
+      date: item.closing_date || '',
+      closing_timestamp: item.closing_timestamp || '',
+      dollar_type: item.dollar_type || '',
+      dollar_name: (item.dollar_type && DOLLAR_DESCRIPTIONS[item.dollar_type]) || item.dollar_type || '',
+      buy_price: Number(item.buy_price || 0),
+      sell_price: Number(item.sell_price || 0),
+      spread: (item.spread !== null && item.spread !== undefined) ? Number(item.spread) : Number((((item.sell_price || 0) - (item.buy_price || 0)) / (item.buy_price || 1) * 100).toFixed(2)),
+      last_updated: item.updated_at || ''
     }));
     
     // Calcular estadísticas
@@ -430,10 +337,197 @@ async function getHistoricalDollar(params: {
       stats,
       meta: {
         filtered_by: {
-          dollar_type: dollarType,
-          start_date: startDate,
-          end_date: endDate
+          dollar_type: dollarType || null,
+          start_date: startDate || null,
+          end_date: endDate || null
+        },
+        description: 'Cierre diario de cada tipo de dólar (último valor del día)'
+      },
+      error: null
+    };
+    
+  } catch (error) {
+    return { error: error as Error, data: null };
+  }
+}
+
+/**
+ * Obtener metadata del dólar (sin cambios, usa la tabla directa)
+ */
+async function getDollarMetadata() {
+  try {
+    // Obtener tipos únicos de dólar (excluyendo SOLIDARIO)
+    const { data: typesData, error: typesError } = await supabase
+      .from('dollar_rates')
+      .select('dollar_type')
+      .neq('dollar_type', 'SOLIDARIO')
+      .order('dollar_type');
+    
+    if (typesError) {
+      return { error: typesError, data: null };
+    }
+    
+    // Obtener tipos únicos
+    const uniqueTypes = [...new Set(typesData?.map(item => item.dollar_type).filter(Boolean) || [])] as string[];
+    
+    // Obtener rango de fechas
+    const { data: dateRangeData } = await supabase
+      .from('dollar_rates')
+      .select('date, updated_at')
+      .neq('dollar_type', 'SOLIDARIO')
+      .order('date', { ascending: false })
+      .limit(1);
+    
+    const { data: firstDateData } = await supabase
+      .from('dollar_rates')
+      .select('date, updated_at')
+      .neq('dollar_type', 'SOLIDARIO')
+      .order('date', { ascending: true })
+      .limit(1);
+    
+    // Contar registros por tipo
+    const typeCounts: Record<string, number> = {};
+    for (const type of uniqueTypes) {
+      const { count } = await supabase
+        .from('dollar_rates')
+        .select('*', { count: 'exact', head: true })
+        .eq('dollar_type', type);
+      
+      typeCounts[type] = count || 0;
+    }
+    
+    // Contar registros únicos por día (para cierres diarios)
+    const { count: dailyCount } = await supabase
+      .from('v_dollar_daily_closing')
+      .select('*', { count: 'exact', head: true });
+    
+    const firstDate = firstDateData?.[0] as DollarRateRow | undefined;
+    const lastDate = dateRangeData?.[0] as DollarRateRow | undefined;
+    
+    return {
+      data: {
+        dollar_types: uniqueTypes.map(type => ({
+          code: type,
+          name: DOLLAR_DESCRIPTIONS[type] || type,
+          count: typeCounts[type] || 0
+        })),
+        date_range: {
+          first_date: (firstDate && firstDate.date) || null,
+          last_date: (lastDate && lastDate.date) || null,
+          first_update: (firstDate && firstDate.updated_at) || null,
+          last_update: (lastDate && lastDate.updated_at) || null,
+          unique_days: dailyCount || 0
+        },
+        metadata: {
+          data_source: 'dolarapi.com',
+          last_updated: new Date().toISOString(),
+          available_formats: ['json', 'csv'],
+          endpoints: {
+            main: '/api/dollar',
+            params: {
+              type: ['latest', 'historical', 'daily', 'metadata'],
+              dollar_types: uniqueTypes
+            }
+          },
+          refresh_frequency: 'Multiple updates per day for active markets',
+          views_available: [
+            'v_dollar_latest (últimos valores)',
+            'v_dollar_with_variations (con variaciones)',
+            'v_dollar_daily_closing (cierre diario)'
+          ]
         }
+      },
+      error: null
+    };
+    
+  } catch (error) {
+    return { error: error as Error, data: null };
+  }
+}
+
+/**
+ * Obtener datos históricos del dólar (todos los registros intradiarios)
+ */
+async function getHistoricalDollar(params: {
+  dollarType?: string;
+  startDate?: string;
+  endDate?: string;
+  limit: number;
+  page: number;
+  order: 'asc' | 'desc';
+}) {
+  const { dollarType, startDate, endDate, limit, page, order } = params;
+  
+  try {
+    // Construir query
+    let query = supabase
+      .from('dollar_rates')
+      .select('*', { count: 'exact' })
+      .neq('dollar_type', 'SOLIDARIO'); // Excluir SOLIDARIO
+    
+    // Filtros
+    if (dollarType) {
+      if (dollarType.includes(',')) {
+        const types = dollarType.split(',').map(t => t.trim());
+        query = query.in('dollar_type', types);
+      } else {
+        query = query.eq('dollar_type', dollarType);
+      }
+    }
+    
+    if (startDate) query = query.gte('date', startDate);
+    if (endDate) query = query.lte('date', endDate);
+    
+    // Ordenar y paginar
+    query = query
+      .order('date', { ascending: order === 'asc' })
+      .order('dollar_type');
+    
+    const offset = (page - 1) * limit;
+    query = query.range(offset, offset + limit - 1);
+    
+    // Ejecutar query
+    const { data, error, count } = await query;
+    
+    if (error) {
+      return { error, data: null };
+    }
+    
+    // Transformar datos
+    const transformedData = ((data || []) as DollarRateRow[]).map(item => ({
+      date: item.date || '',
+      dollar_type: item.dollar_type || '',
+      dollar_name: (item.dollar_type && DOLLAR_DESCRIPTIONS[item.dollar_type]) || item.dollar_type || '',
+      buy_price: Number(item.buy_price || 0),
+      sell_price: Number(item.sell_price || 0),
+      spread: Number((((item.sell_price || 0) - (item.buy_price || 0)) / (item.buy_price || 1) * 100).toFixed(2)),
+      last_updated: item.date || ''
+    }));
+    
+    // Calcular estadísticas
+    const stats = calculateDollarStats(transformedData);
+    
+    // Metadata de paginación
+    const totalPages = Math.ceil((count || 0) / limit);
+    
+    return {
+      data: transformedData,
+      pagination: {
+        current_page: page,
+        per_page: limit,
+        total_pages: totalPages,
+        total_records: count || 0,
+        has_more: page < totalPages,
+        has_previous: page > 1
+      },
+      stats,
+      meta: {
+        filtered_by: {
+          dollar_type: dollarType || null,
+          start_date: startDate || null,
+          end_date: endDate || null
+        },
+        description: 'Datos históricos completos (incluye múltiples actualizaciones diarias)'
       },
       error: null
     };
