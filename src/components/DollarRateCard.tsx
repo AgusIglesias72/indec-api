@@ -194,7 +194,6 @@ export default function DollarRateCard({
               </div>
             )}
             
-            {/* Note: spread property doesn't exist in DollarRateData type */}
           </div>
         )}
       </CardContent>

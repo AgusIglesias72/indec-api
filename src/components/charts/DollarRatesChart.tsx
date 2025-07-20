@@ -256,7 +256,7 @@ export default function DollarRatesChart({
       </CardContent>
       <CardFooter>
         <div className="text-xs text-muted-foreground">
-          Fuente: Argentina Datos API
+          Fuente: INDEC
         </div>
       </CardFooter>
     </Card>

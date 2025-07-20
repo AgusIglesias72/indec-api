@@ -67,88 +67,88 @@ export default function EnhancedDollarChart({
   ];
 
   // Tipos de dólar disponibles con colores y gradientes para el área
-  const dollarTypes: { 
-    type: DollarType, 
-    label: string, 
+  const dollarTypes: {
+    type: DollarType,
+    label: string,
     color: string,
     gradient: {
       id: string,
       colors: { offset: string, color: string, opacity: string }[]
     }
   }[] = [
-    { 
-      type: "BLUE", 
-      label: "Blue", 
-      color: "#3b82f6",
-      gradient: {
-        id: "blueGradient",
-        colors: [
-          { offset: "0%", color: "#3b82f6", opacity: "0.7" },
-          { offset: "95%", color: "#3b82f6", opacity: "0.05" }
-        ]
+      {
+        type: "BLUE",
+        label: "Blue",
+        color: "#3b82f6",
+        gradient: {
+          id: "blueGradient",
+          colors: [
+            { offset: "0%", color: "#3b82f6", opacity: "0.7" },
+            { offset: "95%", color: "#3b82f6", opacity: "0.05" }
+          ]
+        }
+      },
+      {
+        type: "OFICIAL",
+        label: "Oficial",
+        color: "#10b981",
+        gradient: {
+          id: "greenGradient",
+          colors: [
+            { offset: "0%", color: "#10b981", opacity: "0.7" },
+            { offset: "95%", color: "#10b981", opacity: "0.05" }
+          ]
+        }
+      },
+      {
+        type: "CCL",
+        label: "Contado con Liqui",
+        color: "#f97316",
+        gradient: {
+          id: "orangeGradient",
+          colors: [
+            { offset: "0%", color: "#f97316", opacity: "0.7" },
+            { offset: "95%", color: "#f97316", opacity: "0.05" }
+          ]
+        }
+      },
+      {
+        type: "MEP",
+        label: "MEP (Bolsa)",
+        color: "#8b5cf6",
+        gradient: {
+          id: "purpleGradient",
+          colors: [
+            { offset: "0%", color: "#8b5cf6", opacity: "0.7" },
+            { offset: "95%", color: "#8b5cf6", opacity: "0.05" }
+          ]
+        }
+      },
+      {
+        type: "MAYORISTA",
+        label: "Mayorista",
+        color: "#64748b",
+        gradient: {
+          id: "grayGradient",
+          colors: [
+            { offset: "0%", color: "#64748b", opacity: "0.7" },
+            { offset: "95%", color: "#64748b", opacity: "0.05" }
+          ]
+        }
+      },
+      {
+        type: "TARJETA",
+        label: "Tarjeta",
+        color: "#f43f5e",
+        gradient: {
+          id: "redGradient",
+          colors: [
+            { offset: "0%", color: "#f43f5e", opacity: "0.7" },
+            { offset: "95%", color: "#f43f5e", opacity: "0.05" }
+          ]
+        }
       }
-    },
-    { 
-      type: "OFICIAL", 
-      label: "Oficial", 
-      color: "#10b981",
-      gradient: {
-        id: "greenGradient",
-        colors: [
-          { offset: "0%", color: "#10b981", opacity: "0.7" },
-          { offset: "95%", color: "#10b981", opacity: "0.05" }
-        ]
-      }
-    },
-    { 
-      type: "CCL", 
-      label: "Contado con Liqui", 
-      color: "#f97316",
-      gradient: {
-        id: "orangeGradient",
-        colors: [
-          { offset: "0%", color: "#f97316", opacity: "0.7" },
-          { offset: "95%", color: "#f97316", opacity: "0.05" }
-        ]
-      }
-    },
-    { 
-      type: "MEP", 
-      label: "MEP (Bolsa)", 
-      color: "#8b5cf6",
-      gradient: {
-        id: "purpleGradient",
-        colors: [
-          { offset: "0%", color: "#8b5cf6", opacity: "0.7" },
-          { offset: "95%", color: "#8b5cf6", opacity: "0.05" }
-        ]
-      }
-    },
-    { 
-      type: "MAYORISTA", 
-      label: "Mayorista", 
-      color: "#64748b",
-      gradient: {
-        id: "grayGradient",
-        colors: [
-          { offset: "0%", color: "#64748b", opacity: "0.7" },
-          { offset: "95%", color: "#64748b", opacity: "0.05" }
-        ]
-      }
-    },
-    { 
-      type: "TARJETA", 
-      label: "Tarjeta", 
-      color: "#f43f5e",
-      gradient: {
-        id: "redGradient",
-        colors: [
-          { offset: "0%", color: "#f43f5e", opacity: "0.7" },
-          { offset: "95%", color: "#f43f5e", opacity: "0.05" }
-        ]
-      }
-    }
-  ];
+    ];
 
   // Función para cambiar la selección de un tipo de dólar
   const toggleDollarType = (type: DollarType) => {
@@ -167,37 +167,37 @@ export default function EnhancedDollarChart({
     try {
       setIsRefreshing(true);
       setLoading(true);
-      
+
       // Calcular fecha de inicio según el rango seleccionado
       const days = parseInt(timeRange);
       const endDate = new Date().toISOString().split('T')[0];
       const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
         .toISOString().split('T')[0];
-      
+
       // Obtener datos históricos para los tipos seleccionados
       const historicalData = await getDollarRatesHistory(selectedTypes, startDate, endDate);
-      
+
       if (historicalData && historicalData.length > 0) {
         // Agrupar por fecha para el gráfico
         const groupedByDate = historicalData.reduce((acc, item) => {
           // Usar solo la fecha sin hora para agrupar cierres diarios
           const dateOnly = item.date.split('T')[0];
-          
+
           if (!acc[dateOnly]) {
             acc[dateOnly] = { date: dateOnly };
           }
-          
+
           // Usar solo el precio de venta
           acc[dateOnly][item.dollar_type] = item.sell_price;
-          
+
           return acc;
         }, {} as Record<string, any>);
-        
+
         // Convertir a array y ordenar por fecha
-        const chartData = Object.values(groupedByDate).sort((a, b) => 
+        const chartData = Object.values(groupedByDate).sort((a, b) =>
           new Date(a.date).getTime() - new Date(b.date).getTime()
         );
-        
+
         setData(chartData);
         setError(null);
       } else {
@@ -222,16 +222,16 @@ export default function EnhancedDollarChart({
     if (active && payload && payload.length) {
       // Formatear fecha para el tooltip
       const date = new Date(label || '');
-      
+
       // Nombres de meses para el tooltip
       const monthNames = [
         "Ene", "Feb", "Mar", "Abr", "May", "Jun",
         "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
       ];
-      
+
       // Formato más completo para el tooltip
       const formattedDate = `${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()}`;
-      
+
       return (
         <div className={`p-3 border rounded-md shadow-md ${darkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200'}`}>
           <p className="font-medium mb-2">{formattedDate}</p>
@@ -240,11 +240,11 @@ export default function EnhancedDollarChart({
             const dollarType = entry.dataKey;
             const dollarInfo = dollarTypes.find(d => d.type === dollarType);
             const displayName = dollarInfo?.label || dollarType;
-            
+
             return (
               <div key={index} className="flex items-center gap-2 my-1">
-                <div 
-                  className="w-3 h-3 rounded-full" 
+                <div
+                  className="w-3 h-3 rounded-full"
                   style={{ backgroundColor: dollarInfo?.color || '#000000' }}
                 />
                 <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
@@ -267,10 +267,29 @@ export default function EnhancedDollarChart({
     const date = new Date(dateStr);
     return date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' });
   };
+  const allValues = data.flatMap(item => [
+    item.BLUE,
+    item.OFICIAL,
+    item.CCL,
+    item.MEP,
+    item.MAYORISTA,
+    item.TARJETA
+  ])
+  .map(val => parseFloat(val))
+  .filter(val => !isNaN(val));
+  
+  const minValue = allValues.length > 0 ? Math.min(...allValues) : 0;
+  const maxValue = allValues.length > 0 ? Math.max(...allValues) : 0;
+  
+  // Round down to nearest 100
+  const yAxisMin = Math.floor(minValue * 0.6 / 100) * 100;
+  // Round up to nearest 100
+  const yAxisMax = Math.ceil(maxValue * 1.1 / 100) * 100;
+
 
   // Formatear valores del eje Y
   const formatYAxis = (value: number) => {
-    return `$${value.toLocaleString('es-AR')}`;
+    return `$ ${value.toLocaleString('es-AR')}`;
   };
 
   return (
@@ -294,42 +313,45 @@ export default function EnhancedDollarChart({
         </div>
 
         {/* Selector de rango de tiempo */}
-        <Tabs value={timeRange} onValueChange={setTimeRange} className="w-full">
-          <TabsList className={`grid w-full grid-cols-4 ${darkMode ? 'bg-gray-800' : ''}`}>
-            {timeRanges.map((range) => (
-              <TabsTrigger 
-                key={range.id} 
-                value={range.id}
-                className={darkMode ? 'data-[state=active]:bg-gray-700' : ''}
+        <div className="flex justify-between gap-4 flex-wrap">
+        <div className="flex flex-wrap gap-2 justify-around">
+            {dollarTypes.map((dollarType) => (
+              <Button
+                key={dollarType.type}
+                variant={selectedTypes.includes(dollarType.type) ? "default" : "outline"}
+                size="sm"
+                onClick={() => toggleDollarType(dollarType.type)}
+                className={`transition-all ${selectedTypes.includes(dollarType.type)
+                    ? ''
+                    : darkMode ? 'border-gray-700 hover:bg-gray-800' : ''
+                  }`}
+                style={{
+                  backgroundColor: selectedTypes.includes(dollarType.type) ? dollarType.color : 'transparent',
+                  borderColor: selectedTypes.includes(dollarType.type) ? dollarType.color : undefined
+                }}
               >
-                {range.label}
-              </TabsTrigger>
+                {dollarType.label}
+              </Button>
             ))}
-          </TabsList>
-        </Tabs>
+          </div>
+          <Tabs value={timeRange} onValueChange={setTimeRange} className="w-auto m-auto lg:m-0">
+            <TabsList className={`grid grid-cols-4 ${darkMode ? 'bg-gray-800' : ''}`}>
+              {timeRanges.map((range) => (
+                <TabsTrigger
+                  key={range.id}
+                  value={range.id}
+                  className={darkMode ? 'data-[state=active]:bg-gray-700' : ''}
+                >
+                  {range.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+         
+        </div>
 
         {/* Selector de tipos de dólar */}
-        <div className="flex flex-wrap gap-2">
-          {dollarTypes.map((dollarType) => (
-            <Button
-              key={dollarType.type}
-              variant={selectedTypes.includes(dollarType.type) ? "default" : "outline"}
-              size="sm"
-              onClick={() => toggleDollarType(dollarType.type)}
-              className={`transition-all ${
-                selectedTypes.includes(dollarType.type)
-                  ? ''
-                  : darkMode ? 'border-gray-700 hover:bg-gray-800' : ''
-              }`}
-              style={{
-                backgroundColor: selectedTypes.includes(dollarType.type) ? dollarType.color : 'transparent',
-                borderColor: selectedTypes.includes(dollarType.type) ? dollarType.color : undefined
-              }}
-            >
-              {dollarType.label}
-            </Button>
-          ))}
-        </div>
+
       </CardHeader>
 
       <CardContent className="p-0">
@@ -348,7 +370,7 @@ export default function EnhancedDollarChart({
             </p>
           </div>
         ) : (
-          <div className="w-full p-6">
+          <div className="w-full p-1 lg:p-6">
             <ResponsiveContainer width="100%" height={height}>
               <AreaChart
                 data={data}
@@ -357,19 +379,19 @@ export default function EnhancedDollarChart({
                 {/* Definir gradientes */}
                 <defs>
                   {dollarTypes.map((dollarType) => (
-                    <linearGradient 
-                      key={dollarType.gradient.id} 
-                      id={dollarType.gradient.id} 
-                      x1="0" 
-                      y1="0" 
-                      x2="0" 
+                    <linearGradient
+                      key={dollarType.gradient.id}
+                      id={dollarType.gradient.id}
+                      x1="0"
+                      y1="0"
+                      x2="0"
                       y2="1"
                     >
                       {dollarType.gradient.colors.map((color, index) => (
-                        <stop 
+                        <stop
                           key={index}
-                          offset={color.offset} 
-                          stopColor={color.color} 
+                          offset={color.offset}
+                          stopColor={color.color}
                           stopOpacity={color.opacity}
                         />
                       ))}
@@ -377,35 +399,40 @@ export default function EnhancedDollarChart({
                   ))}
                 </defs>
 
-                <CartesianGrid 
-                  strokeDasharray="3 3" 
+                <CartesianGrid
+                  strokeDasharray="3 3"
                   stroke={darkMode ? '#374151' : '#e5e7eb'}
                   vertical={false}
                 />
-                
-                <XAxis 
-                  dataKey="date" 
+
+                <XAxis
+                  dataKey="date"
                   tickFormatter={formatXAxis}
                   stroke={darkMode ? '#9ca3af' : '#6b7280'}
                   tick={{ fontSize: 12 }}
                 />
-                
-                <YAxis 
+
+                <YAxis
                   tickFormatter={formatYAxis}
                   stroke={darkMode ? '#9ca3af' : '#6b7280'}
                   tick={{ fontSize: 12 }}
-                />
-                
-                <Tooltip 
+                  ticks={Array.from(
+                    {length: Math.floor((yAxisMax - yAxisMin) / 100) + 1}, 
+                    (_, i) => yAxisMin + i * 100
+                  )}
+                  domain={[yAxisMin, yAxisMax]}     
+                               />
+
+                <Tooltip
                   content={<CustomTooltip />}
-                  cursor={{ 
+                  cursor={{
                     stroke: darkMode ? '#6b7280' : '#d1d5db',
                     strokeWidth: 1
                   }}
                 />
-                
-                <Legend 
-                  verticalAlign="bottom" 
+
+                <Legend
+                  verticalAlign="bottom"
                   height={36}
                   iconType="line"
                   wrapperStyle={{
@@ -436,7 +463,7 @@ export default function EnhancedDollarChart({
       </CardContent>
 
       <CardFooter className={`text-sm ${darkMode ? 'text-gray-500 border-gray-800' : 'text-gray-600'}`}>
-        <p>Los datos se actualizan automáticamente durante los días hábiles. Fuente: Argentina Datos API</p>
+        <p>Fuente: INDEC</p>
       </CardFooter>
     </Card>
   );

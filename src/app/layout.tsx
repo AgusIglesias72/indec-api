@@ -9,6 +9,7 @@ import Footer from "@/components/landing/CTAFooter";
 import { defaultMetadata } from "@/lib/metadata";
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { Analytics } from "@vercel/analytics/next"
+import StructuredData, { OrganizationSchema, WebsiteSchema } from "@/components/StructuredData"
 
 const clearSans = localFont({
   src: [
@@ -82,6 +83,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={`${clearSans.variable} ${jetbrainsMono.variable} ${righteous.variable}`}>
+      <head>
+        <StructuredData data={OrganizationSchema} />
+        <StructuredData data={WebsiteSchema} />
+      </head>
       <body>
         <AppWrapper>
           <NavBar />
