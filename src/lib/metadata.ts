@@ -60,7 +60,7 @@ export const defaultMetadata: Metadata = {
     "format-detection": "telephone=no",
   },
   verification: {
-    google: 'Gbp1L10DUj5kpdyIJucmkVKXnl3bJoI3woTQYXy7jrk',
+    google: process.env.GOOGLE_SEARCH_CONSOLE_VERIFICATION
   },
 };
 
