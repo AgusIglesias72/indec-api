@@ -142,7 +142,7 @@ export default function NavBar() {
           <div className="hidden md:flex md:items-center md:gap-2">
             <Button 
               asChild
-              variant="fill" 
+              variant="default" 
               size="sm"
               className="font-medium text-indec-blue hover:bg-indec-blue hover:text-white transition-colors border-none"
             >

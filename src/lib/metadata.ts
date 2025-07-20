@@ -59,6 +59,9 @@ export const defaultMetadata: Metadata = {
     "apple-mobile-web-app-status-bar-style": "default",
     "format-detection": "telephone=no",
   },
+  verification: {
+    google: 'Gbp1L10DUj5kpdyIJucmkVKXnl3bJoI3woTQYXy7jrk',
+  },
 };
 
 // Homepage metadata

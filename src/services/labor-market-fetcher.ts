@@ -157,7 +157,7 @@ function generateNationalDataUrls(): string[] {
   const urls: string[] = [];
   
   // Determinar qué trimestre estaría disponible ahora - buscar el ÚLTIMO mes <= currentMonth
-  let availableMonths: Array<{month: number, year: number}> = [];
+  const availableMonths: Array<{month: number, year: number}> = [];
   
   // Encontrar el índice del último mes de publicación que es <= currentMonth
   let latestAvailableIndex = -1;
@@ -230,7 +230,7 @@ function generateRegionalDataUrls(): string[] {
   const urls: string[] = [];
   
   // Usar la misma lógica que en generateNationalDataUrls()
-  let availableMonths: Array<{month: number, year: number}> = [];
+  const availableMonths: Array<{month: number, year: number}> = [];
   
   // Encontrar el índice del último mes de publicación que es <= currentMonth
   let latestAvailableIndex = -1;

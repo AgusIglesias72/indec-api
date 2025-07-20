@@ -1,3 +1,5 @@
+// Este archivo está deprecado por DollarRateCard
+
 "use client"
 
 import React, { useState, useEffect } from 'react';
@@ -6,7 +8,8 @@ import { ArrowDownRight, ArrowUpRight, RefreshCw, ExternalLink } from "lucide-re
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { getLatestDollarRates, DollarRateData } from '@/services/api-dollar';
+import { getLatestDollarRates } from '@/services/api-dollar';
+import { DollarRateData } from '@/types/dollar';
 import { DollarType } from '@/types/dollar';
 import Link from 'next/link';
 
@@ -156,10 +159,10 @@ export default function DollarRatesCard({
             >
               <div className="font-semibold">{typeNames[rate.dollar_type] || rate.dollar_type}</div>
               <div className="text-right font-mono">
-                ${formatCurrency(rate.buy_price)}
+                ${rate.buy_price !== undefined ? formatCurrency(rate.buy_price) : '—'}
               </div>
               <div className="text-right font-mono">
-                ${formatCurrency(rate.sell_price)}
+                ${rate.sell_price !== undefined ? formatCurrency(rate.sell_price) : '—'}
               </div>
             </motion.div>
           ))}

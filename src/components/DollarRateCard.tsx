@@ -5,7 +5,8 @@ import { ArrowUpRight, ArrowDownRight, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { getLatestDollarRate, DollarRateData } from '@/services/api-dollar';
+import { getLatestDollarRates } from '@/services/api-dollar';
+import { DollarRateData } from '@/types/dollar';
 import { DollarType } from '@/types/dollar';
 
 interface DollarRateCardProps {
@@ -52,27 +53,37 @@ export default function DollarRateCard({
   const fetchData = async () => {
     try {
       setIsRefreshing(true);
-      const data = await getLatestDollarRate(dollarType);
+      const data = await getLatestDollarRates();
       
-      if (data) {
-        setDollarRate(data);
+      if (data && data.length > 0) {
+        // Buscar el tipo de dólar específico
+        const specificRate = data.find(rate => rate.dollar_type === dollarType);
         
-        // Obtener la fecha de última actualización
-        if (data.last_updated) {
-          const date = new Date(data.last_updated);
-          setLastUpdated(date.toLocaleString('es-AR'));
-        }
-        
-        setError(null);
-        
-        // Notificar el cambio si se proporcionó un callback
-        if (onChange) {
-          onChange(data);
+        if (specificRate) {
+          setDollarRate(specificRate);
+          
+          // Obtener la fecha de última actualización
+          if (specificRate.updated_at) {
+            const date = new Date(specificRate.updated_at);
+            setLastUpdated(date.toLocaleString('es-AR'));
+          }
+          
+          setError(null);
+          
+          // Notificar el cambio si se proporcionó un callback
+          if (onChange) {
+            onChange(specificRate);
+          }
+        } else {
+          setError('No se encontraron datos para este tipo de dólar');
+          setDollarRate(null);
+          if (onChange) {
+            onChange(null);
+          }
         }
       } else {
         setError('No se encontraron datos');
-        
-        // Notificar el cambio si se proporcionó un callback
+        setDollarRate(null);
         if (onChange) {
           onChange(null);
         }
@@ -80,8 +91,7 @@ export default function DollarRateCard({
     } catch (err) {
       console.error(`Error al cargar cotización de ${dollarType}:`, err);
       setError('Error al cargar datos');
-      
-      // Notificar el cambio si se proporcionó un callback
+      setDollarRate(null);
       if (onChange) {
         onChange(null);
       }
@@ -96,7 +106,8 @@ export default function DollarRateCard({
   }, [dollarType]);
 
   // Formatear valores monetarios
-  const formatCurrency = (value: number) => {
+  const formatCurrency = (value: number | null) => {
+    if (value === null) return '-';
     return value.toLocaleString('es-AR', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
@@ -169,7 +180,7 @@ export default function DollarRateCard({
               <div className="flex justify-between items-center">
                 <span className={`text-indec-gray-dark ${compactMode ? "text-sm" : ""}`}>Compra</span>
                 <span className={`font-mono font-semibold ${compactMode ? "text-xl" : "text-2xl"}`}>
-                  ${formatCurrency(dollarRate.buy_price)}
+                  ${formatCurrency(dollarRate.buy_price ?? null)}
                 </span>
               </div>
             )}
@@ -183,15 +194,7 @@ export default function DollarRateCard({
               </div>
             )}
             
-            {/* Spread (diferencia porcentual) */}
-            {showBuy && showSell && dollarRate.spread !== undefined && !compactMode && (
-              <div className="flex justify-between items-center text-sm mt-2 pt-2 border-t">
-                <span className="text-indec-gray-dark">Spread</span>
-                <span className="font-medium">
-                  {dollarRate.spread.toFixed(2)}%
-                </span>
-              </div>
-            )}
+            {/* Note: spread property doesn't exist in DollarRateData type */}
           </div>
         )}
       </CardContent>

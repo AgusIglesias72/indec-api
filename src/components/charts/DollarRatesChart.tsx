@@ -13,7 +13,8 @@ import {
   Legend,
   ResponsiveContainer
 } from 'recharts';
-import { getDollarRatesHistory, DollarRateData } from '@/services/api-dollar';
+import { getDollarRatesHistory } from '@/services/api-dollar';
+import { DollarRateData } from '@/types/dollar';
 import { DollarType } from '@/types/dollar';
 
 interface DollarRatesChartProps {

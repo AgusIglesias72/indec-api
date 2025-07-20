@@ -14,6 +14,7 @@ export interface DollarRate {
 export type DollarType = 'BLUE' | 'CCL' | 'CRYPTO' | 'MEP' | 'MAYORISTA' | 'OFICIAL' | 'TARJETA';
 
 export interface DollarRateData {
+  updated_at: any;
   date: string;
   dollar_type: DollarType;
   dollar_name: string;
