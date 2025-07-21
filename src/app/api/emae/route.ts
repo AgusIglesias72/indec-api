@@ -115,9 +115,9 @@ export async function GET(request: NextRequest) {
       return respondWithCSV(transformedData, 'emae_data.csv');
     }
     
-    // Configurar caché para 1 hora
-    const CACHE_MAX_AGE = 3600; // 1 hora en segundos
-    const CACHE_STALE_WHILE_REVALIDATE = 86400; // 24 horas
+    // Configurar caché más corto para datos frescos
+    const CACHE_MAX_AGE = 300; // 5 minutos en segundos
+    const CACHE_STALE_WHILE_REVALIDATE = 3600; // 1 hora
     
     // Configurar encabezados de caché
     const headers = new Headers();
@@ -203,5 +203,6 @@ function respondWithCSV(data: Record<string, any>[], filename: string) {
   });
 }
 
-// Revalidación programada cada hora
-export const revalidate = 60; // 1 hora
+// Revalidación programada cada 5 minutos para datos más frescos
+export const revalidate = 300; // 5 minutos
+export const dynamic = 'force-dynamic';
