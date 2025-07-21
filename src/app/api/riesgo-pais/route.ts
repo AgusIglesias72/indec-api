@@ -98,7 +98,7 @@ async function handler(request: NextRequest) {
     let data: any[] = [];
     let totalRecords = 0;
     let hasMore = false;
-    let currentPage = page;
+    const currentPage = page;
     let totalPages = 1;
     
     if (useAutoPagination) {

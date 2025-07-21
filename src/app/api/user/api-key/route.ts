@@ -76,7 +76,7 @@ export async function POST() {
 
     // Si el usuario no existe, crearlo
     if (checkError && checkError.code === 'PGRST116') {
-      console.log('Creating new user in database...')
+      console.info('Creating new user in database...')
       
       const { data: newUser, error: insertError } = await supabase
         .from('users')
@@ -100,7 +100,7 @@ export async function POST() {
         }, { status: 500 })
       }
       
-      console.log('User created successfully:', newUser?.id)
+      console.info('User created successfully:', newUser?.id)
     }
 
     // Generate new API key
@@ -114,7 +114,7 @@ export async function POST() {
       }, { status: 500 })
     }
 
-    console.log('Generated API key:', apiKeyData?.substring(0, 10) + '...')
+    console.info('Generated API key:', apiKeyData?.substring(0, 10) + '...')
 
     // Update user's API key
     const { data: updatedUser, error: updateError } = await supabase
@@ -135,7 +135,7 @@ export async function POST() {
       }, { status: 500 })
     }
 
-    console.log('API key updated successfully for user:', updatedUser?.id)
+    console.info('API key updated successfully for user:', updatedUser?.id)
 
     return NextResponse.json({ 
       apiKey: apiKeyData,

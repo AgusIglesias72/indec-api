@@ -350,7 +350,7 @@ export function useRiskCountryData(params: QueryParams = {}) {
     } finally {
       setLoading(false);
     }
-  }, [JSON.stringify(params)]);
+  }, [params]);
 
   React.useEffect(() => {
     fetchData();

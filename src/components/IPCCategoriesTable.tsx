@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -67,7 +67,7 @@ export default function IPCCategoriesTable({ lastUpdate, className }: IPCCategor
   };
 
   // Cargar los datos de la API
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setIsRefreshing(true);
       
@@ -80,7 +80,7 @@ export default function IPCCategoriesTable({ lastUpdate, className }: IPCCategor
       }
       
       const metadataJson = await metadataResponse.json();
-      console.log('Metadata response:', metadataJson); // Debug log
+      console.info('Metadata response:', metadataJson);
       
       // Verificar si la respuesta tiene la estructura esperada
       if (!metadataJson.data) {
@@ -114,7 +114,7 @@ export default function IPCCategoriesTable({ lastUpdate, className }: IPCCategor
         });
       }
       
-      console.log('Categories to fetch:', categoriesToFetch); // Debug log
+      console.info('Categories to fetch:', categoriesToFetch);
       
       // Obtener el último dato disponible para cada categoría
       const latestDate = metadata.metadata?.last_updated || '';
@@ -124,7 +124,7 @@ export default function IPCCategoriesTable({ lastUpdate, className }: IPCCategor
         throw new Error('No se pudo determinar la última fecha disponible');
       }
       
-      console.log('Latest date:', latestDate); // Debug log
+      console.info('Latest date:', latestDate);
       
       // Construir un array de promesas para obtener los datos de cada categoría
       const fetchPromises = categoriesToFetch.map(async (categoryCode) => {
@@ -179,12 +179,12 @@ export default function IPCCategoriesTable({ lastUpdate, className }: IPCCategor
       setLoading(false);
       setIsRefreshing(false);
     }
-  };
+  }, []);
 
   // Cargar datos al iniciar el componente
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   // Función para manejar el cambio de ordenación
   const handleSort = (field: SortField) => {

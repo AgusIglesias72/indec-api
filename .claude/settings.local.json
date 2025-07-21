@@ -19,7 +19,8 @@
       "Bash(npm run build:*)",
       "Bash(cmd /c:*)",
       "Bash(npx tsc:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(ls:*)"
     ],
     "deny": []
   }

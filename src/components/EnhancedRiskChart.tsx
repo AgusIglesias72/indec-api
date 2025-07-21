@@ -1,7 +1,7 @@
 // src/components/EnhancedRiskChart.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   AreaChart, 
   Area, 
@@ -50,16 +50,16 @@ export default function EnhancedRiskChart({
     avg: number;
   } | null>(null);
 
-  const periodOptions = [
+  const periodOptions = useMemo(() => [
     { value: '30d' as const, label: '30D', apiType: 'last_30_days' as const },
     { value: '3m' as const, label: '3M', apiType: 'last_90_days' as const },
     { value: '1y' as const, label: '1A', apiType: 'custom' as const },
     { value: '5y' as const, label: '5A', apiType: 'custom' as const },
     { value: '10y' as const, label: '10A', apiType: 'custom' as const }
-  ];
+  ], []);
 
   // Cargar datos del gráfico con autopaginación mejorada
-  const fetchChartData = async (period: '30d' | '3m' | '1y' | '5y' | '10y') => {
+  const fetchChartData = useCallback(async (period: '30d' | '3m' | '1y' | '5y' | '10y') => {
     try {
       setLoading(true);
       const selectedOption = periodOptions.find(opt => opt.value === period);
@@ -85,7 +85,7 @@ export default function EnhancedRiskChart({
         params.limit = Math.min(maxDataPoints, 1000); // Para períodos cortos no necesitamos tanto
       }
 
-      console.log(`Loading ${period} data with params:`, params);
+      console.info(`Loading ${period} data with params:`, params);
 
       const response = await getRiskCountryData(params);
       
@@ -108,7 +108,7 @@ export default function EnhancedRiskChart({
           });
         }
 
-        console.log(`Loaded ${finalData.length} data points for ${period}`);
+        console.info(`Loaded ${finalData.length} data points for ${period}`);
       } else {
         console.error('Error loading data:', response.error);
         setChartData([]);
@@ -122,11 +122,11 @@ export default function EnhancedRiskChart({
     } finally {
       setLoading(false);
     }
-  };
+  }, [maxDataPoints, periodOptions]);
 
   useEffect(() => {
     fetchChartData(selectedPeriod);
-  }, [selectedPeriod, maxDataPoints]);
+  }, [fetchChartData, selectedPeriod]);
 
   // Formatear fechas para el eje X con espaciado inteligente
   const formatDateForAxis = (dateString: string, period: string, index: number, totalLength: number) => {

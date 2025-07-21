@@ -52,8 +52,8 @@ export async function POST(req: Request) {
   const { id } = evt.data;
   const eventType = evt.type;
 
-  console.log(`Webhook with and ID of ${id} and type of ${eventType}`)
-  console.log('Webhook body:', body)
+  console.info(`Webhook with and ID of ${id} and type of ${eventType}`)
+  console.info('Webhook body:', body)
 
   const supabase = createServerComponentClient();
 
@@ -132,7 +132,7 @@ export async function POST(req: Request) {
       break;
 
     default:
-      console.log(`Unhandled webhook event type: ${eventType}`);
+      console.info(`Unhandled webhook event type: ${eventType}`);
   }
 
   return new Response('', { status: 200 })

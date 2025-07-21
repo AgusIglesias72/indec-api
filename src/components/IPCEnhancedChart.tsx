@@ -1,7 +1,7 @@
 // src/components/IPCEnhancedChart.tsx
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   AreaChart,
   Area,
@@ -351,7 +351,7 @@ export default function IPCEnhancedChart({
   const groupedComponents = getGroupedComponents();
 
   // Cargar datos según filtros seleccionados
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setIsRefreshing(true);
       setLoading(true);
@@ -418,12 +418,12 @@ export default function IPCEnhancedChart({
       setLoading(false);
       setIsRefreshing(false);
     }
-  };
+  }, [timeRange, selectedComponent, selectedRegion]);
 
   // Cargar datos iniciales
   useEffect(() => {
     fetchData();
-  }, [timeRange, selectedComponent, selectedRegion, variationType]);
+  }, [fetchData]);
 
   // Componente personalizado para el tooltip
   const CustomTooltip = ({ active, payload, label, variationType }: CustomTooltipProps) => {

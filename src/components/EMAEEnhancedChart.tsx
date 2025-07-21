@@ -1,7 +1,7 @@
 // src/components/EMAEEnhancedChart.tsx
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   AreaChart,
   Area,
@@ -302,18 +302,13 @@ export default function EMAEEnhancedChart({
     // Si se selecciona un sector que no es GENERAL y la visualización es mensual,
     // cambiar automáticamente a visualización de índice
     if (selectedSector !== 'GENERAL' && viewType === 'monthly') {
-      console.log('Cambiando automáticamente a visualización de índice');
+      console.info('Cambiando automáticamente a visualización de índice');
       setViewType('index');
     }
   }, [selectedSector, viewType]);
 
-  // Cargar datos iniciales
-  useEffect(() => {
-    fetchData();
-  }, [timeRange, selectedSector, viewType]);
-
   // Obtener datos según filtros seleccionados
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setIsRefreshing(true);
       setLoading(true);
@@ -328,7 +323,7 @@ export default function EMAEEnhancedChart({
       // Verificar si estamos intentando obtener variación mensual para un sector que no es GENERAL
       if (viewType === 'monthly' && selectedSector !== 'GENERAL') {
         // Solo mostrar error pero continuar con la solicitud para el nivel general
-        console.log('Intentando visualizar variación mensual para sector no general, redirigiendo...');
+        console.info('Intentando visualizar variación mensual para sector no general, redirigiendo...');
         setTimeout(() => {
           setViewType('index');
         }, 0);
@@ -402,7 +397,12 @@ export default function EMAEEnhancedChart({
       setLoading(false);
       setIsRefreshing(false);
     }
-  };
+  }, [timeRange, selectedSector, viewType, setViewType]);
+
+  // Cargar datos iniciales
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   // Componente personalizado para el tooltip
   const CustomTooltip = ({ active, payload, label, viewType }: CustomTooltipProps) => {

@@ -111,7 +111,7 @@ const ModernDollarRateCard = memo(function ModernDollarRateCard({ dollarType, ti
 
     // Si ninguna está disponible, retornamos 0
     return 0;
-  }, [data?.buy_variation, data?.sell_variation]);
+  }, [data]);
 
   // Use shared variation styles
   const variationStyles = useMemo(() => getVariationStyles(variation), [variation]);

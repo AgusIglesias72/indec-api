@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   getHistoricalIPCData,
   IPCHistoricalData,
@@ -15,7 +15,7 @@ export function useHistoricalEmaeData(limit = 24) {
   const [error, setError] = useState<any>(null);
 
   // Función para obtener datos con parámetros opcionales
-  const refetch = async (startDate?: string, endDate?: string, customLimit?: number) => {
+  const refetch = useCallback(async (startDate?: string, endDate?: string, customLimit?: number) => {
     try {
       setLoading(true);
       
@@ -78,11 +78,11 @@ export function useHistoricalEmaeData(limit = 24) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [limit]);
 
   useEffect(() => {
     refetch();
-  }, [limit]);
+  }, [refetch]);
 
   return { data, loading, error, refetch };
 }

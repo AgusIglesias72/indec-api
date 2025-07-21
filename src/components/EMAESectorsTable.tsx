@@ -79,7 +79,7 @@ export default function EMAESectorsTable({ lastUpdate, className }: EMAESectorsT
       const generalData = await generalResponse.json();
       
       // Crear un array con todos los sectores más el nivel general
-      let processedSectors = sectorsResult.data.map((item: any) => ({
+      const processedSectors = sectorsResult.data.map((item: any) => ({
         sector_name: item.economy_sector || item.sector,
         sector_code: item.economy_sector_code || item.sector_code,
         original_value: item.original_value || 0,

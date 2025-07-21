@@ -75,7 +75,7 @@ export async function POST(req: Request) {
         return new Response('Error creating user', { status: 500 })
       }
 
-      console.log('User created successfully:', id)
+      console.info('User created successfully:', id)
     } catch (error) {
       console.error('Error processing user.created webhook:', error)
       return new Response('Error processing webhook', { status: 500 })
@@ -102,7 +102,7 @@ export async function POST(req: Request) {
         return new Response('Error updating user', { status: 500 })
       }
 
-      console.log('User updated successfully:', id)
+      console.info('User updated successfully:', id)
     } catch (error) {
       console.error('Error processing user.updated webhook:', error)
       return new Response('Error processing webhook', { status: 500 })
@@ -123,7 +123,7 @@ export async function POST(req: Request) {
         return new Response('Error deleting user', { status: 500 })
       }
 
-      console.log('User deleted successfully:', id)
+      console.info('User deleted successfully:', id)
     } catch (error) {
       console.error('Error processing user.deleted webhook:', error)
       return new Response('Error processing webhook', { status: 500 })

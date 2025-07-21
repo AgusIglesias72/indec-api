@@ -1,7 +1,7 @@
 // src/components/EnhancedDollarChart.tsx
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   AreaChart,
   Area,
@@ -163,7 +163,7 @@ export default function EnhancedDollarChart({
   };
 
   // Cargar datos según filtros seleccionados
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setIsRefreshing(true);
       setLoading(true);
@@ -210,12 +210,12 @@ export default function EnhancedDollarChart({
       setLoading(false);
       setIsRefreshing(false);
     }
-  };
+  }, [timeRange, selectedTypes]);
 
   // Cargar datos iniciales
   useEffect(() => {
     fetchData();
-  }, [timeRange, selectedTypes]);
+  }, [fetchData]);
 
   // Componente personalizado para el tooltip
   const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {

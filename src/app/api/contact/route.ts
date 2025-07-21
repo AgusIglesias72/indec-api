@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
     
     // Aquí podrías implementar rate limiting con Redis o similar
     // Por ahora solo logeamos
-    console.log(`Contact form submission from IP: ${ip}`);
+    console.info(`Contact form submission from IP: ${ip}`);
     
     // Parsear y validar el body
     const body = await request.json();
@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Log para monitoring
-    console.log(`Contact submission created: ID ${insertedData.id}, Type: ${data.contact_type}, Spam Score: ${spamScore}`);
+    console.info(`Contact submission created: ID ${insertedData.id}, Type: ${data.contact_type}, Spam Score: ${spamScore}`);
     
     // Respuesta exitosa
     return NextResponse.json({

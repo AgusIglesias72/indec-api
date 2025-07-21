@@ -32,7 +32,7 @@ export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult>
     const userAgent = req.headers.get('user-agent') || ''
     
     // Log para debugging
-    console.log('Rate limit check:', {
+    console.info('Rate limit check:', {
       origin,
       host,
       referer,
@@ -76,7 +76,7 @@ export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult>
       const apiKey = req.headers.get('x-api-key')
       
       if (!apiKey) {
-        console.log('Development tool detected without API key')
+        console.info('Development tool detected without API key')
         return {
           success: false,
           limit: 0,
@@ -91,7 +91,7 @@ export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult>
     
     // Si es una petición interna genuina desde el navegador, permitir sin límites
     if (isInternalRequest && !isDevelopmentTool) {
-      console.log('Internal request detected, allowing without rate limit')
+      console.info('Internal request detected, allowing without rate limit')
       return {
         success: true,
         limit: 999999,
@@ -104,7 +104,7 @@ export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult>
     const apiKey = req.headers.get('x-api-key')
     
     if (!apiKey) {
-      console.log('External request without API key')
+      console.info('External request without API key')
       return {
         success: false,
         limit: 0,
@@ -115,7 +115,7 @@ export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult>
     }
 
 //    console.log('Checking API key:', apiKey.substring(0, 10) + '...')
-    console.log('Checking API key:', apiKey)
+    console.info('Checking API key:', apiKey)
 
     // Crear cliente de Supabase
     const supabase = createRateLimitSupabaseClient()
@@ -145,7 +145,7 @@ export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult>
       }
     }
 
-    console.log('User found:', { id: user.id, plan: user.plan_type, count: user.daily_requests_count })
+    console.info('User found:', { id: user.id, plan: user.plan_type, count: user.daily_requests_count })
 
     // Determine rate limit based on plan
     const limits = {
@@ -163,7 +163,7 @@ export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult>
       tomorrow.setDate(tomorrow.getDate() + 1)
       tomorrow.setHours(0, 0, 0, 0)
 
-      console.log('Rate limit exceeded:', { limit, currentCount })
+      console.info('Rate limit exceeded:', { limit, currentCount })
 
       return {
         success: false,

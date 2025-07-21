@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Users, TrendingUp, TrendingDown, Activity, Clock, RefreshCw, ArrowUpRight, ArrowDownRight, Info, MapPin, Calendar } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -302,8 +302,35 @@ function EmpleoEnhancedChart() {
     { value: '10', label: '10 años' }
   ];
 
+  // Datos de fallback en caso de error
+  const getFallbackData = useCallback(() => {
+    const currentYear = new Date().getFullYear();
+    const years = parseInt(timeRange);
+    const fallbackData = [];
+    
+    // Generar datos básicos de fallback
+    for (let y = 0; y < years; y++) {
+      for (let q = 1; q <= 4; q++) {
+        const year = currentYear - years + y + 1;
+        if (year <= currentYear) {
+          fallbackData.push({
+            period: `T${q} ${year}`,
+            date: `${year}-${q * 3}-30`,
+            [indicatorType]: indicatorType === 'unemployment_rate' ? 
+              Math.random() * 5 + 5 : // 5-10% para desempleo
+              indicatorType === 'employment_rate' ? 
+              Math.random() * 5 + 40 : // 40-45% para empleo
+              Math.random() * 3 + 46 // 46-49% para actividad
+          });
+        }
+      }
+    }
+    
+    return fallbackData.slice(-20); // Últimos 20 trimestres
+  }, [timeRange, indicatorType]);
+
   // Fetch datos de la API
-  const fetchChartData = async () => {
+  const fetchChartData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -374,44 +401,17 @@ function EmpleoEnhancedChart() {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Datos de fallback en caso de error
-  const getFallbackData = () => {
-    const currentYear = new Date().getFullYear();
-    const years = parseInt(timeRange);
-    const fallbackData = [];
-    
-    // Generar datos básicos de fallback
-    for (let y = 0; y < years; y++) {
-      for (let q = 1; q <= 4; q++) {
-        const year = currentYear - years + y + 1;
-        if (year <= currentYear) {
-          fallbackData.push({
-            period: `T${q} ${year}`,
-            date: `${year}-${q * 3}-30`,
-            [indicatorType]: indicatorType === 'unemployment_rate' ? 
-              Math.random() * 5 + 5 : // 5-10% para desempleo
-              indicatorType === 'employment_rate' ? 
-              Math.random() * 5 + 40 : // 40-45% para empleo
-              Math.random() * 3 + 46 // 46-49% para actividad
-          });
-        }
-      }
-    }
-    
-    return fallbackData.slice(-20); // Últimos 20 trimestres
-  };
+  }, [indicatorType, regionType, segmentType, timeRange, getFallbackData]);
 
   // Efectos para recargar datos cuando cambian los filtros
   useEffect(() => {
     fetchChartData();
-  }, [indicatorType, regionType, segmentType, timeRange]);
+  }, [fetchChartData]);
 
   const getChartConfig = () => {
     let gradientId = 'areaGradient';
     let strokeColor = '#EA580C';
-    let fillOpacity = 0.3;
+    const fillOpacity = 0.3;
 
     // Determinar la configuración basada en el indicador
     switch (indicatorType) {
@@ -647,7 +647,7 @@ function RegionalStats() {
   const [error, setError] = useState<string | null>(null);
 
   // Fetch datos regionales de la API
-  const fetchRegionalData = async () => {
+  const fetchRegionalData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -697,7 +697,7 @@ function RegionalStats() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // Datos de fallback
   const getFallbackRegionalData = () => [
@@ -719,7 +719,7 @@ function RegionalStats() {
   // Cargar datos al montar el componente
   useEffect(() => {
     fetchRegionalData();
-  }, []);
+  }, [fetchRegionalData]);
 
   if (loading) {
     return (
