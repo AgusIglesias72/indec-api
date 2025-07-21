@@ -319,12 +319,19 @@ export default function NavBar() {
                         ) : isMounted ? (
                           <div className="space-y-2 pt-2">
                             <SignInButton mode="modal">
-                              <Button variant="outline" className="w-full">
+                              <Button 
+                                variant="outline" 
+                                className="w-full"
+                                onClick={handleMobileNavClick}
+                              >
                                 Iniciar sesión
                               </Button>
                             </SignInButton>
                             <SignUpButton mode="modal">
-                              <Button className="w-full">
+                              <Button 
+                                className="w-full"
+                                onClick={handleMobileNavClick}
+                              >
                                 Registrarse
                               </Button>
                             </SignUpButton>
