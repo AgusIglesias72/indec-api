@@ -89,6 +89,21 @@ const HeroWithMetrics = () => {
     return "text-gray-600";
   };
 
+  const formatDateToMonthYear = (dateString: string | undefined) => {
+    if (!dateString) return "";
+    
+    const date = new Date(dateString);
+    const monthNames = [
+      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    ];
+    
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear();
+    
+    return `${month} ${year}`;
+  };
+
 
   return (
     <>
@@ -260,7 +275,7 @@ const HeroWithMetrics = () => {
                 <div className="mt-4 pt-3 border-t border-purple-100">
                   <div className="flex items-center text-xs text-purple-700">
                     <div className="h-2 w-2 rounded-full bg-purple-500 mr-2 animate-pulse"></div>
-                    Datos INDEC oficiales
+                    {loadingIPC || !ipcData ? "INDEC" : `INDEC - ${formatDateToMonthYear(ipcData.date)}`}
                   </div>
                 </div>
               </div>
@@ -309,7 +324,7 @@ const HeroWithMetrics = () => {
                 <div className="mt-4 pt-3 border-t border-blue-100">
                   <div className="flex items-center text-xs text-blue-700">
                     <div className="h-2 w-2 rounded-full bg-blue-500 mr-2 animate-pulse"></div>
-                    Actividad económica
+                    {loadingEmae || !emaeData ? "INDEC" : `INDEC - ${formatDateToMonthYear(emaeData.date)}`}
                   </div>
                 </div>
               </div>
