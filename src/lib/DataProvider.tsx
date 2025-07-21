@@ -9,6 +9,10 @@ import {
   EmaeLatestData,
   IPCLatestData,
 } from '@/services/api';
+import { getLatestDollarRates } from '@/services/api-dollar';
+import { DollarRateData } from '@/types/dollar';
+import { getRiskCountryData } from '@/services/api-risk-country';
+import { RiskCountryDataPoint } from '@/types/risk-country';
 
 // Interfaz para los datos de sectores
 interface SectorData {
@@ -24,19 +28,29 @@ interface DataContextType {
   emaeData: EmaeLatestData | null;
   ipcData: IPCLatestData | null;
   sectorData: SectorData[] | null;
+  dollarData: DollarRateData | null;
+  riskCountryData: RiskCountryDataPoint | null;
+  monthlyVariation: number | null;
+  yearlyVariation: number | null;
   statsData: ApiStats | null;
   loadingEmae: boolean;
   loadingIPC: boolean;
   loadingSectors: boolean;
+  loadingDollar: boolean;
+  loadingRiskCountry: boolean;
   loadingStats: boolean;
   errorEmae: Error | null;
   errorIPC: Error | null;
   errorSectors: Error | null;
+  errorDollar: Error | null;
+  errorRiskCountry: Error | null;
   errorStats: Error | null;
   latestSectorDate: string | null;
   refetchEmae: () => Promise<void>;
   refetchIPC: () => Promise<void>;
   refetchSectors: () => Promise<void>;
+  refetchDollar: () => Promise<void>;
+  refetchRiskCountry: () => Promise<void>;
 }
 
 // Crear el contexto
@@ -48,6 +62,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [emaeData, setEmaeData] = useState<EmaeLatestData | null>(null);
   const [ipcData, setIpcData] = useState<IPCLatestData | null>(null);
   const [sectorData, setSectorData] = useState<SectorData[] | null>(null);
+  const [dollarData, setDollarData] = useState<DollarRateData | null>(null);
+  const [riskCountryData, setRiskCountryData] = useState<RiskCountryDataPoint | null>(null);
+  const [monthlyVariation, setMonthlyVariation] = useState<number | null>(null);
+  const [yearlyVariation, setYearlyVariation] = useState<number | null>(null);
   const [statsData, setStatsData] = useState<ApiStats | null>(null);
   const [latestSectorDate, setLatestSectorDate] = useState<string | null>(null);
 
@@ -55,12 +73,16 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loadingEmae, setLoadingEmae] = useState(true);
   const [loadingIPC, setLoadingIPC] = useState(true);
   const [loadingSectors, setLoadingSectors] = useState(true);
+  const [loadingDollar, setLoadingDollar] = useState(true);
+  const [loadingRiskCountry, setLoadingRiskCountry] = useState(true);
   const [loadingStats, setLoadingStats] = useState(true);
 
   // Estados de error
   const [errorEmae, setErrorEmae] = useState<Error | null>(null);
   const [errorIPC, setErrorIPC] = useState<Error | null>(null);
   const [errorSectors, setErrorSectors] = useState<Error | null>(null);
+  const [errorDollar, setErrorDollar] = useState<Error | null>(null);
+  const [errorRiskCountry, setErrorRiskCountry] = useState<Error | null>(null);
   const [errorStats, setErrorStats] = useState<Error | null>(null);
 
   // Funciones para obtener datos
@@ -89,6 +111,114 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Error al cargar datos IPC:', err);
     } finally {
       setLoadingIPC(false);
+    }
+  };
+
+  // Función para obtener datos del dólar oficial
+  const fetchDollar = async () => {
+    try {
+      setLoadingDollar(true);
+      const dollarRates = await getLatestDollarRates();
+      const oficialRate = dollarRates.find(rate => rate.dollar_type === 'OFICIAL');
+      
+      if (oficialRate) {
+        setDollarData(oficialRate);
+        setErrorDollar(null);
+      } else {
+        throw new Error('No se encontraron datos del dólar oficial');
+      }
+    } catch (err) {
+      setErrorDollar(err instanceof Error ? err : new Error('Error desconocido'));
+      console.error('Error al cargar datos del dólar:', err);
+      // Datos de fallback
+      setDollarData({
+        date: new Date().toISOString().split('T')[0],
+        dollar_type: 'OFICIAL',
+        dollar_name: 'Oficial',
+        sell_price: 1185,
+        buy_price: 1135,
+        spread: 4.41,
+        sell_variation: 0,
+        last_updated: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+    } finally {
+      setLoadingDollar(false);
+    }
+  };
+
+  // Función para obtener datos del riesgo país con variaciones
+  const fetchRiskCountry = async () => {
+    try {
+      setLoadingRiskCountry(true);
+      
+      // Obtener valor actual
+      const currentData = await getRiskCountryData({ type: 'latest' });
+      if (!currentData.success || !currentData.data || currentData.data.length === 0) {
+        throw new Error('No se encontraron datos actuales');
+      }
+      
+      const latest = currentData.data[0];
+      setRiskCountryData(latest);
+      
+      // Calcular variaciones
+      const currentDate = new Date(latest.closing_date);
+      const oneMonthAgo = new Date(currentDate);
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+      
+      const oneYearAgo = new Date(currentDate);
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+      
+      // Obtener datos históricos para variaciones
+      const [monthlyData, yearlyData] = await Promise.allSettled([
+        getRiskCountryData({ 
+          type: 'custom',
+          date_from: new Date(oneMonthAgo.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          date_to: new Date(oneMonthAgo.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          limit: 1
+        }),
+        getRiskCountryData({ 
+          type: 'custom',
+          date_from: new Date(oneYearAgo.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          date_to: new Date(oneYearAgo.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          limit: 1
+        })
+      ]);
+      
+      // Calcular variación mensual
+      if (monthlyData.status === 'fulfilled' && monthlyData.value.success && monthlyData.value.data.length > 0) {
+        const monthlyValue = monthlyData.value.data[0].closing_value;
+        const monthlyVar = ((latest.closing_value - monthlyValue) / monthlyValue * 100);
+        setMonthlyVariation(monthlyVar);
+      } else {
+        setMonthlyVariation(null);
+      }
+      
+      // Calcular variación anual
+      if (yearlyData.status === 'fulfilled' && yearlyData.value.success && yearlyData.value.data.length > 0) {
+        const yearlyValue = yearlyData.value.data[0].closing_value;
+        const yearlyVar = ((latest.closing_value - yearlyValue) / yearlyValue * 100);
+        setYearlyVariation(yearlyVar);
+      } else {
+        setYearlyVariation(null);
+      }
+      
+      setErrorRiskCountry(null);
+    } catch (err) {
+      console.error('Error al cargar datos del riesgo país:', err);
+      setErrorRiskCountry(err instanceof Error ? err : new Error('Error desconocido'));
+      
+      // Datos de fallback
+      setRiskCountryData({
+        closing_value: 705,
+        change_percentage: -0.14,
+        closing_date: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+      setMonthlyVariation(2.1);
+      setYearlyVariation(-54.6);
+    } finally {
+      setLoadingRiskCountry(false);
     }
   };
 
@@ -179,10 +309,26 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         fetchEmae(),
         fetchIPC(),
         fetchSectors(),
+        fetchDollar(),
+        fetchRiskCountry(),
       ]);
     };
 
     loadAllData();
+    
+    // Configurar intervalos de actualización
+    const dollarInterval = setInterval(() => {
+      fetchDollar();
+    }, 5 * 60 * 1000); // Actualizar dólar cada 5 minutos
+    
+    const riskCountryInterval = setInterval(() => {
+      fetchRiskCountry();
+    }, 5 * 60 * 1000); // Actualizar riesgo país cada 5 minutos
+
+    return () => {
+      clearInterval(dollarInterval);
+      clearInterval(riskCountryInterval);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Agregamos el comentario para deshabilitar la advertencia
 
@@ -191,19 +337,29 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     emaeData,
     ipcData,
     sectorData,
+    dollarData,
+    riskCountryData,
+    monthlyVariation,
+    yearlyVariation,
     statsData,
     loadingEmae,
     loadingIPC,
     loadingSectors,
+    loadingDollar,
+    loadingRiskCountry,
     loadingStats,
     errorEmae,
     errorIPC,
     errorSectors,
+    errorDollar,
+    errorRiskCountry,
     errorStats,
     latestSectorDate,
     refetchEmae: fetchEmae,
     refetchIPC: fetchIPC,
     refetchSectors: fetchSectors,
+    refetchDollar: fetchDollar,
+    refetchRiskCountry: fetchRiskCountry,
   };
 
   return (

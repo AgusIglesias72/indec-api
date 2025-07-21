@@ -19,38 +19,23 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useAppData } from '@/lib/DataProvider';
 
-// Interfaces para los datos
-interface DollarData {
-  buy_price: number;
-  sell_price: number;
-  spread: number;
-  sell_variation?: number;
-  dollar_type: string;
-  date: string;
-}
-
-interface RiskCountryData {
-  closing_value: number;
-  change_percentage: number | null;
-  closing_date: string;
-}
 
 const HeroWithMetrics = () => {
   const { 
     emaeData, 
     ipcData, 
     sectorData,
+    dollarData,
+    riskCountryData,
+    monthlyVariation,
+    yearlyVariation,
     loadingEmae, 
     loadingIPC, 
-    loadingSectors 
+    loadingSectors,
+    loadingDollar,
+    loadingRiskCountry
   } = useAppData();
   
-  const [dollarData, setDollarData] = useState<DollarData | null>(null);
-  const [loadingDollar, setLoadingDollar] = useState(true);
-  const [riskCountryData, setRiskCountryData] = useState<RiskCountryData | null>(null);
-  const [loadingRiskCountry, setLoadingRiskCountry] = useState(true);
-  const [monthlyVariation, setMonthlyVariation] = useState<number | null>(null);
-  const [yearlyVariation, setYearlyVariation] = useState<number | null>(null);
   const [isMounted, setIsMounted] = useState(false);
 
   // Prevent hydration mismatch
@@ -58,161 +43,10 @@ const HeroWithMetrics = () => {
     setIsMounted(true);
   }, []);
 
-  // Función para obtener datos del dólar oficial
-// Función para obtener datos del dólar oficial
-const fetchDollarData = async () => {
-  try {
-    setLoadingDollar(true);
-    const response = await fetch('/api/dollar?type=latest&dollar_type=OFICIAL&include_variations=true');
-    
-    if (!response.ok) {
-      throw new Error(`Error ${response.status}: ${response.statusText}`);
-    }
-    
-    const result = await response.json();
 
-    let oficialData = null;
-    
-    // Manejar diferentes estructuras de respuesta
-    if (result.data && Array.isArray(result.data)) {
-      oficialData = result.data.find((d: any) => d.dollar_type === 'OFICIAL');
-    } else if (result.dollar_type === 'OFICIAL') {
-      oficialData = result;
-    } else if (result.data && result.data.dollar_type === 'OFICIAL') {
-      oficialData = result.data;
-    }
-    
-    if (oficialData) {
-      setDollarData(oficialData);
-    } else {
-      throw new Error('No se encontraron datos del dólar oficial');
-    }
-  } catch (error) {
-    console.error('Error fetching dollar data:', error);
-    // Datos de fallback en caso de error
-    setDollarData({
-      buy_price: 1135,
-      sell_price: 1185,
-      spread: 4.41,
-      sell_variation: 0,
-      dollar_type: "OFICIAL",
-      date: new Date().toISOString()
-    });
-  } finally {
-    setLoadingDollar(false);
-  }
-};
 
-  // Función para obtener datos del riesgo país con variaciones calculadas
-  const fetchRiskCountryData = async () => {
-    try {
-      setLoadingRiskCountry(true);
-      
-      // 1. Obtener valor actual
-      const currentResponse = await fetch('/api/riesgo-pais?type=latest');
-      if (!currentResponse.ok) {
-        throw new Error('Error obteniendo valor actual');
-      }
-      const currentResult = await currentResponse.json();
-      
-      if (!currentResult.success || !currentResult.data || currentResult.data.length === 0) {
-        throw new Error('No se encontraron datos actuales');
-      }
-      
-      const currentData = currentResult.data[0];
-      setRiskCountryData(currentData);
-      
-      // 2. Calcular fechas para variaciones
-      const currentDate = new Date(currentData.closing_date);
-      const oneMonthAgo = new Date(currentDate);
-      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-      
-      const oneYearAgo = new Date(currentDate);
-      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-      
-      // 3. Obtener datos históricos con rangos amplios
-      const monthlyStartDate = new Date(oneMonthAgo.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      const monthlyEndDate = new Date(oneMonthAgo.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      
-      const yearlyStartDate = new Date(oneYearAgo.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      const yearlyEndDate = new Date(oneYearAgo.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      
-      // 4. Llamadas paralelas para datos históricos
-      const [monthlyResponse, yearlyResponse] = await Promise.all([
-        fetch(`/api/riesgo-pais?type=custom&date_from=${monthlyStartDate}&date_to=${monthlyEndDate}&order=desc&limit=1`),
-        fetch(`/api/riesgo-pais?type=custom&date_from=${yearlyStartDate}&date_to=${yearlyEndDate}&order=desc&limit=1`)
-      ]);
-      
-      // 5. Procesar respuesta mensual
-      if (monthlyResponse.ok) {
-        const monthlyResult = await monthlyResponse.json();
-        if (monthlyResult.success && monthlyResult.data && monthlyResult.data.length > 0) {
-          const monthlyValue = monthlyResult.data[0].closing_value;
-          const monthlyVar = ((currentData.closing_value - monthlyValue) / monthlyValue * 100);
-          setMonthlyVariation(monthlyVar);
-        } else {
-          setMonthlyVariation(null);
-        }
-      } else {
-        setMonthlyVariation(null);
-      }
-      
-      // 6. Procesar respuesta anual
-      if (yearlyResponse.ok) {
-        const yearlyResult = await yearlyResponse.json();
-        if (yearlyResult.success && yearlyResult.data && yearlyResult.data.length > 0) {
-          const yearlyValue = yearlyResult.data[0].closing_value;
-          const yearlyVar = ((currentData.closing_value - yearlyValue) / yearlyValue * 100);
-          setYearlyVariation(yearlyVar);
-        } else {
-          setYearlyVariation(null);
-        }
-      } else {
-        setYearlyVariation(null);
-      }
-      
-    } catch (error) {
-      console.error('Error fetching risk country data:', error);
-      // Datos de fallback en caso de error
-      setRiskCountryData({
-        closing_value: 705,
-        change_percentage: -0.14,
-        closing_date: new Date().toISOString()
-      });
-      setMonthlyVariation(2.1);
-      setYearlyVariation(-54.6);
-    } finally {
-      setLoadingRiskCountry(false);
-    }
-  };
-
-  // Cargar datos al montar el componente
-  useEffect(() => {
-    if (!isMounted) return;
-    
-    const initializeData = async () => {
-      try {
-        await Promise.all([
-          fetchDollarData(),
-          fetchRiskCountryData()
-        ]);
-      } catch (error) {
-        console.error('Error inicializando datos:', error);
-      }
-    };
-    
-    initializeData();
-    
-    // Actualizar cada 5 minutos
-    const interval = setInterval(() => {
-      fetchDollarData();
-      fetchRiskCountryData();
-    }, 5 * 60 * 1000);
-    
-    return () => clearInterval(interval);
-  }, [isMounted]);
-
-  const formatNumber = (num: number, decimals: number = 2) => {
+  const formatNumber = (num: number | undefined, decimals: number = 2) => {
+    if (num === undefined || num === null) return "N/A";
     if (!isMounted) return num.toFixed(decimals);
     return new Intl.NumberFormat('es-AR', {
       minimumFractionDigits: decimals,
@@ -220,7 +54,8 @@ const fetchDollarData = async () => {
     }).format(num);
   };
 
-  const formatRiskValue = (value: number) => {
+  const formatRiskValue = (value: number | undefined) => {
+    if (value === undefined || value === null) return "N/A";
     if (!isMounted) return Math.round(value).toString();
     return new Intl.NumberFormat('es-AR', {
       minimumFractionDigits: 0,
@@ -228,13 +63,15 @@ const fetchDollarData = async () => {
     }).format(value);
   };
 
-  const getChangeIcon = (value: number) => {
+  const getChangeIcon = (value: number | undefined) => {
+    if (!value) return <Minus className="h-2 w-2" />;
     if (value > 0) return <ArrowUpRight className="h-4 w-4" />;
     if (value < 0) return <ArrowDownRight className="h-4 w-4" />;
     return <Minus className="h-2 w-2" />;
   };
 
-  const getEMAEChangeColor = (value: number) => {
+  const getEMAEChangeColor = (value: number | undefined) => {
+    if (!value) return "text-gray-600";
     if (value > 0) return "text-green-600";
     if (value < 0) return "text-red-600";
     return "text-gray-600";
@@ -244,16 +81,14 @@ const fetchDollarData = async () => {
     return "text-purple-600";
   };
 
-  const getRiskChangeColor = (value: number | null) => {
-    if (!value) return "text-gray-600";
+  const getRiskChangeColor = (value: number | null | undefined) => {
+    if (!value || value === null || value === undefined) return "text-gray-600";
     // Para riesgo país, subida es malo (rojo) y bajada es bueno (verde)
     if (value > 0) return "text-red-600";
     if (value < 0) return "text-green-600";
     return "text-gray-600";
   };
 
-  // Show consistent loading state during SSR
-  const isLoading = !isMounted || loadingDollar || loadingRiskCountry;
 
   return (
     <>
@@ -336,7 +171,7 @@ const fetchDollarData = async () => {
                   </div>
                   <div className="text-right">
                     <div className="text-4xl font-bold text-gray-900 group-hover:text-green-600 transition-colors">
-                      {isLoading || !dollarData ? "..." : `$${formatNumber(dollarData.sell_price, 0)}`}
+                      {loadingDollar || !dollarData ? "..." : `$${formatNumber(dollarData.sell_price, 0)}`}
                     </div>
                     <div className="text-sm text-gray-500">venta</div>
                   </div>
@@ -346,11 +181,11 @@ const fetchDollarData = async () => {
                 <div className="text-sm text-gray-600 space-y-2 flex-grow">
                   <div className="flex justify-between">
                     <span>Compra:</span>
-                    <span className="font-medium">${isLoading || !dollarData ? "..." : formatNumber(dollarData.buy_price, 0)}</span>
+                    <span className="font-medium">${loadingDollar || !dollarData ? "..." : formatNumber(dollarData.buy_price!, 0)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Venta:</span>
-                    <span className="font-medium">${isLoading || !dollarData ? "..." : formatNumber(dollarData.sell_price, 0)}</span>
+                    <span className="font-medium">${loadingDollar || !dollarData ? "..." : formatNumber(dollarData.sell_price, 0)}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span>Variación:</span>
@@ -360,7 +195,7 @@ const fetchDollarData = async () => {
                       dollarData.sell_variation < 0 ? "text-green-600" :
                       "text-gray-600"
                     }`}>
-                      {isLoading || !dollarData ? "..." : (
+                      {loadingDollar || !dollarData ? "..." : (
                         <>
                           {getChangeIcon(dollarData.sell_variation || 0)}
                           {formatNumber(Math.abs(dollarData.sell_variation || 0), 1)}%
@@ -499,7 +334,7 @@ const fetchDollarData = async () => {
                   </div>
                   <div className="text-right">
                     <div className="text-4xl font-bold text-gray-900 group-hover:text-red-600 transition-colors">
-                      {isLoading || !riskCountryData ? "..." : formatRiskValue(riskCountryData.closing_value)}
+                      {loadingRiskCountry || !riskCountryData ? "..." : formatRiskValue(riskCountryData.closing_value)}
                     </div>
                     <div className="text-sm text-gray-500">puntos básicos</div>
                   </div>
@@ -510,7 +345,7 @@ const fetchDollarData = async () => {
                   <div className="flex justify-between items-center">
                     <span>Var. Diaria:</span>
                     <span className={`font-medium flex items-center ${getRiskChangeColor(riskCountryData?.change_percentage ?? null)}`}>
-                      {isLoading || !riskCountryData ? "..." : (
+                      {loadingRiskCountry || !riskCountryData ? "..." : (
                         riskCountryData.change_percentage !== null && riskCountryData.change_percentage !== undefined ? (
                           <>
                             {getChangeIcon(riskCountryData.change_percentage)}
@@ -523,7 +358,7 @@ const fetchDollarData = async () => {
                   <div className="flex justify-between items-center">
                     <span>Var. Mensual:</span>
                     <span className={`font-medium flex items-center ${getRiskChangeColor(monthlyVariation)}`}>
-                      {isLoading ? "..." : (
+                      {loadingRiskCountry ? "..." : (
                         monthlyVariation !== null ? (
                           <>
                             {getChangeIcon(monthlyVariation)}
@@ -536,7 +371,7 @@ const fetchDollarData = async () => {
                   <div className="flex justify-between items-center">
                     <span>Var. Interanual:</span>
                     <span className={`font-medium flex items-center ${getRiskChangeColor(yearlyVariation)}`}>
-                      {isLoading ? "..." : (
+                      {loadingRiskCountry ? "..." : (
                         yearlyVariation !== null ? (
                           <>
                             {getChangeIcon(yearlyVariation)}
@@ -569,7 +404,7 @@ const fetchDollarData = async () => {
           >
             <div className="inline-flex items-center gap-2 px-6 py-3 bg-green-50 text-green-700 rounded-full text-sm border border-green-200">
               <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
-              {isLoading || loadingEmae || loadingIPC
+              {loadingDollar || loadingRiskCountry || loadingEmae || loadingIPC
                 ? "Actualizando datos..." 
                 : "Datos actualizados en tiempo real"
               }
