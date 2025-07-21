@@ -15,6 +15,9 @@ const AppWrapper: React.FC<AppWrapperProps> = ({ children }) => {
   return (
     <ClerkProvider
       localization={esES}
+      fallbackRedirectUrl="/"
+      signInFallbackRedirectUrl="/"
+      signUpFallbackRedirectUrl="/"
       appearance={{
         baseTheme: undefined,
         variables: {

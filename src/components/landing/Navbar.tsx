@@ -136,12 +136,12 @@ export default function NavBar() {
     </DropdownMenu>
   ) : isMounted ? (
     <>
-      <SignInButton mode="modal">
+      <SignInButton mode="modal" fallbackRedirectUrl="/">
         <Button variant="ghost" size="sm" className="text-indec-blue hover:bg-indec-blue hover:text-white transition-colors">
           <LogIn className="h-4 w-4" />
         </Button>
       </SignInButton>
-      <SignUpButton mode="modal">
+      <SignUpButton mode="modal" fallbackRedirectUrl="/">
         <Button size="sm" className="bg-indec-blue text-white hover:bg-indec-blue-dark transition-colors">
           <User className="h-4 w-4" />
         </Button>
@@ -318,7 +318,7 @@ export default function NavBar() {
                           </>
                         ) : isMounted ? (
                           <div className="space-y-2 pt-2">
-                            <SignInButton mode="modal">
+                            <SignInButton mode="modal" fallbackRedirectUrl="/">
                               <Button 
                                 variant="outline" 
                                 className="w-full"
@@ -327,7 +327,7 @@ export default function NavBar() {
                                 Iniciar sesión
                               </Button>
                             </SignInButton>
-                            <SignUpButton mode="modal">
+                            <SignUpButton mode="modal" fallbackRedirectUrl="/">
                               <Button 
                                 className="w-full"
                                 onClick={handleMobileNavClick}
