@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, memo, useMemo, lazy, Suspense } from 'react';
-import { DollarSign, TrendingUp, BarChart3, Clock, RefreshCw, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { DollarSign, TrendingUp, BarChart3, Clock, RefreshCw, ArrowUpRight, ArrowDownRight, Calculator } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { DollarRateData } from '@/types/dollar';
 import { DollarType } from '@/types/dollar';
@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 // Lazy load heavy chart component
 const EnhancedDollarChart = lazy(() => import('@/components/EnhancedDollarChart'));
+const DollarConverter = lazy(() => import('@/components/DollarConverter'));
 
 // Actualizar la interfaz DollarRateData para incluir las variaciones
 interface ExtendedDollarRateData extends DollarRateData {
@@ -470,6 +471,28 @@ export default function ModernCotizacionesPage() {
               />
             ))}
           </div>
+        </div>
+
+        {/* Dollar Converter Section */}
+        <div className="mb-16">
+          <SectionHeader title="Conversor de Divisas" icon={Calculator} />
+          <Suspense fallback={
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-green-100">
+              <div className="animate-pulse space-y-6">
+                <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+                <div className="space-y-4">
+                  <div className="h-12 bg-gray-200 rounded"></div>
+                  <div className="h-12 bg-gray-200 rounded"></div>
+                  <div className="h-16 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            </div>
+          }>
+            <DollarConverter 
+              dollarRates={dollarRates} 
+              loading={loading}
+            />
+          </Suspense>
         </div>
 
         {/* Historical Analysis with lazy loaded chart */}
