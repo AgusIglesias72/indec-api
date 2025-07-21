@@ -124,3 +124,30 @@ export const createDollarPageSchema = (latestRates?: any) => ({
     ]
   }
 });
+
+export const createFAQSchema = (faqs: {question: string, answer: string}[]) => ({
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": faqs.map(faq => ({
+    "@type": "Question",
+    "name": faq.question,
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": faq.answer
+    }
+  }))
+});
+
+export const createTimeSeriesSchema = (indicatorName: string, data: any[], description: string) => ({
+  "@context": "https://schema.org",
+  "@type": "Dataset",
+  "name": `${indicatorName} - Serie Temporal`,
+  "description": description,
+  "variableMeasured": indicatorName,
+  "temporalCoverage": data.length > 0 ? `${data[0].date}/${data[data.length - 1].date}` : undefined,
+  "distribution": {
+    "@type": "DataDownload",
+    "encodingFormat": "application/json",
+    "contentUrl": "https://argenstats.com/api"
+  }
+});

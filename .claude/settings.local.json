@@ -20,7 +20,8 @@
       "Bash(cmd /c:*)",
       "Bash(npx tsc:*)",
       "Bash(grep:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(cp:*)"
     ],
     "deny": []
   }
