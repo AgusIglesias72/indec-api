@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo, useMemo, lazy, Suspense } from 'react';
 import { DollarSign, TrendingUp, BarChart3, Clock, RefreshCw, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { DollarRateData } from '@/types/dollar';
 import { DollarType } from '@/types/dollar';
 import { Skeleton } from '@/components/ui/skeleton';
-import EnhancedDollarChart from '@/components/EnhancedDollarChart';
+
+// Lazy load heavy chart component
+const EnhancedDollarChart = lazy(() => import('@/components/EnhancedDollarChart'));
 
 // Actualizar la interfaz DollarRateData para incluir las variaciones
 interface ExtendedDollarRateData extends DollarRateData {
@@ -15,8 +17,21 @@ interface ExtendedDollarRateData extends DollarRateData {
   minutes_ago?: number;
 }
 
-// Componente Hero Section
-function HeroSection({ title, subtitle }: { title: string; subtitle: string }) {
+// Shared utility functions for variation styling (eliminates code duplication)
+const getVariationStyles = (variation: number) => {
+  const isPositive = variation > 0;
+  const isNegative = variation < 0;
+  
+  return {
+    isPositive,
+    isNegative,
+    bgClass: isPositive ? 'bg-green-100 text-green-700' : isNegative ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700',
+    icon: isPositive ? <ArrowUpRight className="h-3 w-3" /> : isNegative ? <ArrowDownRight className="h-3 w-3" /> : null
+  };
+};
+
+// Memoized Hero Section to prevent unnecessary re-renders
+const HeroSection = memo(function HeroSection({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <div className="relative bg-gradient-to-br from-green-50 to-green-100 py-16 mb-8">
       <div className="container mx-auto px-4 text-center relative z-10">
@@ -36,9 +51,9 @@ function HeroSection({ title, subtitle }: { title: string; subtitle: string }) {
       </div>
     </div>
   );
-}
+});
 
-// Función para formatear tiempo relativo
+// Memoized utility function for time formatting
 function formatTimeAgo(minutes: number): string {
   if (minutes < 1) return 'Hace menos de 1 minuto';
   if (minutes === 1) return 'Hace 1 minuto';
@@ -65,9 +80,9 @@ interface ModernDollarRateCardProps {
   error: string | null;
 }
 
-function ModernDollarRateCard({ dollarType, title, index, data, loading, error }: ModernDollarRateCardProps) {
-  // Formatear valores monetarios con verificación de valores nulos
-  const formatCurrency = (value: number | undefined | null) => {
+const ModernDollarRateCard = memo(function ModernDollarRateCard({ dollarType, title, index, data, loading, error }: ModernDollarRateCardProps) {
+  // Memoized currency formatter
+  const formatCurrency = useMemo(() => (value: number | undefined | null) => {
     if (value === undefined || value === null) {
       return "N/A";
     }
@@ -76,10 +91,10 @@ function ModernDollarRateCard({ dollarType, title, index, data, loading, error }
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     });
-  };
+  }, []);
 
-  // Calcular variación real usando el promedio de buy_variation y sell_variation
-  const calculateVariation = (data: ExtendedDollarRateData | null): number => {
+  // Memoized variation calculation
+  const variation = useMemo(() => {
     if (!data) return 0;
 
     const buyVar = data.buy_variation ?? 0;
@@ -96,11 +111,10 @@ function ModernDollarRateCard({ dollarType, title, index, data, loading, error }
 
     // Si ninguna está disponible, retornamos 0
     return 0;
-  };
+  }, [data?.buy_variation, data?.sell_variation]);
 
-  const variation = calculateVariation(data);
-  const isPositive = variation > 0;
-  const isNegative = variation < 0;
+  // Use shared variation styles
+  const variationStyles = useMemo(() => getVariationStyles(variation), [variation]);
 
   // Renderizar skeleton mientras carga
   if (loading) {
@@ -178,12 +192,8 @@ function ModernDollarRateCard({ dollarType, title, index, data, loading, error }
           </div>
 
           {/* Change indicator */}
-          <div className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${isPositive ? 'bg-green-100 text-green-700' :
-              isNegative ? 'bg-red-100 text-red-700' :
-                'bg-gray-100 text-gray-700'
-            }`}>
-            {isPositive && <ArrowUpRight className="h-3 w-3" />}
-            {isNegative && <ArrowDownRight className="h-3 w-3" />}
+          <div className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${variationStyles.bgClass}`}>
+            {variationStyles.icon}
             {variation > 0 ? '+' : ''}{variation.toFixed(2)}%
           </div>
         </div>
@@ -220,10 +230,10 @@ function ModernDollarRateCard({ dollarType, title, index, data, loading, error }
       </div>
     </motion.div>
   );
-}
+});
 
-// Componente para los headers de sección
-function SectionHeader({ title, icon: Icon }: { title: string; icon: any }) {
+// Memoized SectionHeader component
+const SectionHeader = memo(function SectionHeader({ title, icon: Icon }: { title: string; icon: any }) {
   return (
     <div className="flex items-center gap-3 mb-6">
       <div className="h-8 w-8 bg-green-100 rounded-lg flex items-center justify-center">
@@ -232,10 +242,10 @@ function SectionHeader({ title, icon: Icon }: { title: string; icon: any }) {
       <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
     </div>
   );
-}
+});
 
-// Componente de información sobre tipos de dólar
-function InfoSection() {
+// Memoized InfoSection component
+const InfoSection = memo(function InfoSection() {
   const dollarInfo = [
     {
       category: "Dólares Financieros",
@@ -313,10 +323,10 @@ function InfoSection() {
       </div>
     </div>
   );
-}
+});
 
-// Componente de información de actualización
-function UpdateInfo() {
+// Memoized UpdateInfo component
+const UpdateInfo = memo(function UpdateInfo() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -340,10 +350,10 @@ function UpdateInfo() {
       </div>
     </motion.div>
   );
-}
+});
 
-// Configuración de tipos de dólar
-const dollarTypes = {
+// Static dollar types configuration
+const dollarTypesConfig = {
   financial: [
     { type: 'MEP' as DollarType, name: 'MEP (Bolsa)' },
     { type: 'CCL' as DollarType, name: 'Contado con Liqui' },
@@ -357,11 +367,14 @@ const dollarTypes = {
   ]
 };
 
-// Componente principal
+// Main optimized component with performance improvements
 export default function ModernCotizacionesPage() {
   const [dollarRates, setDollarRates] = useState<Record<DollarType, ExtendedDollarRateData | null>>({} as any);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Memoized dollar types to prevent object recreation
+  const dollarTypes = useMemo(() => dollarTypesConfig, []);
 
   // Cargar todos los datos de una vez
   const fetchAllRates = async () => {
@@ -459,15 +472,30 @@ export default function ModernCotizacionesPage() {
           </div>
         </div>
 
-        {/* Historical Analysis with your existing chart */}
+        {/* Historical Analysis with lazy loaded chart */}
         <div className="mb-16">
           <SectionHeader title="Análisis histórico" icon={TrendingUp} />
-          <EnhancedDollarChart
-            title="Evolución de cotizaciones"
-            description="Selecciona el rango de tiempo y los tipos de dólar para visualizar"
-            height={450}
-            darkMode={false}
-          />
+          <Suspense fallback={
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-green-100">
+              <div className="animate-pulse space-y-4">
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-64 bg-gray-200 rounded"></div>
+                <div className="grid grid-cols-4 gap-4">
+                  <div className="h-8 bg-gray-200 rounded"></div>
+                  <div className="h-8 bg-gray-200 rounded"></div>
+                  <div className="h-8 bg-gray-200 rounded"></div>
+                  <div className="h-8 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            </div>
+          }>
+            <EnhancedDollarChart
+              title="Evolución de cotizaciones"
+              description="Selecciona el rango de tiempo y los tipos de dólar para visualizar"
+              height={450}
+              darkMode={false}
+            />
+          </Suspense>
         </div>
 
         {/* Information Section */}

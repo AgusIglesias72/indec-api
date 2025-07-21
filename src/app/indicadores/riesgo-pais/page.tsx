@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Globe, TrendingUp, TrendingDown, BarChart3, Clock, RefreshCw, ArrowUpRight, ArrowDownRight, Info, Minus } from 'lucide-react';
+import React, { useState, useEffect, memo, useMemo, lazy, Suspense } from 'react';
+import { Globe, TrendingUp, TrendingDown, BarChart3, Clock, RefreshCw, ArrowUpRight, ArrowDownRight, Info, Minus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AreaChart, Area, ResponsiveContainer } from 'recharts';
-import EnhancedRiskChart from '@/components/EnhancedRiskChart';
+
+// Lazy load heavy chart component
+const EnhancedRiskChart = lazy(() => import('@/components/EnhancedRiskChart'));
 import {
   getRiskCountryData,
   getLatestRiskCountryRate,
@@ -13,6 +14,30 @@ import {
   formatPercentageChange
 } from '@/services/api-risk-country';
 import { RiskCountryDataPoint, RiskCountryStats } from '@/types/risk-country';
+
+// Shared utility functions for variation styling (eliminates code duplication)
+const getVariationStyles = (variation: number | null) => {
+  if (!variation) return {
+    color: 'text-gray-700',
+    icon: <Minus className="h-4 w-4" />,
+    bg: 'bg-gray-100 text-gray-700',
+    gradient: 'from-gray-600/10 to-gray-400/10 border-gray-100'
+  };
+  
+  if (variation > 0) return {
+    color: 'text-red-700',
+    icon: <ArrowUpRight className="h-4 w-4" />,
+    bg: 'bg-red-100 text-red-700',
+    gradient: 'from-red-600/10 to-red-400/10 border-red-100'
+  };
+  
+  return {
+    color: 'text-green-700',
+    icon: <ArrowDownRight className="h-4 w-4" />,
+    bg: 'bg-green-100 text-green-700',
+    gradient: 'from-green-600/10 to-green-400/10 border-green-100'
+  };
+};
 
 // Función para calcular tiempo relativo
 function getTimeAgo(dateString: string): string {
@@ -36,8 +61,8 @@ function getTimeAgo(dateString: string): string {
   });
 }
 
-// Componente Hero Section
-function HeroSection({ title, subtitle }: { title: string; subtitle: string }) {
+// Memoized Hero Section to prevent unnecessary re-renders
+const HeroSection = memo(function HeroSection({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <div className="relative bg-gradient-to-br from-red-50 to-orange-100 py-16 mb-8">
       <div className="container mx-auto px-4 text-center relative z-10">
@@ -57,7 +82,7 @@ function HeroSection({ title, subtitle }: { title: string; subtitle: string }) {
       </div>
     </div>
   );
-}
+});
 
 // Componente para la card principal del riesgo país (simplificada y responsive)
 function CurrentRiskCard() {
@@ -96,26 +121,8 @@ function CurrentRiskCard() {
     return () => clearInterval(interval);
   }, []);
 
-  const getVariationColor = (variation: number | null) => {
-    if (!variation) return 'text-gray-700';
-    if (variation > 0) return 'text-red-700';
-    if (variation < 0) return 'text-green-700';
-    return 'text-gray-700';
-  };
-
-  const getVariationIcon = (variation: number | null) => {
-    if (!variation) return <Minus className="h-4 w-4" />;
-    if (variation > 0) return <ArrowUpRight className="h-4 w-4" />;
-    if (variation < 0) return <ArrowDownRight className="h-4 w-4" />;
-    return <Minus className="h-4 w-4" />;
-  };
-
-  const getVariationBg = (variation: number | null) => {
-    if (!variation) return 'bg-gray-100 text-gray-700';
-    if (variation > 0) return 'bg-red-100 text-red-700';
-    if (variation < 0) return 'bg-green-100 text-green-700';
-    return 'bg-gray-100 text-gray-700';
-  };
+  // Use shared variation styles
+  const variationStyles = useMemo(() => getVariationStyles(riskData?.change_percentage || null), [riskData?.change_percentage]);
 
   if (loading) {
     return (
@@ -204,8 +211,8 @@ function CurrentRiskCard() {
 
             {riskData.change_percentage !== null && (
               <div className="flex items-center justify-center md:justify-start gap-2 flex-wrap">
-                <div className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg font-medium ${getVariationBg(riskData.change_percentage)}`}>
-                  {getVariationIcon(riskData.change_percentage)}
+                <div className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg font-medium ${variationStyles.bg}`}>
+                  {variationStyles.icon}
                   {formatPercentageChange(riskData.change_percentage)}
                 </div>
                 <span className="text-gray-600">vs ayer</span>
@@ -227,8 +234,8 @@ function CurrentRiskCard() {
   );
 }
 
-// Componente para las variaciones por período (responsive)
-function PeriodVariations() {
+// Optimized PeriodVariations with memoization and shared utilities
+const PeriodVariations = memo(function PeriodVariations() {
   const [variations, setVariations] = useState<{
     thirtyDays: { value: number | null; date: string | null };
     sixMonths: { value: number | null; date: string | null };
@@ -344,32 +351,13 @@ function PeriodVariations() {
     fetchVariations();
   }, []);
 
-  const getVariationColor = (variation: number | null) => {
-    if (!variation) return 'text-gray-700';
-    if (variation > 0) return 'text-red-700';
-    if (variation < 0) return 'text-green-700';
-    return 'text-gray-700';
-  };
-
-  const getVariationIcon = (variation: number | null) => {
-    if (!variation) return <Minus className="h-4 w-4" />;
-    if (variation > 0) return <ArrowUpRight className="h-4 w-4" />;
-    if (variation < 0) return <ArrowDownRight className="h-4 w-4" />;
-    return <Minus className="h-4 w-4" />;
-  };
-
-  const getVariationBg = (variation: number | null) => {
-    if (!variation) return 'from-gray-600/10 to-gray-400/10 border-gray-100';
-    if (variation > 0) return 'from-red-600/10 to-red-400/10 border-red-100';
-    if (variation < 0) return 'from-green-600/10 to-green-400/10 border-green-100';
-    return 'from-gray-600/10 to-gray-400/10 border-gray-100';
-  };
-
-  const periods = [
+  // Memoized period data to prevent unnecessary re-calculations
+  const periodsData = useMemo(() => [
     { key: 'thirtyDays', label: '30 días', data: variations.thirtyDays },
     { key: 'sixMonths', label: '6 meses', data: variations.sixMonths },
     { key: 'oneYear', label: '1 año', data: variations.oneYear }
-  ];
+  ], [variations]);
+
 
   if (loading) {
     return (
@@ -407,46 +395,49 @@ function PeriodVariations() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-        {periods.map((period, index) => (
-          <motion.div
-            key={period.key}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-            className="group relative"
-          >
-            <div className={`absolute -inset-1 bg-gradient-to-r ${getVariationBg(period.data.value)} rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-300`}></div>
-            <div className={`relative bg-white rounded-2xl p-4 md:p-6 shadow-md border ${getVariationBg(period.data.value).includes('border-') ? getVariationBg(period.data.value).split('border-')[1] : 'border-gray-100'} text-center md:text-left`}>
-              <div className="flex items-center justify-center md:justify-between mb-4">
-                <p className="text-sm font-medium text-gray-600">{period.label}</p>
-                <div className="ml-2 md:ml-0">
-                  {getVariationIcon(period.data.value)}
+        {periodsData.map((period, index) => {
+          const styles = getVariationStyles(period.data.value);
+          return (
+            <motion.div
+              key={period.key}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              className="group relative"
+            >
+              <div className={`absolute -inset-1 bg-gradient-to-r ${styles.gradient} rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-300`}></div>
+              <div className={`relative bg-white rounded-2xl p-4 md:p-6 shadow-md border ${styles.gradient.includes('border-') ? styles.gradient.split('border-')[1] : 'border-gray-100'} text-center md:text-left`}>
+                <div className="flex items-center justify-center md:justify-between mb-4">
+                  <p className="text-sm font-medium text-gray-600">{period.label}</p>
+                  <div className="ml-2 md:ml-0">
+                    {styles.icon}
+                  </div>
                 </div>
-              </div>
 
-              <p className={`text-2xl md:text-3xl font-bold mb-2 ${getVariationColor(period.data.value)}`}>
-                {period.data.value !== null ? formatPercentageChange(period.data.value) : 'N/A'}
-              </p>
-
-              {period.data.date && (
-                <p className="text-xs text-gray-500">
-                  desde {new Date(period.data.date).toLocaleDateString('es-AR', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric'
-                  })}
+                <p className={`text-2xl md:text-3xl font-bold mb-2 ${styles.color}`}>
+                  {period.data.value !== null ? formatPercentageChange(period.data.value) : 'N/A'}
                 </p>
-              )}
-            </div>
-          </motion.div>
-        ))}
+
+                {period.data.date && (
+                  <p className="text-xs text-gray-500">
+                    desde {new Date(period.data.date).toLocaleDateString('es-AR', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric'
+                    })}
+                  </p>
+                )}
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
     </div>
   );
-}
+});
 
-// Componente para valores actuales de los últimos 3 meses (responsive)
-function ValoresActuales() {
+// Optimized ValoresActuales with memoization
+const ValoresActuales = memo(function ValoresActuales() {
   const [stats, setStats] = useState<RiskCountryStats | null>(null);
   const [minData, setMinData] = useState<{ value: number; date: string } | null>(null);
   const [maxData, setMaxData] = useState<{ value: number; date: string } | null>(null);
@@ -644,10 +635,10 @@ function ValoresActuales() {
       </div>
     </div>
   );
-}
+});
 
-// Componente para los headers de sección
-function SectionHeader({ title, icon: Icon }: { title: string; icon: any }) {
+// Memoized SectionHeader component
+const SectionHeader = memo(function SectionHeader({ title, icon: Icon }: { title: string; icon: any }) {
   return (
     <div className="flex items-center justify-center md:justify-start gap-3 mb-6">
       <div className="h-8 w-8 bg-red-100 rounded-lg flex items-center justify-center">
@@ -656,10 +647,10 @@ function SectionHeader({ title, icon: Icon }: { title: string; icon: any }) {
       <h2 className="text-xl md:text-2xl font-bold text-gray-900">{title}</h2>
     </div>
   );
-}
+});
 
-// Componente de información sobre el riesgo país
-function RiskCountryInfo() {
+// Memoized RiskCountryInfo component
+const RiskCountryInfo = memo(function RiskCountryInfo() {
   const riskInfo = [
     {
       category: "¿Qué es el Riesgo País?",
@@ -733,10 +724,10 @@ function RiskCountryInfo() {
       </div>
     </div>
   );
-}
+});
 
-// Componente de información de actualización
-function UpdateInfo() {
+// Memoized UpdateInfo component
+const UpdateInfo = memo(function UpdateInfo() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -770,9 +761,9 @@ function UpdateInfo() {
       </div>
     </motion.div>
   );
-}
+});
 
-// Componente principal
+// Main optimized component with performance improvements
 export default function RiesgoPaisPage() {
   return (
     <div className="relative min-h-screen">
@@ -809,15 +800,32 @@ export default function RiesgoPaisPage() {
         {/* Last 3 Months Values Section */}
         <ValoresActuales />
 
-        {/* Historical Analysis with enhanced limits */}
-        <EnhancedRiskChart
-          title="Análisis histórico"
-          description="Evolución del riesgo país con selector de períodos extendidos"
-          height={450}
-          darkMode={false}
-          enableExtendedPeriods={true}
-          maxDataPoints={5000}
-        />
+        {/* Historical Analysis with enhanced limits - Lazy loaded */}
+        <Suspense fallback={
+          <div className="mb-16">
+            <SectionHeader title="Análisis histórico" icon={BarChart3} />
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-red-100">
+              <div className="animate-pulse space-y-4">
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-64 bg-gray-200 rounded"></div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="h-8 bg-gray-200 rounded"></div>
+                  <div className="h-8 bg-gray-200 rounded"></div>
+                  <div className="h-8 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        }>
+          <EnhancedRiskChart
+            title="Análisis histórico"
+            description="Evolución del riesgo país con selector de períodos extendidos"
+            height={450}
+            darkMode={false}
+            enableExtendedPeriods={true}
+            maxDataPoints={5000}
+          />
+        </Suspense>
 
         {/* Information Sections */}
         <RiskCountryInfo />
