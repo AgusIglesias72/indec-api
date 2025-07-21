@@ -110,4 +110,4 @@ export async function GET(request: NextRequest) {
 }
 
 // Revalidación programada cada hora
-export const revalidate = 3600; // 1 hora
+export const revalidate = 60; // 1 hora

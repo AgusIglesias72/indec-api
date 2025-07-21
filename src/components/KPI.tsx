@@ -51,6 +51,12 @@ const HeroWithMetrics = () => {
   const [loadingRiskCountry, setLoadingRiskCountry] = useState(true);
   const [monthlyVariation, setMonthlyVariation] = useState<number | null>(null);
   const [yearlyVariation, setYearlyVariation] = useState<number | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Función para obtener datos del dólar oficial
 // Función para obtener datos del dólar oficial
@@ -182,6 +188,8 @@ const fetchDollarData = async () => {
 
   // Cargar datos al montar el componente
   useEffect(() => {
+    if (!isMounted) return;
+    
     const initializeData = async () => {
       try {
         await Promise.all([
@@ -202,9 +210,10 @@ const fetchDollarData = async () => {
     }, 5 * 60 * 1000);
     
     return () => clearInterval(interval);
-  }, []);
+  }, [isMounted]);
 
   const formatNumber = (num: number, decimals: number = 2) => {
+    if (!isMounted) return num.toFixed(decimals);
     return new Intl.NumberFormat('es-AR', {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals
@@ -212,6 +221,7 @@ const fetchDollarData = async () => {
   };
 
   const formatRiskValue = (value: number) => {
+    if (!isMounted) return Math.round(value).toString();
     return new Intl.NumberFormat('es-AR', {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
@@ -241,6 +251,9 @@ const fetchDollarData = async () => {
     if (value < 0) return "text-green-600";
     return "text-gray-600";
   };
+
+  // Show consistent loading state during SSR
+  const isLoading = !isMounted || loadingDollar || loadingRiskCountry;
 
   return (
     <>
@@ -323,7 +336,7 @@ const fetchDollarData = async () => {
                   </div>
                   <div className="text-right">
                     <div className="text-4xl font-bold text-gray-900 group-hover:text-green-600 transition-colors">
-                      {loadingDollar ? "..." : `$${formatNumber(dollarData?.sell_price || 0, 0)}`}
+                      {isLoading || !dollarData ? "..." : `$${formatNumber(dollarData.sell_price, 0)}`}
                     </div>
                     <div className="text-sm text-gray-500">venta</div>
                   </div>
@@ -333,11 +346,11 @@ const fetchDollarData = async () => {
                 <div className="text-sm text-gray-600 space-y-2 flex-grow">
                   <div className="flex justify-between">
                     <span>Compra:</span>
-                    <span className="font-medium">${loadingDollar ? "..." : formatNumber(dollarData?.buy_price || 0, 0)}</span>
+                    <span className="font-medium">${isLoading || !dollarData ? "..." : formatNumber(dollarData.buy_price, 0)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Venta:</span>
-                    <span className="font-medium">${loadingDollar ? "..." : formatNumber(dollarData?.sell_price || 0, 0)}</span>
+                    <span className="font-medium">${isLoading || !dollarData ? "..." : formatNumber(dollarData.sell_price, 0)}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span>Variación:</span>
@@ -347,10 +360,10 @@ const fetchDollarData = async () => {
                       dollarData.sell_variation < 0 ? "text-green-600" :
                       "text-gray-600"
                     }`}>
-                      {loadingDollar ? "..." : (
+                      {isLoading || !dollarData ? "..." : (
                         <>
-                          {getChangeIcon(dollarData?.sell_variation || 0)}
-                          {formatNumber(Math.abs(dollarData?.sell_variation || 0), 1)}%
+                          {getChangeIcon(dollarData.sell_variation || 0)}
+                          {formatNumber(Math.abs(dollarData.sell_variation || 0), 1)}%
                         </>
                       )}
                     </span>
@@ -486,7 +499,7 @@ const fetchDollarData = async () => {
                   </div>
                   <div className="text-right">
                     <div className="text-4xl font-bold text-gray-900 group-hover:text-red-600 transition-colors">
-                      {loadingRiskCountry ? "..." : formatRiskValue(riskCountryData?.closing_value || 0)}
+                      {isLoading || !riskCountryData ? "..." : formatRiskValue(riskCountryData.closing_value)}
                     </div>
                     <div className="text-sm text-gray-500">puntos básicos</div>
                   </div>
@@ -497,8 +510,8 @@ const fetchDollarData = async () => {
                   <div className="flex justify-between items-center">
                     <span>Var. Diaria:</span>
                     <span className={`font-medium flex items-center ${getRiskChangeColor(riskCountryData?.change_percentage ?? null)}`}>
-                      {loadingRiskCountry ? "..." : (
-                        riskCountryData?.change_percentage !== null && riskCountryData?.change_percentage !== undefined ? (
+                      {isLoading || !riskCountryData ? "..." : (
+                        riskCountryData.change_percentage !== null && riskCountryData.change_percentage !== undefined ? (
                           <>
                             {getChangeIcon(riskCountryData.change_percentage)}
                             {formatNumber(riskCountryData.change_percentage, 2)}%
@@ -510,7 +523,7 @@ const fetchDollarData = async () => {
                   <div className="flex justify-between items-center">
                     <span>Var. Mensual:</span>
                     <span className={`font-medium flex items-center ${getRiskChangeColor(monthlyVariation)}`}>
-                      {loadingRiskCountry ? "..." : (
+                      {isLoading ? "..." : (
                         monthlyVariation !== null ? (
                           <>
                             {getChangeIcon(monthlyVariation)}
@@ -523,7 +536,7 @@ const fetchDollarData = async () => {
                   <div className="flex justify-between items-center">
                     <span>Var. Interanual:</span>
                     <span className={`font-medium flex items-center ${getRiskChangeColor(yearlyVariation)}`}>
-                      {loadingRiskCountry ? "..." : (
+                      {isLoading ? "..." : (
                         yearlyVariation !== null ? (
                           <>
                             {getChangeIcon(yearlyVariation)}
@@ -556,7 +569,7 @@ const fetchDollarData = async () => {
           >
             <div className="inline-flex items-center gap-2 px-6 py-3 bg-green-50 text-green-700 rounded-full text-sm border border-green-200">
               <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
-              {loadingDollar || loadingEmae || loadingIPC || loadingRiskCountry 
+              {isLoading || loadingEmae || loadingIPC
                 ? "Actualizando datos..." 
                 : "Datos actualizados en tiempo real"
               }

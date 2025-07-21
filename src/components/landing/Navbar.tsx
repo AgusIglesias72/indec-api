@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Menu, DollarSign, TrendingUp, BarChart3, Globe, Calendar, FileText, Users, Mail, User, LogOut, Key, Settings } from "lucide-react"
+import { Menu, DollarSign, TrendingUp, BarChart3, Globe, Calendar, FileText, Users, Mail, User, LogOut, Key, Settings, LogIn } from "lucide-react"
 import { useUser, useClerk, SignInButton, SignUpButton } from "@clerk/nextjs"
 
 import { Button } from "@/components/ui/button"
@@ -83,37 +83,71 @@ export default function NavBar() {
     setIsMobileMenuOpen(false)
   }
   
-  // No renderizar hasta que el componente esté montado en el cliente
-  if (!isMounted) {
-    return (
-      <header className="sticky top-0 z-40 w-full bg-white border-b border-white">
-        <div className="mx-auto h-16 px-4 xl:px-12 grid grid-cols-2 md:grid-cols-3 items-center">
-          <div className="flex items-center justify-start">
-            <Link href="/" className="flex items-center gap-2">
-              <Logo />
-            </Link>
+  // Render consistent structure for SSR
+  const authButtons = isMounted && isSignedIn ? (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={user?.imageUrl} alt={user?.fullName || ""} />
+            <AvatarFallback>
+              {user?.firstName?.charAt(0) || user?.emailAddresses?.[0]?.emailAddress?.charAt(0)?.toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-56" align="end" forceMount>
+        <DropdownMenuLabel className="font-normal">
+          <div className="flex flex-col space-y-1">
+            <p className="text-sm font-medium leading-none">{user?.fullName}</p>
+            <p className="text-xs leading-none text-muted-foreground">
+              {user?.emailAddresses?.[0]?.emailAddress}
+            </p>
           </div>
-          <div className="hidden md:flex justify-center font-clear-sans font-extrabold">
-            <MainNavigation />
-          </div>
-          <div className="flex items-center justify-end gap-2">
-            <div className="hidden md:flex md:items-center md:gap-2">
-              <Button 
-                asChild
-                variant="outline" 
-                size="sm"
-                className="font-medium border-indec-blue text-indec-blue hover:bg-indec-blue hover:text-white transition-colors"
-              >
-                <Link href="/contacto" className="flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-    )
-  }
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href="/profile" className="cursor-pointer">
+            <User className="mr-2 h-4 w-4" />
+            <span>Mi Perfil</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/profile/api-keys" className="cursor-pointer">
+            <Key className="mr-2 h-4 w-4" />
+            <span>API Keys</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/profile/settings" className="cursor-pointer">
+            <Settings className="mr-2 h-4 w-4" />
+            <span>Configuración</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="cursor-pointer text-red-600 focus:text-red-600"
+          onClick={() => signOut()}
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Cerrar sesión</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  ) : isMounted ? (
+    <>
+      <SignInButton mode="modal">
+        <Button variant="ghost" size="sm" className="text-indec-blue hover:bg-indec-blue hover:text-white transition-colors">
+          <LogIn className="h-4 w-4" />
+        </Button>
+      </SignInButton>
+      <SignUpButton mode="modal">
+        <Button size="sm" className="bg-indec-blue text-white hover:bg-indec-blue-dark transition-colors">
+          <User className="h-4 w-4" />
+        </Button>
+      </SignUpButton>
+    </>
+  ) : null;
   
   return (
     <header className={cn(
@@ -142,80 +176,17 @@ export default function NavBar() {
           <div className="hidden md:flex md:items-center md:gap-2">
             <Button 
               asChild
-              variant="default" 
+              variant="ghost" 
               size="sm"
-              className="font-medium text-indec-blue hover:bg-indec-blue hover:text-white transition-colors border-none"
+              className="text-indec-blue hover:bg-indec-blue hover:text-white transition-colors"
             >
-              <Link href="/contacto" className="flex items-center gap-2">
+              <Link href="/contacto" className="flex items-center gap-1">
                 <Mail className="h-4 w-4" />
               </Link>
             </Button>
             
             {/* Auth section */}
-            {isSignedIn ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={user.imageUrl} alt={user.fullName || ""} />
-                      <AvatarFallback>
-                        {user.firstName?.charAt(0) || user.emailAddresses[0].emailAddress.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user.fullName}</p>
-                      <p className="text-xs leading-none text-muted-foreground">
-                        {user.emailAddresses[0].emailAddress}
-                      </p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/profile" className="cursor-pointer">
-                      <User className="mr-2 h-4 w-4" />
-                      <span>Mi Perfil</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/profile/api-keys" className="cursor-pointer">
-                      <Key className="mr-2 h-4 w-4" />
-                      <span>API Keys</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/profile/settings" className="cursor-pointer">
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Configuración</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="cursor-pointer text-red-600 focus:text-red-600"
-                    onClick={() => signOut()}
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Cerrar sesión</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <>
-                <SignInButton mode="modal">
-                  <Button variant="ghost" size="sm">
-                    Iniciar sesión
-                  </Button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <Button size="sm">
-                    Registrarse
-                  </Button>
-                </SignUpButton>
-              </>
-            )}
+            {authButtons}
           </div>
           
           {/* Mobile menu trigger */}
@@ -315,7 +286,7 @@ export default function NavBar() {
                       
                       {/* Enlaces adicionales y auth */}
                       <div className="space-y-1">
-                        {isSignedIn ? (
+                        {isMounted && isSignedIn ? (
                           <>
                             <Link 
                               href="/profile"
@@ -345,7 +316,7 @@ export default function NavBar() {
                               </div>
                             </button>
                           </>
-                        ) : (
+                        ) : isMounted ? (
                           <div className="space-y-2 pt-2">
                             <SignInButton mode="modal">
                               <Button variant="outline" className="w-full">
@@ -358,7 +329,7 @@ export default function NavBar() {
                               </Button>
                             </SignUpButton>
                           </div>
-                        )}
+                        ) : null}
                         
                         <div className="pt-2 space-y-1">
                           <Link 

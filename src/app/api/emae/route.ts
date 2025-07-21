@@ -204,4 +204,4 @@ function respondWithCSV(data: Record<string, any>[], filename: string) {
 }
 
 // Revalidación programada cada hora
-export const revalidate = 3600; // 1 hora
+export const revalidate = 60; // 1 hora
