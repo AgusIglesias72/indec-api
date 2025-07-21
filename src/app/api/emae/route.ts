@@ -4,6 +4,8 @@ import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/supabase';
 import { EmaeResponse } from '@/types';
 
+export const dynamic = 'force-dynamic';
+
 // Inicializar cliente Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY as string;
@@ -205,4 +207,3 @@ function respondWithCSV(data: Record<string, any>[], filename: string) {
 
 // Revalidación programada cada 5 minutos para datos más frescos
 export const revalidate = 300; // 5 minutos
-export const dynamic = 'force-dynamic';

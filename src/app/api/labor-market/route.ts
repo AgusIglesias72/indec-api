@@ -4,6 +4,8 @@ import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/supabase';
 import { withRateLimit } from '@/lib/rate-limit';
 
+export const dynamic = 'force-dynamic';
+
 interface LaborMarketRecord {
   id?: string;
   date?: string;
