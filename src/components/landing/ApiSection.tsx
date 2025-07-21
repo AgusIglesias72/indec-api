@@ -52,20 +52,19 @@ fetch('https://argenstats.com/api/emae?start_date=2023-01-01&include_variations=
     color: 'text-purple-400',
     endpoint: '/api/ipc',
     description: 'Acceder a datos de inflación y variaciones de precios',
-    code: `// Obtener datos de inflación mensual e interanual
-fetch('https://argenstats.com/api/ipc?period=monthly&limit=12')
+    code: `// Obtener datos de inflación mensual para el IPC General
+fetch('https://argenstats.com/api/ipc?type=historical&category=GENERAL&limit=12')
   .then(response => response.json())
   .then(data => {
     const inflation = data.data;
     
-    // Calcular inflación acumulada
-    const accumulated = inflation.reduce((acc, month) => {
-      return acc * (1 + month.monthly_change / 100);
-    }, 1) - 1;
-    
-    console.log('Inflación acumulada:', accumulated * 100, '%');
+    // Mostrar último valor e índice
+    const latest = inflation[0];
+    console.log('IPC actual:', latest.index_value);
+    console.log('Variación mensual:', latest.monthly_pct_change, '%');
+    console.log('Variación interanual:', latest.yearly_pct_change, '%');
   });`,
-    endpoints: ['GET /api/ipc', 'GET /api/ipc/categories', 'GET /api/ipc/latest']
+    endpoints: ['GET /api/ipc?type=historical', 'GET /api/ipc?type=latest', 'GET /api/ipc?type=metadata']
   },
   {
     id: 'dollar',
@@ -76,17 +75,17 @@ fetch('https://argenstats.com/api/ipc?period=monthly&limit=12')
     endpoint: '/api/dollar',
     description: 'Cotizaciones actualizadas del dólar en sus diferentes tipos',
     code: `// Obtener cotizaciones del dólar oficial y blue
-fetch('https://argenstats.com/api/dollar/latest')
+fetch('https://argenstats.com/api/dollar?type=latest')
   .then(response => response.json())
   .then(data => {
-    const official = data.data.find(d => d.type === 'OFICIAL');
-    const blue = data.data.find(d => d.type === 'BLUE');
+    const official = data.data.find(d => d.dollar_type === 'OFICIAL');
+    const blue = data.data.find(d => d.dollar_type === 'BLUE');
     
     console.log('Dólar Oficial:', official.sell_price);
     console.log('Dólar Blue:', blue.sell_price);
     console.log('Brecha:', ((blue.sell_price / official.sell_price - 1) * 100).toFixed(1) + '%');
   });`,
-    endpoints: ['GET /api/dollar/latest', 'GET /api/dollar/history', 'GET /api/dollar/types']
+    endpoints: ['GET /api/dollar?type=latest', 'GET /api/dollar?type=historical', 'GET /api/dollar?type=metadata']
   },
   {
     id: 'risk',
@@ -96,23 +95,47 @@ fetch('https://argenstats.com/api/dollar/latest')
     color: 'text-red-400',
     endpoint: '/api/riesgo-pais',
     description: 'Seguimiento del riesgo soberano argentino',
-    code: `// Obtener riesgo país con variaciones históricas
-fetch('https://argenstats.com/api/riesgo-pais?include_variations=true&limit=30')
+    code: `// Obtener riesgo país de los últimos 30 días
+fetch('https://argenstats.com/api/riesgo-pais?type=last_30_days&limit=30')
   .then(response => response.json())
   .then(data => {
     const latest = data.data[0];
     
     console.log('Riesgo País actual:', latest.closing_value, 'puntos básicos');
-    console.log('Variación diaria:', latest.daily_change, '%');
+    console.log('Variación mensual:', latest.monthly_change, '%');
+    console.log('Variación anual:', latest.yearly_change, '%');
     
-    // Analizar tendencia
-    const trend = data.data.slice(0, 5).every((day, i, arr) => 
-      i === 0 || day.closing_value < arr[i-1].closing_value
-    ) ? 'bajista' : 'alcista';
-    
-    console.log('Tendencia reciente:', trend);
+    // Estadísticas de volatilidad
+    console.log('Promedio 30 días:', data.stats.average);
+    console.log('Volatilidad:', data.stats.std_deviation);
   });`,
-    endpoints: ['GET /api/riesgo-pais', 'GET /api/riesgo-pais/latest', 'GET /api/riesgo-pais/history']
+    endpoints: ['GET /api/riesgo-pais?type=last_30_days', 'GET /api/riesgo-pais?type=latest', 'GET /api/riesgo-pais?type=custom']
+  },
+  {
+    id: 'labor',
+    title: 'Mercado Laboral',
+    subtitle: 'Empleo y Desempleo',
+    icon: LineChart,
+    color: 'text-orange-400',
+    endpoint: '/api/labor-market',
+    description: 'Datos del mercado laboral argentino por región y demografía',
+    code: `// Obtener datos laborales nacionales recientes
+fetch('https://argenstats.com/api/labor-market?view=latest&data_type=national')
+  .then(response => response.json())
+  .then(data => {
+    const national = data.data.national[0];
+    
+    console.log('Período:', national.period);
+    console.log('Tasa de actividad:', national.activity_rate, '%');
+    console.log('Tasa de empleo:', national.employment_rate, '%');
+    console.log('Tasa de desempleo:', national.unemployment_rate, '%');
+    
+    // Ver variaciones vs período anterior
+    if (national.activity_rate_change) {
+      console.log('Cambio actividad:', national.activity_rate_change, 'pp');
+    }
+  });`,
+    endpoints: ['GET /api/labor-market?view=latest', 'GET /api/labor-market?view=temporal', 'GET /api/labor-market?view=comparison']
   },
   {
     id: 'filters',
@@ -122,7 +145,7 @@ fetch('https://argenstats.com/api/riesgo-pais?include_variations=true&limit=30')
     color: 'text-cyan-400',
     endpoint: '/api/*',
     description: 'Utilizar filtros y parámetros para consultas específicas',
-    code: `// Ejemplo de filtros avanzados en cualquier endpoint
+    code: `// Ejemplo de filtros avanzados en diferentes endpoints
 const params = new URLSearchParams({
   start_date: '2024-01-01',
   end_date: '2024-12-31',
@@ -131,17 +154,18 @@ const params = new URLSearchParams({
   order: 'desc'
 });
 
-fetch(\`https://argenstats.com/api/emae?\${params}\`)
+// Obtener datos históricos del dólar en CSV
+fetch(\`https://argenstats.com/api/dollar?type=historical&\${params}\`)
   .then(response => response.text()) // CSV response
   .then(csvData => {
-    console.log('Datos en formato CSV:', csvData);
-    
-    // O para JSON con filtros específicos
-    return fetch('https://argenstats.com/api/ipc?categories=alimentos,transporte');
-  })
+    console.log('Datos de dólar en CSV:', csvData);
+  });
+
+// Filtrar mercado laboral por región y demografía
+fetch('https://argenstats.com/api/labor-market?view=temporal&data_type=regional&region=GBA')
   .then(response => response.json())
   .then(data => {
-    console.log('IPC por categorías específicas:', data);
+    console.log('Datos laborales del GBA:', data.data.regional);
   });`,
     endpoints: ['?start_date=YYYY-MM-DD', '?format=json|csv', '?limit=N&order=asc|desc']
   }

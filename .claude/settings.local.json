@@ -1,6 +1,7 @@
 {
   "permissions": {
     "allow": [
+      "mcp__playwright",
       "WebFetch(domain:docs.anthropic.com)",
       "Bash(claude mcp add:*)",
       "Bash(claude mcp:*)",
@@ -15,7 +16,9 @@
       "Bash(npm install:*)",
       "Bash(npm update:*)",
       "Bash(npm run dev:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(cmd /c:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": []
   }

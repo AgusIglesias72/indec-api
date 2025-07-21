@@ -16,7 +16,7 @@ export default function ApiTabs({ baseUrl, apiGroups, defaultTab }: ApiTabsProps
 
   return (
     <Tabs defaultValue={effectiveDefaultTab} className="bg-transparent relative">
-      <TabsList className="grid w-full grid-cols-3">
+      <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
         {apiGroups.map(group => (
           <TabsTrigger key={group.id} value={group.id}>
             {group.title.replace('API de ', '')}

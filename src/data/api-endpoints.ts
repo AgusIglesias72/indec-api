@@ -266,175 +266,66 @@ export const ipcEndpoints: ApiEndpoint[] = [
   {
     method: "GET",
     path: "/api/ipc",
-    description: "Obtiene datos del IPC general y por categorías.",
+    description: "Endpoint unificado para datos del IPC con múltiples tipos de consulta.",
     parameters: [
+      { name: "type", type: "string", required: false, description: "Tipo de consulta: 'latest', 'historical', 'metadata', 'components' (por defecto: 'historical')" },
+      { name: "category", type: "string", required: false, description: "Código de categoría (por defecto: 'GENERAL')" },
+      { name: "region", type: "string", required: false, description: "Región (por defecto: 'nacional')" },
+      { name: "component_type", type: "string", required: false, description: "Tipo de componente para filtrar" },
       { name: "start_date", type: "string", required: false, description: "Fecha de inicio (YYYY-MM-DD)" },
       { name: "end_date", type: "string", required: false, description: "Fecha de fin (YYYY-MM-DD)" },
-      { name: "month", type: "number", required: false, description: "Filtrar por mes específico (1-12)" },
-      { name: "year", type: "number", required: false, description: "Filtrar por año específico (ej. 2023)" },
-      { name: "category", type: "string", required: false, description: "Categoría específica a consultar (ej. 'GENERAL', 'RUBRO_ALIMENTOS')" },
-      { name: "region", type: "string", required: false, description: "Región específica (ej. 'Nacional', 'GBA')" },
-      { name: "component_type", type: "string", required: false, description: "Tipo de componente (ej. 'RUBRO', 'BYS', 'CATEGORIA')" },
-      { name: "include_variations", type: "boolean", required: false, description: "Incluir variaciones mensuales, anuales y acumuladas (por defecto: true)" },
-      { name: "format", type: "string", required: false, description: "Formato de respuesta: 'json' (por defecto) o 'csv'" }
+      { name: "month", type: "number", required: false, description: "Mes específico (1-12)" },
+      { name: "year", type: "number", required: false, description: "Año específico (ej. 2024)" },
+      { name: "limit", type: "number", required: false, description: "Número máximo de registros (máx: 1000, por defecto: 100)" },
+      { name: "page", type: "number", required: false, description: "Página para paginación (por defecto: 1)" },
+      { name: "order", type: "string", required: false, description: "Orden: 'asc' o 'desc' (por defecto: 'desc')" },
+      { name: "format", type: "string", required: false, description: "Formato: 'json' o 'csv' (por defecto: 'json')" },
+      { name: "include_variations", type: "boolean", required: false, description: "Incluir variaciones calculadas (por defecto: true)" }
     ],
     notes: [
-      "Los datos se ordenan por fecha descendente (más recientes primero).",
-      "Al solicitar formato CSV (format=csv), los datos se devuelven en formato UTF-8 con BOM.",
-      "Si no se especifica una categoría, se devuelven datos para la categoría 'GENERAL'.",
-      "Todos los filtros se aplican directamente en la base de datos para un rendimiento óptimo.",
-      "La respuesta incluye todos los datos que cumplen con los criterios de filtrado, sin paginación.",
-      "Los filtros de mes y año permiten analizar tendencias específicas (ej. todos los eneros, o toda la evolución de un año).",
-      "La variación acumulada se calcula respecto a diciembre del año anterior."
+      "type='latest': Obtiene el valor más reciente del IPC para la categoría/región especificada.",
+      "type='historical': Datos históricos del IPC con paginación y filtros temporales.",
+      "type='metadata': Información sobre regiones disponibles, componentes y estructura de la API.",
+      "type='components': Componentes del IPC organizados por tipo.",
+      "Formato CSV disponible para datos históricos (format=csv).",
+      "Las variaciones incluyen cambios mensuales, anuales y acumulados.",
+      "Soporte para paginación con límites configurables (máx 1000 registros)."
     ],
     responseExample: `{
+  "success": true,
   "data": [
     {
       "date": "2025-01-01",
       "category": "Nivel General",
       "category_code": "GENERAL",
-      "category_type": "NIVEL",
+      "category_type": "NIVEL", 
       "index_value": 7864.13,
-      "region": "Nacional",
+      "region": "nacional",
       "monthly_pct_change": 2.2,
       "yearly_pct_change": 84.5,
-      "accumulated_pct_change": 2.2
-    },
-    {
-      "date": "2024-12-01",
-      "category": "Nivel General",
-      "category_code": "GENERAL",
-      "category_type": "NIVEL",
-      "index_value": 7694.84,
-      "region": "Nacional",
-      "monthly_pct_change": 2.7,
-      "yearly_pct_change": 88.3,
-      "accumulated_pct_change": 211.4
+      "accumulated_pct_change": 2.2,
+      "monthly_change_variation": -0.5
     }
   ],
+  "pagination": {
+    "current_page": 1,
+    "per_page": 100,
+    "total_pages": 1,
+    "total_records": 150,
+    "has_more": false
+  },
   "metadata": {
-    "count": 2,
     "filtered_by": {
-      "start_date": null,
-      "end_date": null,
-      "month": null,
-      "year": null,
-      "component_type": null,
-      "component_code": "GENERAL",
-      "region": "Nacional",
-      "include_variations": true
-    }
-  }
-}`
+      "type": "historical",
+      "category": "GENERAL",
+      "region": "nacional"
+    },
+    "last_updated": "2025-01-15T10:00:00Z"
   },
-  {
-    method: "GET",
-    path: "/api/ipc/latest",
-    description: "Obtiene los datos más recientes del IPC para una categoría y región específicas.",
-    parameters: [
-      { name: "category", type: "string", required: false, description: "Categoría específica (ej. 'GENERAL', 'RUBRO_ALIMENTOS'). Por defecto: 'GENERAL'" },
-      { name: "region", type: "string", required: false, description: "Región específica (ej. 'Nacional', 'GBA'). Por defecto: 'Nacional'" }
-    ],
-    notes: [
-      "Este endpoint devuelve los datos del último mes disponible para la categoría y región especificadas.",
-      "Incluye variaciones mensuales, interanuales y acumuladas.",
-      "El campo 'monthly_change_variation' indica la diferencia entre la variación mensual actual y la del mes anterior.",
-      "Es útil para obtener rápidamente el último valor del IPC sin necesidad de filtrar por fecha.",
-      "La respuesta es cacheada durante una hora para mejorar el rendimiento."
-    ],
-    responseExample: `{
-  "data": {
-    "date": "2025-01-01",
-    "category": "Nivel General",
-    "category_code": "GENERAL",
-    "category_type": "NIVEL",
-    "index_value": 7864.13,
-    "region": "Nacional",
-    "monthly_pct_change": 2.2,
-    "yearly_pct_change": 84.5,
-    "accumulated_pct_change": 2.2,
-    "monthly_change_variation": -0.5
-  },
-  "metadata": {
-    "region": "Nacional",
-    "component_code": "GENERAL",
-    "last_updated": "2025-02-15T14:30:45.123Z"
-  }
-}`
-  },
-  {
-    method: "GET",
-    path: "/api/ipc/metadata",
-    description: "Obtiene metadata sobre los datos del IPC, incluyendo regiones y componentes disponibles.",
-    parameters: [],
-    notes: [
-      "Este endpoint no requiere parámetros y devuelve información útil para trabajar con los otros endpoints de IPC.",
-      "Incluye información sobre la última actualización y los endpoints disponibles.",
-      "La respuesta es cacheada durante una hora para mejorar el rendimiento."
-    ],
-    responseExample: `{
-  "regions": [
-    "Cuyo",
-    "GBA",
-    "Nacional",
-    "Noreste",
-    "Noroeste",
-    "Pampeana",
-    "Patagonia"
-  ],
-  "components": {
-    "BYS": [
-      {
-        "code": "BYS_BIENES",
-        "name": "Bienes"
-      },
-      {
-        "code": "BYS_SERVICIOS",
-        "name": "Servicios"
-      }
-    ],
-    "CATEGORIA": [
-      {
-        "code": "CAT_ESTACIONAL",
-        "name": "Estacional"
-      },
-      {
-        "code": "CAT_NUCLEO",
-        "name": "Núcleo"
-      },
-      {
-        "code": "CAT_REGULADOS",
-        "name": "Regulados"
-      }
-    ],
-    "RUBRO": [
-      {
-        "code": "RUBRO_ALIMENTOS",
-        "name": "Alimentos y bebidas no alcohólicas"
-      },
-      {
-        "code": "RUBRO_COMUNICACION",
-        "name": "Comunicación"
-      },
-      {
-        "code": "RUBRO_EDUCACION",
-        "name": "Educación"
-      },
-      {
-        "code": "RUBRO_EQUIPAMIENTO",
-        "name": "Equipamiento y mantenimiento del hogar"
-      },
-      ...resto de los rubros
-    ]
-  },
-  "metadata": {
-    "last_updated": "2025-01-01",
-    "available_formats": ["json", "csv"],
-    "endpoints": {
-      "main": "/api/ipc",
-      "latest": "/api/ipc/latest",
-      "metadata": "/api/ipc/metadata"
-    }
+  "stats": {
+    "avg_monthly_change": 2.5,
+    "std_deviation": 1.2,
+    "volatility": "moderate"
   }
 }`
   }
@@ -444,145 +335,196 @@ export const dollarEndpoints: ApiEndpoint[] = [
   {
     method: "GET",
     path: "/api/dollar",
-    description: "Obtiene datos históricos de cotizaciones de dólar",
+    description: "Endpoint unificado para datos del dólar con múltiples tipos de consulta.",
     parameters: [
+      { name: "type", type: "string", required: false, description: "Tipo de consulta: 'latest', 'historical', 'daily', 'metadata' (por defecto: 'latest')" },
+      { name: "dollar_type", type: "string", required: false, description: "Tipo de dólar específico o múltiples separados por comas (OFICIAL, BLUE, MEP, CCL, MAYORISTA, CRYPTO, TARJETA)" },
       { name: "start_date", type: "string", required: false, description: "Fecha de inicio (YYYY-MM-DD)" },
       { name: "end_date", type: "string", required: false, description: "Fecha de fin (YYYY-MM-DD)" },
-      { name: "type", type: "string", required: false, description: "Tipo de dólar (CCL, MEP, BLUE, OFICIAL, MAYORISTA, CRYPTO, TARJETA) o múltiples tipos separados por comas" },
-      { name: "format", type: "string", required: false, description: "Formato de respuesta: 'json' (por defecto) o 'csv'" }
+      { name: "limit", type: "number", required: false, description: "Número máximo de registros (máx: 1000, por defecto: 100)" },
+      { name: "page", type: "number", required: false, description: "Página para paginación (por defecto: 1)" },
+      { name: "order", type: "string", required: false, description: "Orden: 'asc' o 'desc' (por defecto: 'desc')" },
+      { name: "format", type: "string", required: false, description: "Formato: 'json' o 'csv' (por defecto: 'json')" },
+      { name: "include_variations", type: "boolean", required: false, description: "Incluir variaciones vs día anterior (por defecto: true para latest)" }
     ],
     notes: [
-      "Los datos se ordenan por fecha descendente (más recientes primero).",
-      "Al solicitar formato CSV (format=csv), los datos se devuelven en formato UTF-8 con BOM.",
-      "Si no se especifica un tipo de dólar, se devuelven datos para todos los tipos disponibles.",
-      "Se pueden solicitar múltiples tipos de dólar separados por comas (ej. type=BLUE,OFICIAL).",
-      "Los filtros de fecha permiten obtener datos para un período específico."
+      "type='latest': Último valor de cada tipo de dólar con variaciones opcionales.",
+      "type='historical': Datos históricos completos (múltiples actualizaciones diarias) con paginación.", 
+      "type='daily': Cierres diarios (último valor de cada día) con estadísticas.",
+      "type='metadata': Información sobre tipos disponibles, rangos de fechas y estructura.",
+      "Formato CSV disponible para datos históricos y diarios.",
+      "Soporte para múltiples tipos de dólar en una sola consulta.",
+      "Las variaciones se calculan automáticamente comparando con el período anterior."
     ],
     responseExample: `{
+  "success": true,
+  "type": "latest", 
   "data": [
     {
       "date": "2025-03-15",
       "dollar_type": "BLUE",
-      "buy_price": 1235.00,
-      "sell_price": 1255.00,
-      "variation_buy": null,
-      "variation_sell": null,
-      "last_updated": "2025-03-15T18:30:45.123Z"
-    },
-    {
-      "date": "2025-03-15",
-      "dollar_type": "OFICIAL",
-      "buy_price": 1065.50,
-      "sell_price": 1085.50,
-      "variation_buy": null,
-      "variation_sell": null,
-      "last_updated": "2025-03-15T18:30:45.123Z"
-    }
-  ],
-  "metadata": {
-    "count": 2,
-    "filtered_by": {
-      "start_date": "2025-03-15",
-      "end_date": "2025-03-15",
-      "dollar_type": "BLUE,OFICIAL"
-    }
-  }
-}`
-  },
-  {
-    method: "GET",
-    path: "/api/dollar/latest",
-    description: "Obtiene las últimas cotizaciones de dólar disponibles",
-    parameters: [
-      { name: "type", type: "string", required: false, description: "Tipo específico de dólar (CCL, MEP, BLUE, OFICIAL, MAYORISTA, CRYPTO, TARJETA)" }
-    ],
-    notes: [
-      "Si no se especifica un tipo, devuelve las últimas cotizaciones de todos los tipos de dólar.",
-      "Si se especifica un tipo, devuelve solo la última cotización de ese tipo.",
-      "Incluye el spread (diferencia porcentual) entre precio de compra y venta.",
-      "La respuesta se cachea por 5 minutos para garantizar datos actualizados."
-    ],
-    responseExample: `{
-  "data": [
-    {
-      "date": "2025-03-15",
-      "dollar_type": "BLUE",
+      "dollar_name": "Dólar Blue (informal)",
       "buy_price": 1235.00,
       "sell_price": 1255.00,
       "spread": 1.62,
-      "last_updated": "2025-03-15T18:30:45.123Z"
+      "last_updated": "2025-03-15",
+      "minutes_ago": 15,
+      "buy_variation": 2.5,
+      "sell_variation": 3.1
     },
     {
-      "date": "2025-03-15",
+      "date": "2025-03-15", 
       "dollar_type": "OFICIAL",
+      "dollar_name": "Dólar Oficial",
       "buy_price": 1065.50,
       "sell_price": 1085.50,
       "spread": 1.88,
-      "last_updated": "2025-03-15T18:30:45.123Z"
+      "last_updated": "2025-03-15",
+      "minutes_ago": 15,
+      "buy_variation": 0.2,
+      "sell_variation": 0.3
     }
   ],
-  "metadata": {
-    "count": 7,
-    "last_updated": "2025-03-15T18:30:45.123Z",
-    "dollar_type": "ALL"
+  "meta": {
+    "type": "latest",
+    "timestamp": "2025-03-15T18:30:45.123Z"
+  },
+  "stats": {
+    "buy_price": {
+      "min": 1065.50,
+      "max": 1235.00,
+      "avg": 1150.25
+    },
+    "sell_price": {
+      "min": 1085.50,
+      "max": 1255.00, 
+      "avg": 1170.25
+    },
+    "avg_spread": 1.75,
+    "total_records": 2
   }
 }`
-  },
+  }
+];
+
+// Endpoints de Riesgo País
+export const riesgoPaisEndpoints: ApiEndpoint[] = [
   {
     method: "GET",
-    path: "/api/dollar/metadata",
-    description: "Obtiene metadatos sobre las cotizaciones de dólar disponibles",
-    parameters: [],
+    path: "/api/riesgo-pais", 
+    description: "Obtiene datos del riesgo país argentino (EMBI) con diferentes períodos temporales.",
+    parameters: [
+      { name: "type", type: "string", required: false, description: "Período: 'latest', 'last_7_days', 'last_30_days', 'last_90_days', 'year_to_date', 'last_year', 'last_5_years', 'all_time', 'custom' (por defecto: 'last_30_days')" },
+      { name: "date_from", type: "string", required: false, description: "Fecha inicio para type='custom' (YYYY-MM-DD)" },
+      { name: "date_to", type: "string", required: false, description: "Fecha fin para type='custom' (YYYY-MM-DD)" },
+      { name: "limit", type: "number", required: false, description: "Número máximo de registros (máx: 5000, por defecto: 100)" },
+      { name: "page", type: "number", required: false, description: "Página para paginación (por defecto: 1)" },
+      { name: "per_page", type: "number", required: false, description: "Registros por página (máx: 1000, por defecto: 100)" },
+      { name: "order", type: "string", required: false, description: "Orden: 'asc' o 'desc' (por defecto: 'desc')" },
+      { name: "auto_paginate", type: "boolean", required: false, description: "Paginación automática para límites grandes (por defecto: true)" }
+    ],
     notes: [
-      "Proporciona información sobre los tipos de dólar disponibles con sus nombres descriptivos.",
-      "Incluye el rango de fechas disponibles y la cantidad de días con datos.",
-      "Detalla la frecuencia de actualización y los formatos disponibles."
+      "Los datos provienen de cierres diarios optimizados desde la vista 'v_embi_daily_closing'.",
+      "auto_paginate=true maneja automáticamente grandes volúmenes de datos (>1000 registros).", 
+      "Las estadísticas incluyen métricas de volatilidad y variaciones temporales.",
+      "Los períodos predefinidos calculan automáticamente las fechas de inicio y fin.",
+      "type='latest' devuelve solo el valor más reciente disponible."
     ],
     responseExample: `{
-  "dollar_types": [
+  "success": true,
+  "data": [
     {
-      "code": "BLUE",
-      "name": "Dólar Blue (informal)",
-      "count": 220
-    },
-    {
-      "code": "CCL",
-      "name": "Contado con Liquidación",
-      "count": 220
-    },
-    {
-      "code": "MEP",
-      "name": "Mercado Electrónico de Pagos (Bolsa)",
-      "count": 220
-    },
-    {
-      "code": "OFICIAL",
-      "name": "Dólar Oficial",
-      "count": 220
+      "closing_date": "2025-01-15",
+      "closing_value": 1250,
+      "daily_change": -25,
+      "daily_change_pct": -1.96,
+      "monthly_change": 50,
+      "monthly_change_pct": 4.17,
+      "yearly_change": 200,
+      "yearly_change_pct": 19.05
     }
   ],
-  "date_range": {
-    "first_date": "2024-09-01",
-    "last_date": "2025-03-15",
-    "days_count": 196
+  "meta": {
+    "type": "last_30_days",
+    "total_records": 30,
+    "date_range": {
+      "from": "2024-12-16",
+      "to": "2025-01-15"
+    },
+    "auto_paginated": false
+  },
+  "stats": {
+    "average": 1275.5,
+    "min": 1200,
+    "max": 1350, 
+    "std_deviation": 42.3,
+    "volatility": "moderate",
+    "trend": "descending"
+  }
+}`
+  }
+];
+
+// Endpoints de Mercado Laboral  
+export const laborMarketEndpoints: ApiEndpoint[] = [
+  {
+    method: "GET",
+    path: "/api/labor-market",
+    description: "Obtiene datos del mercado laboral argentino con diferentes vistas y filtros demográficos.",
+    parameters: [
+      { name: "view", type: "string", required: false, description: "Vista: 'temporal', 'latest', 'by_type', 'comparison', 'annual' (por defecto: 'temporal')" },
+      { name: "data_type", type: "string", required: false, description: "Tipo de datos: 'national', 'regional', 'demographic', 'all' (por defecto: 'national')" },
+      { name: "region", type: "string", required: false, description: "Región específica (GBA, Cuyo, NEA, NOA, Pampeana, Patagónica)" },
+      { name: "gender", type: "string", required: false, description: "Filtro por género" },
+      { name: "age_group", type: "string", required: false, description: "Grupo etario específico" },
+      { name: "segment", type: "string", required: false, description: "Segmento demográfico" },
+      { name: "indicator", type: "string", required: false, description: "Indicador: 'activity_rate', 'employment_rate', 'unemployment_rate', 'all' (por defecto: 'all')" },
+      { name: "period", type: "string", required: false, description: "Período específico (ej. 'T1 2025', '2024')" },
+      { name: "start_date", type: "string", required: false, description: "Fecha de inicio (YYYY-MM-DD)" },
+      { name: "end_date", type: "string", required: false, description: "Fecha de fin (YYYY-MM-DD)" },
+      { name: "include_variations", type: "boolean", required: false, description: "Incluir variaciones vs período anterior (por defecto: true)" },
+      { name: "limit", type: "number", required: false, description: "Número máximo de registros (máx: 1000, por defecto: 100)" },
+      { name: "format", type: "string", required: false, description: "Formato: 'json' o 'csv' (por defecto: 'json')" }
+    ],
+    notes: [
+      "view='temporal': Series completas con variaciones temporales.",
+      "view='latest': Datos más recientes por cada tipo de dato.",  
+      "view='comparison': Comparación entre datos nacionales, regionales y demográficos.",
+      "view='annual': Agregaciones anuales con promedios y variaciones interanuales.",
+      "Los datos incluyen 31 aglomerados urbanos para datos nacionales.",
+      "Las variaciones significativas (>1 punto porcentual) son destacadas automáticamente.",
+      "Soporte para filtros trimestrales ('T1 2025') y anuales ('2024')."
+    ],
+    responseExample: `{
+  "success": true,
+  "data": {
+    "national": [
+      {
+        "period": "T4 2024",
+        "data_type": "nacional",
+        "activity_rate": 47.8,
+        "employment_rate": 44.2,
+        "unemployment_rate": 7.5,
+        "activity_rate_change": 0.3,
+        "employment_rate_change": 0.5,
+        "unemployment_rate_change": -0.2,
+        "significant_changes": ["employment_rate"]
+      }
+    ]
   },
   "metadata": {
-    "data_source": "Argentina Datos API",
-    "last_updated": "2025-03-15T18:30:45.123Z",
-    "available_formats": ["json", "csv"],
-    "endpoints": {
-      "main": "/api/dollar",
-      "latest": "/api/dollar/latest",
-      "metadata": "/api/dollar/metadata"
-    },
-    "refresh_frequency": {
-      "data_update": "Daily (Business days)",
-      "api_cache": "15 minutes"
+    "view": "latest",
+    "data_types_included": ["national"],
+    "period_coverage": "T4 2024",
+    "available_filters": {
+      "regions": ["GBA", "Cuyo", "NEA", "NOA", "Pampeana", "Patagónica"],
+      "indicators": ["activity_rate", "employment_rate", "unemployment_rate"]
     }
   }
 }`
   }
 ];
+
 // Configuración de las pestañas con los grupos de endpoints
 export const apiGroups: ApiGroup[] = [
   {
@@ -599,7 +541,7 @@ export const apiGroups: ApiGroup[] = [
   },
   {
     id: "ipc",
-    title: "API de IPC",
+    title: "API de IPC", 
     description: "Índice de Precios al Consumidor - Datos generales y por categorías",
     endpoints: ipcEndpoints
   },
@@ -608,5 +550,17 @@ export const apiGroups: ApiGroup[] = [
     title: "API de Cotizaciones",
     description: "Cotizaciones de dólar y otras divisas - Datos históricos y actuales",
     endpoints: dollarEndpoints
+  },
+  {
+    id: "riesgo-pais",
+    title: "API de Riesgo País", 
+    description: "Indicador EMBI+ de riesgo soberano argentino - Datos históricos y análisis",
+    endpoints: riesgoPaisEndpoints
+  },
+  {
+    id: "labor-market",
+    title: "API de Mercado Laboral",
+    description: "Indicadores laborales por región y demografía - Tasas de actividad, empleo y desempleo",
+    endpoints: laborMarketEndpoints
   }
 ];

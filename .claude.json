@@ -1,21 +1,8 @@
 {
-  "compactMode": true,
   "mcpServers": {
-    "supabase": {
+    "playwright": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@supabase/mcp-server-supabase@latest",
-        "--read-only",
-        "--project-ref=rdyrzmzlabxeazpazhqw"
-      ],
-      "env": {
-        "SUPABASE_ACCESS_TOKEN": "cli_AGUSIGLESIAS\\agusi@AgusIglesias_1740501807"
-      }
-    },
-    "fetch": {
-      "command": "npx",
-      "args": ["-y", "@kazuph/mcp-fetch"]
+      "args": ["@playwright/mcp@latest"]
     }
   }
 }

@@ -9,256 +9,29 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 // Importar los endpoints actualizados
-const apiGroups = [
-  {
-    id: "calendar",
-    title: "API de Calendario",
-    description: "Accede a información sobre publicaciones programadas del INDEC",
-    color: "blue",
-    icon: Calendar,
-    endpoints: [
-      {
-        method: "GET",
-        path: "/api/calendar",
-        description: "Obtiene eventos del calendario de publicaciones",
-        parameters: [
-          { name: "month", type: "number", required: false, description: "Mes (1-12)" },
-          { name: "year", type: "number", required: false, description: "Año (ej. 2023)" },
-          { name: "start_date", type: "string", required: false, description: "Fecha de inicio (YYYY-MM-DD)" },
-          { name: "end_date", type: "string", required: false, description: "Fecha de fin (YYYY-MM-DD)" }
-        ],
-        notes: [
-          "Se recomienda utilizar o bien la combinación month/year, o bien start_date/end_date, pero no ambas simultáneamente.",
-          "La respuesta incluye todos los eventos que cumplen con los criterios de filtrado, sin paginación.",
-          "Las fechas se devuelven en formato ISO con hora (YYYY-MM-DDThh:mm:ss)."
-        ],
-        responseExample: `{
-  "data": [
-    {
-      "date": "2025-01-03T19:00:00",
-      "day_week": "Viernes",
-      "indicator": "Encuesta Nacional a Grandes Empresas",
-      "period": "Año 2023",
-      "source": "INDEC"
-    }
-  ],
-  "metadata": {
-    "count": 150,
-    "filtered_by": { "year": 2025 }
-  }
-}`
-      }
-    ]
-  },
-  {
-    id: "emae",
-    title: "API de EMAE",
-    description: "Estimador Mensual de Actividad Económica - Datos generales y por sectores económicos",
-    color: "blue",
-    icon: BarChart3,
-    endpoints: [
-      {
-        method: "GET",
-        path: "/api/emae",
-        description: "Obtiene datos generales del EMAE con series original, desestacionalizada y tendencia-ciclo.",
-        parameters: [
-          { name: "start_date", type: "string", required: false, description: "Fecha de inicio (YYYY-MM-DD)" },
-          { name: "end_date", type: "string", required: false, description: "Fecha de fin (YYYY-MM-DD)" },
-          { name: "month", type: "number", required: false, description: "Filtrar por mes específico (1-12)" },
-          { name: "year", type: "number", required: false, description: "Filtrar por año específico (ej. 2023)" },
-          { name: "format", type: "string", required: false, description: "Formato de respuesta: 'json' (por defecto) o 'csv'" }
-        ],
-        notes: [
-          "Al solicitar formato CSV (format=csv), los datos se devuelven en formato UTF-8 con BOM.",
-          "Los datos incluyen las series original, desestacionalizada y de tendencia-ciclo.",
-          "Todos los filtros se aplican directamente en la base de datos para un rendimiento óptimo."
-        ],
-        responseExample: `{
-  "data": [
-    {
-      "date": "2023-01-01",
-      "original_value": 145.968275964961,
-      "seasonally_adjusted_value": 149.183720667308,
-      "trend_cycle_value": 148.276458932176,
-      "monthly_pct_change": 0.5,
-      "yearly_pct_change": 5.5
-    }
-  ],
-  "metadata": {
-    "count": 1,
-    "date_range": {
-      "first_date": "2004-01-01",
-      "last_date": "2023-06-01"
-    }
-  }
-}`
-      }
-    ]
-  },
-  {
-    id: "ipc",
-    title: "API de IPC",
-    description: "Índice de Precios al Consumidor - Datos generales y por categorías",
-    color: "purple",
-    icon: TrendingUp,
-    endpoints: [
-      {
-        method: "GET",
-        path: "/api/ipc",
-        description: "Obtiene datos del IPC general y por categorías.",
-        parameters: [
-          { name: "start_date", type: "string", required: false, description: "Fecha de inicio (YYYY-MM-DD)" },
-          { name: "end_date", type: "string", required: false, description: "Fecha de fin (YYYY-MM-DD)" },
-          { name: "category", type: "string", required: false, description: "Categoría específica (ej. 'GENERAL', 'RUBRO_ALIMENTOS')" },
-          { name: "region", type: "string", required: false, description: "Región específica (ej. 'Nacional', 'GBA')" },
-          { name: "format", type: "string", required: false, description: "Formato de respuesta: 'json' (por defecto) o 'csv'" }
-        ],
-        notes: [
-          "Los datos incluyen variaciones mensuales, interanuales y acumuladas.",
-          "Al solicitar formato CSV (format=csv), los datos se devuelven en formato UTF-8 con BOM.",
-          "Se pueden filtrar por categoría (nivel general, rubros, bienes y servicios, etc.)."
-        ],
-        responseExample: `{
-  "data": [
-    {
-      "date": "2025-01-01",
-      "category": "Nivel General",
-      "region": "Nacional",
-      "index_value": 7864.13,
-      "monthly_pct_change": 2.2,
-      "yearly_pct_change": 84.5,
-      "accumulated_pct_change": 2.2
-    }
-  ]
-}`
-      }
-    ]
-  },
-  {
-    id: "riesgo-pais",
-    title: "API de Riesgo País",
-    description: "Indicador de riesgo soberano argentino - Datos históricos con análisis de volatilidad",
-    color: "red",
-    icon: Globe,
-    endpoints: [
-      {
-        method: "GET",
-        path: "/api/riesgo-pais",
-        description: "Obtiene datos históricos del riesgo país argentino con paginación avanzada.",
-        parameters: [
-          { name: "type", type: "string", required: false, description: "Tipo de consulta: 'latest', 'last_7_days', 'last_30_days', 'last_90_days', 'year_to_date', 'last_year', 'last_5_years', 'all_time', 'custom'. Por defecto: 'last_30_days'" },
-          { name: "date_from", type: "string", required: false, description: "Fecha de inicio (YYYY-MM-DD) - requerido si type='custom'" },
-          { name: "date_to", type: "string", required: false, description: "Fecha de fin (YYYY-MM-DD) - requerido si type='custom'" },
-          { name: "limit", type: "number", required: false, description: "Cantidad de registros a devolver (máximo 5000, por defecto: 100)" }
-        ],
-        notes: [
-          "Para límites superiores a 1000 registros, se usa autopaginación automática.",
-          "El tipo 'latest' devuelve solo el último valor disponible.",
-          "Los datos incluyen estadísticas calculadas como variaciones mensuales y anuales."
-        ],
-        responseExample: `{
-  "success": true,
-  "data": [
-    {
-      "closing_date": "2024-01-15",
-      "closing_value": 1250,
-      "change_percentage": -2.5,
-      "daily_change": -31.25
-    }
-  ],
-  "stats": {
-    "latest_value": 1250,
-    "monthly_variation": -5.2,
-    "yearly_variation": 15.8,
-    "volatility": {
-      "avg_daily_change": -0.8
-    }
-  }
-}`
-      }
-    ]
-  },
-  {
-    id: "mercado-laboral",
-    title: "API de Mercado Laboral",
-    description: "Indicadores de empleo, desempleo y actividad - Datos nacionales, regionales y demográficos",
-    color: "orange",
-    icon: Users,
-    endpoints: [
-      {
-        method: "GET",
-        path: "/api/labor-market",
-        description: "Obtiene datos del mercado laboral argentino con múltiples vistas y segmentaciones.",
-        parameters: [
-          { name: "view", type: "string", required: false, description: "Vista de datos: 'temporal', 'latest', 'by_type', 'comparison', 'annual'. Por defecto: 'temporal'" },
-          { name: "data_type", type: "string", required: false, description: "Tipo de datos: 'national', 'regional', 'demographic', 'all'. Por defecto: 'national'" },
-          { name: "region", type: "string", required: false, description: "Región específica (ej. 'GBA', 'Pampeana')" },
-          { name: "gender", type: "string", required: false, description: "Filtro por género: 'Varón', 'Mujer'" },
-          { name: "indicator", type: "string", required: false, description: "Indicador específico: 'activity_rate', 'employment_rate', 'unemployment_rate', 'all'. Por defecto: 'all'" }
-        ],
-        notes: [
-          "La vista 'temporal' incluye serie histórica completa con variaciones vs período anterior.",
-          "La vista 'latest' devuelve el último período disponible por cada tipo de dato.",
-          "Los datos incluyen detección automática de cambios significativos (>1 punto porcentual)."
-        ],
-        responseExample: `{
-  "data": [
-    {
-      "date": "2025-03-31",
-      "period": "T1 2025",
-      "data_type": "national",
-      "activity_rate": 47.8,
-      "employment_rate": 43.2,
-      "unemployment_rate": 9.6,
-      "has_significant_yoy_change": true
-    }
-  ],
-  "metadata": {
-    "view": "temporal",
-    "data_type": "national",
-    "count": 1
-  }
-}`
-      }
-    ]
-  },
-  {
-    id: "dollar",
-    title: "API de Cotizaciones",
-    description: "Cotizaciones de dólar y otras divisas - Datos históricos y actuales",
-    color: "green",
-    icon: DollarSign,
-    endpoints: [
-      {
-        method: "GET",
-        path: "/api/dollar",
-        description: "Obtiene datos históricos de cotizaciones de dólar",
-        parameters: [
-          { name: "start_date", type: "string", required: false, description: "Fecha de inicio (YYYY-MM-DD)" },
-          { name: "end_date", type: "string", required: false, description: "Fecha de fin (YYYY-MM-DD)" },
-          { name: "type", type: "string", required: false, description: "Tipo de dólar (CCL, MEP, BLUE, OFICIAL, MAYORISTA, CRYPTO, TARJETA)" },
-          { name: "format", type: "string", required: false, description: "Formato de respuesta: 'json' (por defecto) o 'csv'" }
-        ],
-        notes: [
-          "Los datos se ordenan por fecha descendente (más recientes primero).",
-          "Se pueden solicitar múltiples tipos de dólar separados por comas (ej. type=BLUE,OFICIAL).",
-          "Los filtros de fecha permiten obtener datos para un período específico."
-        ],
-        responseExample: `{
-  "data": [
-    {
-      "date": "2024-03-15",
-      "dollar_type": "BLUE",
-      "buy_price": 1050.0,
-      "sell_price": 1070.0,
-      "spread": 20.0
-    }
-  ]
-}`
-      }
-    ]
-  }
-];
+import { apiGroups as importedApiGroups } from '@/data/api-endpoints';
+
+// Agregar colores e iconos a los grupos importados
+const apiGroupsWithUI = importedApiGroups.map(group => {
+  const uiConfig = {
+    'calendar': { color: 'blue', icon: Calendar },
+    'emae': { color: 'blue', icon: BarChart3 },
+    'ipc': { color: 'purple', icon: TrendingUp },
+    'dollar': { color: 'green', icon: DollarSign },
+    'riesgo-pais': { color: 'red', icon: Globe },
+    'labor-market': { color: 'orange', icon: Users }
+  };
+  
+  const config = uiConfig[group.id as keyof typeof uiConfig];
+  return {
+    ...group,
+    color: config?.color || 'blue',
+    icon: config?.icon || BarChart3
+  };
+});
+
+// Use the imported API groups with UI configuration
+const apiGroups = apiGroupsWithUI;
 
 export default function ApiDocsPage() {
   const [copiedExample, setCopiedExample] = useState<string | null>(null);
@@ -625,6 +398,8 @@ fetch('https://argenstats.com/api/emae?year=2024')
                                     <table className="w-full text-sm">
                                       <thead>
                                         <tr className="border-b border-gray-200">
+                                          <th className="text-left py-2 font-medium text-gray-700">Nombre</th>
+                                          <th className="text-left py-2 font-medium text-gray-700">Tipo</th>
                                           <th className="text-left py-2 font-medium text-gray-700">Requerido</th>
                                           <th className="text-left py-2 font-medium text-gray-700">Descripción</th>
                                         </tr>
