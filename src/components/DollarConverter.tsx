@@ -349,12 +349,12 @@ const DollarConverter = memo(function DollarConverter({ dollarRates, loading = f
         {/* Conversion Interface */}
         <div className="space-y-4">
           {/* From Currency Input */}
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-4">
             <div className="flex-1">
               <div className="flex items-center gap-3 p-4 border border-gray-300 rounded-xl focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-500 focus-within:ring-opacity-20">
                 <CountryFlag country={isFromUSD ? 'US' : 'AR'} className="w-8 h-6" />
-                <div className="flex-1">
-                  <div className="text-xs font-medium text-gray-500 mb-1">
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-medium text-gray-500 mb-1 truncate">
                     {isFromUSD ? 'Dólares estadounidenses' : 'Pesos argentinos'}
                   </div>
                   <input
@@ -368,34 +368,36 @@ const DollarConverter = memo(function DollarConverter({ dollarRates, loading = f
                     disabled={loadingHistorical}
                   />
                 </div>
-                <div className="text-lg font-bold text-gray-600">
+                <div className="text-lg font-bold text-gray-600 shrink-0">
                   {isFromUSD ? 'USD' : 'ARS'}
                 </div>
               </div>
             </div>
 
             {/* Swap Button */}
-            <button
-              onClick={handleSwapDirection}
-              className="p-3 bg-green-100 hover:bg-green-200 rounded-xl transition-colors duration-200 group"
-              disabled={loadingHistorical}
-            >
-              <ArrowUpDown className="h-5 w-5 text-green-600 group-hover:scale-110 transition-transform duration-200" />
-            </button>
+            <div className="flex justify-center lg:block">
+              <button
+                onClick={handleSwapDirection}
+                className="p-3 bg-green-100 hover:bg-green-200 rounded-xl transition-colors duration-200 group"
+                disabled={loadingHistorical}
+              >
+                <ArrowUpDown className="h-5 w-5 text-green-600 group-hover:scale-110 transition-transform duration-200" />
+              </button>
+            </div>
 
             {/* To Currency Display */}
             <div className="flex-1">
               <div className="flex items-center gap-3 p-4 bg-gray-50 border border-gray-200 rounded-xl">
                 <CountryFlag country={!isFromUSD ? 'US' : 'AR'} className="w-8 h-6" />
-                <div className="flex-1">
-                  <div className="text-xs font-medium text-gray-500 mb-1">
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-medium text-gray-500 mb-1 truncate">
                     {!isFromUSD ? 'Dólares estadounidenses' : 'Pesos argentinos'}
                   </div>
-                  <div className="text-lg font-bold text-gray-900">
+                  <div className="text-lg font-bold text-gray-900 truncate">
                     {loadingHistorical ? '...' : formatCurrency(conversionResult, !isFromUSD ? 'USD' : 'ARS').replace(/[^\d.,]/g, '')}
                   </div>
                 </div>
-                <div className="text-lg font-bold text-gray-600">
+                <div className="text-lg font-bold text-gray-600 shrink-0">
                   {!isFromUSD ? 'USD' : 'ARS'}
                 </div>
               </div>
