@@ -89,13 +89,13 @@ const DollarConverterSection = memo(function DollarConverterSection() {
           </div>
           
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            Conversor de Divisas
+            Conversor de Dólar a Peso Argentino
             <span className="text-emerald-600"> en Tiempo Real</span>
           </h2>
           
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-            Convierte entre dólares y pesos argentinos con las cotizaciones más actualizadas. 
-            Incluye todos los tipos de cambio: oficial, blue, MEP, CCL y más.
+            Calculadora de dólar a peso argentino hoy - Conversor USD ARS con cotización dólar blue, 
+            oficial, MEP y CCL actualizado minuto a minuto. La mejor herramienta para convertir dólares a pesos.
           </p>
 
           {/* Featured Rate Display */}
@@ -138,13 +138,13 @@ const DollarConverterSection = memo(function DollarConverterSection() {
           <DollarConverter dollarRates={dollarRates} loading={loading} />
         </motion.div>
 
-        {/* Features Grid */}
+        {/* Features Grid - Centered with constrained width */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
           viewport={{ once: true }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12"
+          className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 mb-12"
         >
           <div className="text-center">
             <div className="h-16 w-16 bg-white rounded-2xl shadow-lg flex items-center justify-center mx-auto mb-4">
@@ -185,23 +185,15 @@ const DollarConverterSection = memo(function DollarConverterSection() {
           viewport={{ once: true }}
           className="text-center"
         >
-          <div className="inline-flex flex-col sm:flex-row gap-4">
-            <Link href="/dolar">
-              <Button size="lg" className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 text-lg font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">
-                Ver Todas las Cotizaciones
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
-            
-            <Link href="/documentacion">
-              <Button variant="outline" size="lg" className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 px-8 py-3 text-lg font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">
-                API Documentation
-              </Button>
-            </Link>
-          </div>
+          <Link href="/dolar">
+            <Button size="lg" className="bg-emerald-600 hover:bg-emerald-700 text-white px-10 py-4 text-lg font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+              Ver Todas las Cotizaciones
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </Link>
           
-          <p className="text-sm text-gray-500 mt-4">
-            Integra nuestras APIs en tu aplicación • Gratis para uso personal
+          <p className="text-sm text-gray-600 mt-6 max-w-md mx-auto">
+            Accedé a gráficos históricos del dólar, comparativas entre tipos de cambio y análisis de tendencias
           </p>
         </motion.div>
       </div>

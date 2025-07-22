@@ -90,6 +90,12 @@ export function MainNavigation() {
         </NavigationMenuItem>
 
         <NavigationMenuItem>
+            <NavigationMenuLink className={navigationMenuTriggerStyle()} href="/conversor-dolar-peso-argentino">
+              Conversor USD/ARS
+            </NavigationMenuLink>
+        </NavigationMenuItem>
+
+        <NavigationMenuItem>
             <NavigationMenuLink className={navigationMenuTriggerStyle()} href="/calendario">
               Calendario INDEC
             </NavigationMenuLink>
