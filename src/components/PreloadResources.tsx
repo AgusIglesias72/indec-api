@@ -1,18 +1,20 @@
 // src/components/PreloadResources.tsx
 import Head from 'next/head';
 
+interface PreloadResource {
+  href: string;
+  as: 'script' | 'style' | 'font' | 'image' | 'fetch';
+  type?: string;
+  crossorigin?: '' | 'anonymous' | 'use-credentials';
+}
+
 interface PreloadResourcesProps {
-  resources?: Array<{
-    href: string;
-    as: 'script' | 'style' | 'font' | 'image' | 'fetch';
-    type?: string;
-    crossorigin?: '' | 'anonymous' | 'use-credentials';
-  }>;
+  resources?: PreloadResource[];
 }
 
 export default function PreloadResources({ resources = [] }: PreloadResourcesProps) {
   // Default critical resources to preload
-  const defaultResources = [
+  const defaultResources: PreloadResource[] = [
     // Preload critical API endpoints
     {
       href: '/api/ipc?type=latest',
@@ -49,7 +51,7 @@ export default function PreloadResources({ resources = [] }: PreloadResourcesPro
           href={resource.href}
           as={resource.as}
           type={resource.type}
-          crossOrigin={resource.crossorigin}
+          crossOrigin={resource.crossorigin || undefined}
         />
       ))}
       
@@ -65,7 +67,7 @@ export default function PreloadResources({ resources = [] }: PreloadResourcesPro
 }
 
 // Specific preload configurations for different pages
-export const homePagePreloads = [
+export const homePagePreloads: PreloadResource[] = [
   {
     href: '/api/emae/latest',
     as: 'fetch' as const,
@@ -78,7 +80,7 @@ export const homePagePreloads = [
   }
 ];
 
-export const dollarPagePreloads = [
+export const dollarPagePreloads: PreloadResource[] = [
   {
     href: '/api/dollar?type=latest&include_variations=true',
     as: 'fetch' as const,

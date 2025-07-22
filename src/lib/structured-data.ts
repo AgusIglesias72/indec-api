@@ -1,5 +1,10 @@
 // src/lib/structured-data.ts
-import { WithContext, Organization, WebSite, BreadcrumbList, SoftwareApplication } from 'schema-dts';
+// TypeScript types for Schema.org structured data
+type WithContext<T> = T & { "@context": "https://schema.org" };
+type Organization = any;
+type WebSite = any;
+type BreadcrumbList = any;
+type SoftwareApplication = any;
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://argenstats.com";
 
