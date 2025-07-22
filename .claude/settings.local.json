@@ -28,7 +28,11 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(timeout 10 npm run dev)",
       "Bash(timeout 5 npm run dev)",
-      "Bash(touch:*)"
+      "Bash(touch:*)",
+      "Bash(taskkill:*)",
+      "Bash(npx kill-port:*)",
+      "Bash(npx playwright codegen:*)",
+      "Bash(npx playwright:*)"
     ],
     "deny": []
   }

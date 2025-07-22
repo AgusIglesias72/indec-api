@@ -1,14 +1,38 @@
 // components/StructuredData.tsx
+import Script from 'next/script';
+
 interface StructuredDataProps {
   data: object;
+  id?: string;
+  strategy?: 'afterInteractive' | 'beforeInteractive' | 'lazyOnload';
 }
 
-export default function StructuredData({ data }: StructuredDataProps) {
+export default function StructuredData({ data, id, strategy = 'afterInteractive' }: StructuredDataProps) {
   return (
-    <script
+    <Script
+      id={id || 'structured-data'}
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+      strategy={strategy}
+      dangerouslySetInnerHTML={{ 
+        __html: JSON.stringify(data, null, 0) 
+      }}
     />
+  );
+}
+
+// Critical structured data component for homepage
+export function CriticalStructuredData({ schemas }: { schemas: object[] }) {
+  return (
+    <>
+      {schemas.map((schema, index) => (
+        <StructuredData 
+          key={index}
+          data={schema}
+          id={`critical-schema-${index}`}
+          strategy="beforeInteractive"
+        />
+      ))}
+    </>
   );
 }
 

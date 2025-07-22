@@ -161,7 +161,7 @@ const HeroWithMetrics = () => {
       </section>
 
       {/* Sección de métricas económicas */}
-      <section className="py-16 relative">
+      <section className="py-12 relative">
         <div className="absolute inset-0"></div>
         
         <div className="container mx-auto px-4 md:px-8 lg:px-12 max-w-7xl relative z-10">

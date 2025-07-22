@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Menu, DollarSign, TrendingUp, BarChart3, Globe, Calendar, FileText, Users, Mail, User, LogOut, Key, Settings, LogIn } from "lucide-react"
+import { Menu, DollarSign, TrendingUp, BarChart3, Globe, Calendar, FileText, Users, Mail, User, LogOut, Key, Settings, LogIn, Calculator } from "lucide-react"
 import { useUser, useClerk, SignInButton, SignUpButton } from "@clerk/nextjs"
 
 import { Button } from "@/components/ui/button"
@@ -50,6 +50,7 @@ const indicators = [
 
 const mainNavItems = [
   { title: "Dólar", href: "/dolar", icon: DollarSign },
+  { title: "Conversor USD/ARS", href: "/conversor-dolar-peso-argentino", icon: Calculator },
   { title: "Calendario INDEC", href: "/calendario", icon: Calendar },
   { title: "API Docs", href: "/documentacion", icon: FileText },
 ]

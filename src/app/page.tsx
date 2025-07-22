@@ -3,9 +3,23 @@ import { Metadata } from 'next';
 import { lazy, Suspense } from 'react';
 import { homeMetadata } from '@/lib/metadata';
 import EconomicMetricsSection from '@/components/KPI';
+import { CriticalStructuredData } from '@/components/StructuredData';
+import { OrganizationSchema, WebsiteSchema } from '@/components/StructuredData';
+import PreloadResources, { homePagePreloads } from '@/components/PreloadResources';
 
 // Lazy load heavy components to improve initial page load
-const DollarConverterSection = lazy(() => import('@/components/landing/DollarConverterSection'));
+// Dollar Converter gets priority preloading since it's high-conversion
+const DollarConverterSection = lazy(() => 
+  import('@/components/landing/DollarConverterSection').then(module => {
+    // Preload dollar API data
+    if (typeof window !== 'undefined') {
+      fetch('/api/dollar?type=latest').catch(() => {});
+    }
+    return module;
+  })
+);
+
+const RiskCountryPromoSection = lazy(() => import('@/components/landing/RiskCountryPromoSection'));
 const APISection = lazy(() => import("@/components/landing/ApiSection"));
 const Indicators = lazy(() => import("@/components/landing/Indicators"));
 const EmploymentSection = lazy(() => import('@/components/landing/LaborMarket'));
@@ -18,46 +32,75 @@ const NetworkGraph = lazy(() => import('@/components/Newsletter'));
 
 export const metadata: Metadata = homeMetadata;
 
-// Loading component for lazy-loaded sections
+// Optimized loading component for lazy-loaded sections
 function SectionSkeleton({ height = "400px", title }: { height?: string; title?: string }) {
   return (
-    <div className="container mx-auto px-4 py-12" style={{ minHeight: height }}>
-      {title && (
-        <div className="text-center mb-8">
-          <div className="h-8 bg-gray-200 rounded w-64 mx-auto animate-pulse"></div>
-        </div>
-      )}
-      <div className="animate-pulse space-y-4">
-        <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
-        <div className="h-64 bg-gray-200 rounded"></div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="h-32 bg-gray-200 rounded"></div>
-          <div className="h-32 bg-gray-200 rounded"></div>
-          <div className="h-32 bg-gray-200 rounded"></div>
+    <section className="relative py-12 overflow-hidden">
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="max-w-7xl mx-auto bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl p-8 md:p-12" style={{ minHeight: height }}>
+          {title && (
+            <div className="text-center mb-8">
+              <div className="h-6 bg-gray-300 rounded-full w-48 mx-auto animate-pulse mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded-full w-32 mx-auto animate-pulse"></div>
+            </div>
+          )}
+          <div className="animate-pulse space-y-6">
+            <div className="h-3 bg-gray-200 rounded-full w-3/4 mx-auto"></div>
+            <div className="h-3 bg-gray-200 rounded-full w-1/2 mx-auto"></div>
+            <div className="bg-white rounded-2xl p-6 shadow-lg border">
+              <div className="h-48 bg-gray-100 rounded-xl"></div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-white rounded-xl p-4 shadow-sm">
+                <div className="h-24 bg-gray-100 rounded"></div>
+              </div>
+              <div className="bg-white rounded-xl p-4 shadow-sm">
+                <div className="h-24 bg-gray-100 rounded"></div>
+              </div>
+              <div className="bg-white rounded-xl p-4 shadow-sm">
+                <div className="h-24 bg-gray-100 rounded"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 
 export default function HomePage() {
+  // Critical structured data for SEO
+  const criticalSchemas = [OrganizationSchema, WebsiteSchema];
+  
   return (
-    <div className="relative">
-      {/* Main background pattern for the entire page */}
-      <div 
-          className="absolute inset-0 opacity-[0.85] pointer-events-none overflow-y-hidden"
-          style={{
-            backgroundImage: 'radial-gradient(circle, #d0d0d0 1px, transparent 1px)',
-            backgroundSize: '24px 24px',
-          }}
-        ></div>
+    <>
+      {/* Preload critical resources for better Core Web Vitals */}
+      <PreloadResources resources={homePagePreloads} />
       
-      {/* Critical above-the-fold content loads immediately */}
-      <EconomicMetricsSection />
+      {/* Critical SEO structured data */}
+      <CriticalStructuredData schemas={criticalSchemas} />
+      
+      <div className="relative">
+        {/* Main background pattern for the entire page */}
+        <div 
+            className="absolute inset-0 opacity-[0.85] pointer-events-none overflow-y-hidden"
+            style={{
+              backgroundImage: 'radial-gradient(circle, #d0d0d0 1px, transparent 1px)',
+              backgroundSize: '24px 24px',
+            }}
+          ></div>
+        
+        {/* Critical above-the-fold content loads immediately */}
+        <EconomicMetricsSection />
       
       {/* Dollar Converter Section - High engagement feature */}
       <Suspense fallback={<SectionSkeleton height="800px" title="Conversor de Divisas" />}>
         <DollarConverterSection />
+      </Suspense>
+      
+      {/* Risk Country Promotion Section - API advantage showcase */}
+      <Suspense fallback={<SectionSkeleton height="600px" title="Riesgo País" />}>
+        <RiskCountryPromoSection />
       </Suspense>
       
       {/* Heavy components are lazy loaded with professional skeletons */}
@@ -76,6 +119,7 @@ export default function HomePage() {
       <Suspense fallback={<SectionSkeleton height="300px" />}>
         <NetworkGraph />
       </Suspense>
-    </div>
+      </div>
+    </>
   )
 }

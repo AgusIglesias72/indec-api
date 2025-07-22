@@ -67,22 +67,24 @@ const DollarConverterSection = memo(function DollarConverterSection() {
   const featuredRate = dollarRates.BLUE || dollarRates.OFICIAL || Object.values(dollarRates).find(rate => rate !== null);
 
   return (
-    <section className="relative py-20 overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50"></div>
-      <div className="absolute top-10 left-10 w-72 h-72 bg-emerald-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-      <div className="absolute top-10 right-10 w-72 h-72 bg-green-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-      <div className="absolute -bottom-8 left-20 w-72 h-72 bg-teal-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
-
+    <section className="relative py-12 overflow-hidden">
       <div className="container mx-auto px-4 relative z-10">
-        {/* Section Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
+        {/* Main Content Container with rounded borders and max width */}
+        <div className="max-w-7xl mx-auto bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 rounded-3xl p-8 md:p-12 relative overflow-hidden">
+          {/* Background decorative elements */}
+          <div className="absolute top-10 left-10 w-72 h-72 bg-emerald-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
+          <div className="absolute top-10 right-10 w-72 h-72 bg-green-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
+          <div className="absolute -bottom-8 left-20 w-72 h-72 bg-teal-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+
+          <div className="relative z-10">
+            {/* Section Header */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+              className="text-center mb-16"
+            >
           <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
             <Sparkles className="h-4 w-4" />
             Herramienta Destacada
@@ -98,54 +100,27 @@ const DollarConverterSection = memo(function DollarConverterSection() {
             oficial, MEP y CCL actualizado minuto a minuto. La mejor herramienta para convertir dólares a pesos.
           </p>
 
-          {/* Featured Rate Display */}
-          {featuredRate && !loading && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4, delay: 0.2 }}
-              viewport={{ once: true }}
-              className="inline-flex items-center gap-3 bg-white rounded-2xl px-6 py-4 shadow-lg border border-emerald-100"
-            >
-              <div className="h-10 w-10 bg-emerald-100 rounded-xl flex items-center justify-center">
-                <TrendingUp className="h-5 w-5 text-emerald-600" />
-              </div>
-              <div className="text-left">
-                <div className="text-sm text-gray-500 font-medium">
-                  Dólar {featuredRate.dollar_type === 'OFICIAL' ? 'Oficial' : 'Blue'}
-                </div>
-                <div className="text-lg font-bold text-gray-900">
-                  ${featuredRate.sell_price?.toFixed(2) || 'N/A'}
-                </div>
-              </div>
-              <div className="h-6 w-px bg-gray-200"></div>
-              <div className="text-xs text-gray-500">
-                En vivo
-                <div className="inline-block w-2 h-2 bg-emerald-500 rounded-full ml-2 animate-pulse"></div>
-              </div>
             </motion.div>
-          )}
-        </motion.div>
 
-        {/* Converter Component */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          viewport={{ once: true }}
-          className="max-w-5xl mx-auto mb-12"
-        >
-          <DollarConverter dollarRates={dollarRates} loading={loading} />
-        </motion.div>
+            {/* Converter Component */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              viewport={{ once: true }}
+              className="max-w-5xl mx-auto mb-12"
+            >
+              <DollarConverter dollarRates={dollarRates} loading={loading} />
+            </motion.div>
 
-        {/* Features Grid - Centered with constrained width */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          viewport={{ once: true }}
-          className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 mb-12"
-        >
+            {/* Features Grid - Centered with constrained width */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              viewport={{ once: true }}
+              className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 mb-12"
+            >
           <div className="text-center">
             <div className="h-16 w-16 bg-white rounded-2xl shadow-lg flex items-center justify-center mx-auto mb-4">
               <RefreshCw className="h-8 w-8 text-emerald-600" />
@@ -175,16 +150,16 @@ const DollarConverterSection = memo(function DollarConverterSection() {
               Consulta cotizaciones de fechas anteriores para análisis y comparación
             </p>
           </div>
-        </motion.div>
+            </motion.div>
 
-        {/* CTA Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          viewport={{ once: true }}
-          className="text-center"
-        >
+            {/* CTA Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              viewport={{ once: true }}
+              className="text-center"
+            >
           <Link href="/dolar">
             <Button size="lg" className="bg-emerald-600 hover:bg-emerald-700 text-white px-10 py-4 text-lg font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
               Ver Todas las Cotizaciones
@@ -195,7 +170,9 @@ const DollarConverterSection = memo(function DollarConverterSection() {
           <p className="text-sm text-gray-600 mt-6 max-w-md mx-auto">
             Accedé a gráficos históricos del dólar, comparativas entre tipos de cambio y análisis de tendencias
           </p>
-        </motion.div>
+            </motion.div>
+          </div>
+        </div>
       </div>
 
       {/* CSS for blob animation */}
