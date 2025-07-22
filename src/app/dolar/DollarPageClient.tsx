@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { DollarRateData } from '@/types/dollar';
 import { DollarType } from '@/types/dollar';
 import { Skeleton } from '@/components/ui/skeleton';
+import ConverterPromoSection from '@/components/landing/ConverterPromoSection';
 
 // Lazy load heavy chart component
 const EnhancedDollarChart = lazy(() => import('@/components/EnhancedDollarChart'));
@@ -519,6 +520,11 @@ export default function ModernCotizacionesPage() {
               darkMode={false}
             />
           </Suspense>
+        </div>
+
+        {/* Converter Promotion Section */}
+        <div className="mb-16">
+          <ConverterPromoSection />
         </div>
 
         {/* Information Section */}
