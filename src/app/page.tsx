@@ -5,6 +5,7 @@ import { homeMetadata } from '@/lib/metadata';
 import EconomicMetricsSection from '@/components/KPI';
 
 // Lazy load heavy components to improve initial page load
+const DollarConverterSection = lazy(() => import('@/components/landing/DollarConverterSection'));
 const APISection = lazy(() => import("@/components/landing/ApiSection"));
 const Indicators = lazy(() => import("@/components/landing/Indicators"));
 const EmploymentSection = lazy(() => import('@/components/landing/LaborMarket'));
@@ -53,6 +54,11 @@ export default function HomePage() {
       
       {/* Critical above-the-fold content loads immediately */}
       <EconomicMetricsSection />
+      
+      {/* Dollar Converter Section - High engagement feature */}
+      <Suspense fallback={<SectionSkeleton height="800px" title="Conversor de Divisas" />}>
+        <DollarConverterSection />
+      </Suspense>
       
       {/* Heavy components are lazy loaded with professional skeletons */}
       <Suspense fallback={<SectionSkeleton height="500px" title="Mercado Laboral" />}>
