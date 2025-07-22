@@ -74,40 +74,36 @@ export default function DollarConverterLanding() {
       ])} />
       
       <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white">
-      {/* Hero Section with SEO-optimized content */}
-      <section className="relative py-16 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-100 via-green-50 to-teal-50 opacity-50"></div>
+      {/* Compact Hero + Immediate Converter */}
+      <section className="relative py-8 md:py-12 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-100 via-green-50 to-teal-50 opacity-30"></div>
         
         <div className="container mx-auto px-4 relative z-10">
+          {/* Compact Title */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
+            transition={{ duration: 0.5 }}
+            className="text-center mb-8"
           >
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
               Conversor de Dólar a Peso Argentino
-              <span className="block text-emerald-600 mt-2">Cotización en Tiempo Real</span>
+              <span className="block text-emerald-600 mt-1">en Tiempo Real</span>
             </h1>
             
-            <p className="text-xl md:text-2xl text-gray-700 max-w-4xl mx-auto mb-8">
-              Calculadora de dólar a peso argentino con todas las cotizaciones del mercado. 
-              Convertí USD a ARS con el tipo de cambio actualizado minuto a minuto.
-            </p>
-
-            {/* Live Rates Banner */}
-            <div className="flex flex-wrap justify-center gap-4 mb-8">
+            {/* Live Rates Banner - More compact */}
+            <div className="flex flex-wrap justify-center gap-3 mb-6">
               {!loading && (
                 <>
                   {dollarRates.BLUE && (
                     <motion.div
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="bg-white rounded-xl px-6 py-3 shadow-lg flex items-center gap-3"
+                      className="bg-white rounded-lg px-4 py-2 shadow-md flex items-center gap-2 text-sm"
                     >
                       <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse"></div>
-                      <span className="text-sm font-medium text-gray-600">Dólar Blue</span>
-                      <span className="text-lg font-bold text-blue-600">${dollarRates.BLUE.sell_price?.toFixed(2)}</span>
+                      <span className="font-medium text-gray-600">Blue</span>
+                      <span className="font-bold text-blue-600">${dollarRates.BLUE.sell_price?.toFixed(2)}</span>
                     </motion.div>
                   )}
                   {dollarRates.OFICIAL && (
@@ -115,37 +111,66 @@ export default function DollarConverterLanding() {
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: 0.1 }}
-                      className="bg-white rounded-xl px-6 py-3 shadow-lg flex items-center gap-3"
+                      className="bg-white rounded-lg px-4 py-2 shadow-md flex items-center gap-2 text-sm"
                     >
                       <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
-                      <span className="text-sm font-medium text-gray-600">Dólar Oficial</span>
-                      <span className="text-lg font-bold text-green-600">${dollarRates.OFICIAL.sell_price?.toFixed(2)}</span>
+                      <span className="font-medium text-gray-600">Oficial</span>
+                      <span className="font-bold text-green-600">${dollarRates.OFICIAL.sell_price?.toFixed(2)}</span>
                     </motion.div>
                   )}
                 </>
               )}
             </div>
           </motion.div>
-        </div>
-      </section>
 
-      {/* Main Converter Section */}
-      <section className="py-12">
-        <div className="container mx-auto px-4">
+          {/* Immediate Converter - Hero Position */}
           <Suspense fallback={
             <div className="max-w-5xl mx-auto">
               <Skeleton className="h-96 w-full rounded-2xl" />
             </div>
           }>
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
               className="max-w-5xl mx-auto"
             >
               <DollarConverter dollarRates={dollarRates} loading={loading} />
             </motion.div>
           </Suspense>
+        </div>
+      </section>
+
+      {/* Value Proposition Section */}
+      <section className="py-12 bg-white">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="text-center max-w-4xl mx-auto"
+          >
+            <p className="text-xl md:text-2xl text-gray-700 mb-8">
+              Calculadora de dólar a peso argentino con todas las cotizaciones del mercado. 
+              Convertí USD a ARS con el tipo de cambio actualizado minuto a minuto.
+            </p>
+            
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="flex items-center justify-center gap-3 p-4 bg-emerald-50 rounded-xl">
+                <RefreshCw className="h-6 w-6 text-emerald-600" />
+                <span className="font-semibold text-gray-900">Tiempo Real</span>
+              </div>
+              <div className="flex items-center justify-center gap-3 p-4 bg-blue-50 rounded-xl">
+                <BarChart className="h-6 w-6 text-blue-600" />
+                <span className="font-semibold text-gray-900">Todos los Tipos</span>
+              </div>
+              <div className="flex items-center justify-center gap-3 p-4 bg-purple-50 rounded-xl">
+                <Clock className="h-6 w-6 text-purple-600" />
+                <span className="font-semibold text-gray-900">Datos Históricos</span>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
