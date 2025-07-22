@@ -86,3 +86,105 @@ export const FinancialProductSchema = (dollarType: string, buyPrice?: number, se
     "validFrom": lastUpdate
   } : undefined
 });
+
+// Dollar Converter Web Application Schema
+export const DollarConverterWebAppSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Conversor de Dólar a Peso Argentino",
+  "description": "Calculadora de dólar a peso argentino con cotizaciones en tiempo real. Convierte USD a ARS con todos los tipos de cambio: blue, oficial, MEP, CCL.",
+  "url": "https://argenstats.com/conversor-dolar-peso-argentino",
+  "applicationCategory": "FinanceApplication",
+  "operatingSystem": "Web Browser",
+  "browserRequirements": "Requires HTML5 support",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD",
+    "category": "Free"
+  },
+  "featureList": [
+    "Conversión USD a ARS en tiempo real",
+    "Múltiples tipos de cambio (Blue, Oficial, MEP, CCL, Crypto, Tarjeta)",
+    "Cotizaciones históricas",
+    "Interfaz responsive",
+    "Actualizaciones automáticas cada minuto"
+  ],
+  "provider": {
+    "@type": "Organization",
+    "name": "ArgenStats",
+    "url": "https://argenstats.com"
+  },
+  "author": {
+    "@type": "Organization", 
+    "name": "ArgenStats"
+  },
+  "potentialAction": {
+    "@type": "UseAction",
+    "target": "https://argenstats.com/conversor-dolar-peso-argentino",
+    "object": {
+      "@type": "Thing",
+      "name": "Conversor de Divisas"
+    }
+  }
+};
+
+// FAQ Schema for Dollar Converter
+export const DollarConverterFAQSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "¿Cuánto vale el dólar hoy en Argentina?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "El valor del dólar varía según el tipo de cambio. En nuestro conversor podés ver todas las cotizaciones actualizadas, incluyendo dólar blue, oficial, MEP, CCL y más."
+      }
+    },
+    {
+      "@type": "Question", 
+      "name": "¿Cómo calcular dólares a pesos argentinos?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Simplemente ingresá el monto en USD en nuestro conversor, seleccioná el tipo de cambio deseado y obtendrás instantáneamente el equivalente en pesos argentinos."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Cuál es la diferencia entre dólar blue y oficial?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "El dólar oficial es el tipo de cambio establecido por el Banco Central, mientras que el dólar blue es la cotización del mercado informal o paralelo, generalmente más alta."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Con qué frecuencia se actualizan las cotizaciones?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Las cotizaciones se actualizan automáticamente cada minuto, garantizando que siempre tengas el tipo de cambio más reciente para tu conversión."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Qué tipos de dólar puedo convertir?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Podés convertir con los siguientes tipos de cambio: Dólar Blue, Oficial, MEP (Mercado Electrónico de Pagos), CCL (Contado con Liquidación), Crypto, Mayorista y Tarjeta."
+      }
+    }
+  ]
+};
+
+// Breadcrumb Schema Generator
+export const BreadcrumbSchema = (items: Array<{ name: string; url: string }>) => ({
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": items.map((item, index) => ({
+    "@type": "ListItem",
+    "position": index + 1,
+    "name": item.name,
+    "item": item.url
+  }))
+});

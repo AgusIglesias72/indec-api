@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://argenstats.com'
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://argenstats.com'
   
   // Static pages
   const staticPages = [
@@ -16,6 +16,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: 'hourly' as const,
       priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/conversor-dolar-peso-argentino`,
+      lastModified: new Date(),
+      changeFrequency: 'hourly' as const,
+      priority: 0.95,
     },
     {
       url: `${baseUrl}/indicadores/ipc`,

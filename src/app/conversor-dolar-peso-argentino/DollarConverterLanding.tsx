@@ -7,6 +7,7 @@ import { DollarType, DollarRateData } from '@/types/dollar';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import StructuredData, { DollarConverterWebAppSchema, DollarConverterFAQSchema, BreadcrumbSchema } from '@/components/StructuredData';
 
 // Lazy load the converter component
 const DollarConverter = lazy(() => import('@/components/DollarConverter'));
@@ -63,7 +64,16 @@ export default function DollarConverterLanding() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white">
+    <>
+      {/* Structured Data */}
+      <StructuredData data={DollarConverterWebAppSchema} />
+      <StructuredData data={DollarConverterFAQSchema} />
+      <StructuredData data={BreadcrumbSchema([
+        { name: "Inicio", url: "https://argenstats.com" },
+        { name: "Conversor de Dólar a Peso Argentino", url: "https://argenstats.com/conversor-dolar-peso-argentino" }
+      ])} />
+      
+      <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white">
       {/* Hero Section with SEO-optimized content */}
       <section className="relative py-16 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-100 via-green-50 to-teal-50 opacity-50"></div>
@@ -397,6 +407,7 @@ export default function DollarConverterLanding() {
           </motion.div>
         </div>
       </section>
-    </div>
+      </div>
+    </>
   );
 }
