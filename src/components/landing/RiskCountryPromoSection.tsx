@@ -97,7 +97,7 @@ export default function RiskCountryPromoSection() {
             viewport={{ once: true }}
             className="pt-4"
           >
-            <Link href="/riesgo-pais">
+            <Link href="/indicadores/riesgo-pais">
               <Button 
                 size="lg" 
                 className="bg-red-600 hover:bg-red-700 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 group"
