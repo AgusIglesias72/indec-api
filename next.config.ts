@@ -4,7 +4,6 @@ const nextConfig: NextConfig = {
   // Performance optimizations
   experimental: {
     // Enable experimental features for better performance
-    optimizeCss: true,
     scrollRestoration: true,
   },
 
