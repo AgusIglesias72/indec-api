@@ -2,7 +2,8 @@
 import { Metadata } from 'next';
 import { lazy, Suspense } from 'react';
 import { homeMetadata } from '@/lib/metadata';
-import EconomicMetricsSection from '@/components/KPI';
+import OptimizedKPI from '@/components/OptimizedKPI';
+import { getKPIDataFromDB, fallbackKPIData } from '@/lib/kpi-db-queries';
 import { CriticalStructuredData } from '@/components/StructuredData';
 import { OrganizationSchema, WebsiteSchema } from '@/components/StructuredData';
 import PreloadResources, { homePagePreloads } from '@/components/PreloadResources';
@@ -33,6 +34,9 @@ const NetworkGraph = lazy(() => import('@/components/Newsletter'));
 // const DashboardFeature = lazy(() => import("@/components/landing/DashboardFeatures"));
 
 export const metadata: Metadata = homeMetadata;
+
+// Cache de 1 minuto para datos dinámicos
+export const revalidate = 60;
 
 // Optimized loading component for lazy-loaded sections
 function SectionSkeleton({ height = "400px", title }: { height?: string; title?: string }) {
@@ -70,9 +74,23 @@ function SectionSkeleton({ height = "400px", title }: { height?: string; title?:
   );
 }
 
-export default function HomePage() {
+export default async function HomePage() {
   // Critical structured data for SEO
   const criticalSchemas = [OrganizationSchema, WebsiteSchema];
+  
+  // Obtener datos KPI directamente de la base de datos
+  let kpiData;
+  try {
+    kpiData = await getKPIDataFromDB();
+    
+    // Si algún campo es null, usar fallback
+    if (!kpiData.emae || !kpiData.ipc || !kpiData.dollar || !kpiData.riskCountry) {
+      kpiData = { ...fallbackKPIData, ...kpiData };
+    }
+  } catch (error) {
+    console.error('Error fetching KPI data:', error);
+    kpiData = fallbackKPIData;
+  }
   
   return (
     <>
@@ -92,8 +110,8 @@ export default function HomePage() {
             }}
           ></div>
         
-        {/* Critical above-the-fold content loads immediately */}
-        <EconomicMetricsSection />
+        {/* Critical above-the-fold content loads immediately with DB data */}
+        <OptimizedKPI data={kpiData} />
       
       {/* Dollar Converter Section - High engagement feature */}
       <Suspense fallback={<SectionSkeleton height="800px" title="Conversor de Divisas" />}>
