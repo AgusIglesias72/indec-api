@@ -121,74 +121,61 @@ async function getLatestDollar() {
  */
 async function getLatestRiskCountry() {
   try {
-    // Obtener el último valor
+    // Obtener el último valor usando la vista que ya tiene la variación calculada correctamente
     const { data: latest, error } = await supabase
-      .from('embi_risk')
-      .select('date, value')
-      .order('date', { ascending: false })
+      .from('v_embi_daily_closing')
+      .select('closing_date, closing_value, change_percentage')
+      .order('closing_date', { ascending: false })
       .limit(1)
       .single();
 
     if (error || !latest) throw error;
 
-    // Calcular fechas para variaciones
-    const currentDate = new Date(latest.date);
+    // Calcular fechas para variaciones mensuales y anuales
+    const currentDate = new Date(latest.closing_date);
     const oneMonthAgo = new Date(currentDate);
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
     const oneYearAgo = new Date(currentDate);
     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
-    // Obtener valores históricos para calcular variaciones
-    const [dailyResult, monthlyResult, yearlyResult] = await Promise.all([
-      // Valor del día anterior (más robusto)
+    // Obtener valores históricos para calcular variaciones mensuales y anuales
+    const [monthlyResult, yearlyResult] = await Promise.all([
+      // Valor de hace 1 mes - buscar el cierre del mismo día del mes anterior
       supabase
-        .from('embi_risk')
-        .select('date, value')
-        .lt('date', latest.date)
-        .order('date', { ascending: false })
+        .from('v_embi_daily_closing')
+        .select('closing_value')
+        .gte('closing_date', new Date(oneMonthAgo.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+        .lte('closing_date', new Date(oneMonthAgo.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+        .order('closing_date', { ascending: false })
         .limit(1)
         .single(),
-      // Valor de hace 1 mes
+      // Valor de hace 1 año - buscar el cierre del mismo día del año anterior
       supabase
-        .from('embi_risk')
-        .select('value')
-        .gte('date', new Date(oneMonthAgo.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
-        .lte('date', new Date(oneMonthAgo.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
-        .order('date', { ascending: false })
-        .limit(1)
-        .single(),
-      // Valor de hace 1 año
-      supabase
-        .from('embi_risk')
-        .select('value')
-        .gte('date', new Date(oneYearAgo.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
-        .lte('date', new Date(oneYearAgo.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
-        .order('date', { ascending: false })
+        .from('v_embi_daily_closing')
+        .select('closing_value')
+        .gte('closing_date', new Date(oneYearAgo.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+        .lte('closing_date', new Date(oneYearAgo.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+        .order('closing_date', { ascending: false })
         .limit(1)
         .single()
     ]);
 
-    // Calcular variaciones
-    let dailyVariation = null;
+    // Calcular variaciones mensuales y anuales
     let monthlyVariation = null;
     let yearlyVariation = null;
 
-    if (dailyResult.data && dailyResult.data.value) {
-      dailyVariation = ((latest.value - dailyResult.data.value) / dailyResult.data.value * 100);
-    }
-
     if (monthlyResult.data) {
-      monthlyVariation = ((latest.value - monthlyResult.data.value) / monthlyResult.data.value * 100);
+      monthlyVariation = ((latest.closing_value - monthlyResult.data.closing_value) / monthlyResult.data.closing_value * 100);
     }
 
     if (yearlyResult.data) {
-      yearlyVariation = ((latest.value - yearlyResult.data.value) / yearlyResult.data.value * 100);
+      yearlyVariation = ((latest.closing_value - yearlyResult.data.closing_value) / yearlyResult.data.closing_value * 100);
     }
 
     return {
-      closing_date: latest.date,
-      closing_value: latest.value,
-      change_percentage: dailyVariation,
+      closing_date: latest.closing_date,
+      closing_value: latest.closing_value,
+      change_percentage: latest.change_percentage, // Ya calculado correctamente en la vista
       monthlyVariation,
       yearlyVariation
     };
