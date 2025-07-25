@@ -132,10 +132,10 @@ async function getLatestRiskCountry() {
     if (error || !latest) throw error;
 
     // Calcular fechas para variaciones mensuales y anuales
-    const currentDate = new Date(latest.closing_date);
-    const oneMonthAgo = new Date(currentDate);
+    const currentDate = new Date(latest.closing_date!);
+    const oneMonthAgo = new Date(currentDate.getTime());
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-    const oneYearAgo = new Date(currentDate);
+    const oneYearAgo = new Date(currentDate.getTime());
     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
     // Obtener valores históricos para calcular variaciones mensuales y anuales
@@ -164,11 +164,11 @@ async function getLatestRiskCountry() {
     let monthlyVariation = null;
     let yearlyVariation = null;
 
-    if (monthlyResult.data) {
+    if (monthlyResult.data && latest.closing_value && monthlyResult.data.closing_value) {
       monthlyVariation = ((latest.closing_value - monthlyResult.data.closing_value) / monthlyResult.data.closing_value * 100);
     }
 
-    if (yearlyResult.data) {
+    if (yearlyResult.data && latest.closing_value && yearlyResult.data.closing_value) {
       yearlyVariation = ((latest.closing_value - yearlyResult.data.closing_value) / yearlyResult.data.closing_value * 100);
     }
 
