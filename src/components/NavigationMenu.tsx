@@ -25,6 +25,11 @@ const indicators = [
     description: "Índice de Precios al Consumidor",
   },
   {
+    title: "Pobreza e Indigencia",
+    href: "/indicadores/pobreza",
+    description: "Indicadores de pobreza e indigencia por regiones",
+  },
+  {
     title: "Riesgo País",
     href: "/indicadores/riesgo-pais",
     description: "Indicador de riesgo soberano argentino",

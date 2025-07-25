@@ -377,6 +377,78 @@ export type Database = {
         }
         Relationships: []
       }
+      poverty_data: {
+        Row: {
+          created_at: string | null
+          cuadro_source: string
+          data_type: string
+          date: string
+          id: string
+          indigence_gap: number | null
+          indigence_rate_households: number | null
+          indigence_rate_persons: number | null
+          indigence_severity: number | null
+          period: string
+          poverty_gap: number | null
+          poverty_rate_households: number | null
+          poverty_rate_persons: number | null
+          poverty_severity: number | null
+          region: string
+          semester: number
+          source_file: string | null
+          updated_at: string | null
+          variable_name: string | null
+          variable_value: number | null
+          year: number
+        }
+        Insert: {
+          created_at?: string | null
+          cuadro_source: string
+          data_type: string
+          date: string
+          id?: string
+          indigence_gap?: number | null
+          indigence_rate_households?: number | null
+          indigence_rate_persons?: number | null
+          indigence_severity?: number | null
+          period: string
+          poverty_gap?: number | null
+          poverty_rate_households?: number | null
+          poverty_rate_persons?: number | null
+          poverty_severity?: number | null
+          region: string
+          semester: number
+          source_file?: string | null
+          updated_at?: string | null
+          variable_name?: string | null
+          variable_value?: number | null
+          year: number
+        }
+        Update: {
+          created_at?: string | null
+          cuadro_source?: string
+          data_type?: string
+          date?: string
+          id?: string
+          indigence_gap?: number | null
+          indigence_rate_households?: number | null
+          indigence_rate_persons?: number | null
+          indigence_severity?: number | null
+          period?: string
+          poverty_gap?: number | null
+          poverty_rate_households?: number | null
+          poverty_rate_persons?: number | null
+          poverty_severity?: number | null
+          region?: string
+          semester?: number
+          source_file?: string | null
+          updated_at?: string | null
+          variable_name?: string | null
+          variable_value?: number | null
+          year?: number
+        }
+        Relationships: []
+      }
       user_alerts: {
         Row: {
           alert_type: string

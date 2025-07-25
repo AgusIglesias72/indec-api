@@ -33,7 +33,10 @@
       "Bash(npx kill-port:*)",
       "Bash(npx playwright codegen:*)",
       "Bash(npx playwright:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(mkdir:*)",
+      "WebFetch(domain:docs.google.com)",
+      "WebFetch(domain:www.indec.gob.ar)"
     ],
     "deny": []
   }

@@ -35,6 +35,12 @@ const indicators = [
     icon: TrendingUp,
   },
   {
+    title: "Pobreza e Indigencia",
+    href: "/indicadores/pobreza",
+    description: "Indicadores de pobreza e indigencia por regiones",
+    icon: Users,
+  },
+  {
     title: "Riesgo País",
     href: "/indicadores/riesgo-pais",
     description: "Indicador de riesgo soberano argentino",
@@ -50,6 +56,7 @@ const indicators = [
 
 const mainNavItems = [
   { title: "Dólar", href: "/dolar", icon: DollarSign },
+  { title: "IPC", href: "/ipc", icon: TrendingUp },
   { title: "Conversor USD/ARS", href: "/conversor-dolar-peso-argentino", icon: Calculator },
   { title: "Calendario INDEC", href: "/calendario", icon: Calendar },
   { title: "API Docs", href: "/documentacion", icon: FileText },

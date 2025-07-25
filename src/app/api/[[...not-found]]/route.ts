@@ -23,6 +23,12 @@ export async function GET() {
           "metadata": "/api/calendar/metadata",
           "by-activity": "/api/calendar/by-activity"
         }},
+        {"api/poverty": {
+          "latest": "/api/poverty/latest",
+          "series": "/api/poverty/series",
+          "comparison": "/api/poverty/comparison",
+          "main": "/api/poverty"
+        }},
       ]
     },
     { status: 404 }

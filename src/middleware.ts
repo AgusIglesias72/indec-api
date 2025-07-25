@@ -9,6 +9,7 @@ const knownApiPaths = [
   '/api/emae',
   '/api/dollar',
   '/api/labor-market',
+  '/api/poverty',
   '/api/calendar',
   '/api/riesgo-pais',
   '/api/stats',
@@ -21,6 +22,8 @@ const knownApiPaths = [
   '/api/cron/update-dollar',
   '/api/cron/update-labor-market',
   '/api/cron/update-embi',
+  '/api/cron/update-poverty',
+
   '/api/webhook/clerk',
   '/api/user/api-key',
   '/api/user/favorites',

@@ -20,6 +20,8 @@ const DollarConverterSection = lazy(() =>
 );
 
 const RiskCountryPromoSection = lazy(() => import('@/components/landing/RiskCountryPromoSection'));
+const IPCPromoSection = lazy(() => import('@/components/landing/IPCPromoSection'));
+const PovertyPromoSection = lazy(() => import('@/components/landing/PovertyPromoSection'));
 const APISection = lazy(() => import("@/components/landing/ApiSection"));
 const Indicators = lazy(() => import("@/components/landing/Indicators"));
 const EmploymentSection = lazy(() => import('@/components/landing/LaborMarket'));
@@ -101,6 +103,16 @@ export default function HomePage() {
       {/* Risk Country Promotion Section - API advantage showcase */}
       <Suspense fallback={<SectionSkeleton height="600px" title="Riesgo País" />}>
         <RiskCountryPromoSection />
+      </Suspense>
+      
+      {/* IPC Promotion Section - Inflation analysis showcase */}
+      <Suspense fallback={<SectionSkeleton height="600px" title="IPC - Índice de Precios" />}>
+        <IPCPromoSection />
+      </Suspense>
+      
+      {/* Poverty Promotion Section - Social indicators showcase */}
+      <Suspense fallback={<SectionSkeleton height="600px" title="Pobreza e Indigencia" />}>
+        <PovertyPromoSection />
       </Suspense>
       
       {/* Heavy components are lazy loaded with professional skeletons */}
