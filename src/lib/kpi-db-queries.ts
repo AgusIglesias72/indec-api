@@ -133,13 +133,23 @@ async function getLatestRiskCountry() {
 
     // Calcular fechas para variaciones
     const currentDate = new Date(latest.date);
+    const oneDayAgo = new Date(currentDate);
+    oneDayAgo.setDate(oneDayAgo.getDate() - 1);
     const oneMonthAgo = new Date(currentDate);
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
     const oneYearAgo = new Date(currentDate);
     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
     // Obtener valores históricos para calcular variaciones
-    const [monthlyResult, yearlyResult] = await Promise.all([
+    const [dailyResult, monthlyResult, yearlyResult] = await Promise.all([
+      // Valor de hace 1 día
+      supabase
+        .from('embi_risk')
+        .select('value')
+        .lt('date', latest.date)
+        .order('date', { ascending: false })
+        .limit(1)
+        .single(),
       // Valor de hace 1 mes
       supabase
         .from('embi_risk')
@@ -161,8 +171,13 @@ async function getLatestRiskCountry() {
     ]);
 
     // Calcular variaciones
+    let dailyVariation = null;
     let monthlyVariation = null;
     let yearlyVariation = null;
+
+    if (dailyResult.data) {
+      dailyVariation = ((latest.value - dailyResult.data.value) / dailyResult.data.value * 100);
+    }
 
     if (monthlyResult.data) {
       monthlyVariation = ((latest.value - monthlyResult.data.value) / monthlyResult.data.value * 100);
@@ -175,7 +190,7 @@ async function getLatestRiskCountry() {
     return {
       closing_date: latest.date,
       closing_value: latest.value,
-      change_percentage: null, // No tenemos este campo en embi_risk
+      change_percentage: dailyVariation,
       monthlyVariation,
       yearlyVariation
     };
