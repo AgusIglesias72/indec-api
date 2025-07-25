@@ -4,6 +4,7 @@ import React, { useState, useEffect, memo, useMemo, lazy, Suspense } from 'react
 import { Globe, TrendingUp, TrendingDown, BarChart3, Clock, RefreshCw, ArrowUpRight, ArrowDownRight, Info, Minus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Lazy load heavy chart component
 const EnhancedRiskChart = lazy(() => import('@/components/EnhancedRiskChart'));
@@ -394,7 +395,7 @@ const PeriodVariations = memo(function PeriodVariations() {
         <h2 className="text-xl md:text-2xl font-bold text-gray-900">Variaciones por Período</h2>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
         {periodsData.map((period, index) => {
           const styles = getVariationStyles(period.data.value);
           return (
@@ -406,15 +407,15 @@ const PeriodVariations = memo(function PeriodVariations() {
               className="group relative"
             >
               <div className={`absolute -inset-1 bg-gradient-to-r ${styles.gradient} rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-300`}></div>
-              <div className={`relative bg-white rounded-2xl p-4 md:p-6 shadow-md border ${styles.gradient.includes('border-') ? styles.gradient.split('border-')[1] : 'border-gray-100'} text-center md:text-left`}>
-                <div className="flex items-center justify-center md:justify-between mb-4">
+              <div className={`relative bg-white rounded-2xl p-3 md:p-6 shadow-md border ${styles.gradient.includes('border-') ? styles.gradient.split('border-')[1] : 'border-gray-100'} text-center md:text-left h-full`}>
+                <div className="flex items-center justify-between mb-2 md:mb-4">
                   <p className="text-sm font-medium text-gray-600">{period.label}</p>
                   <div className="ml-2 md:ml-0">
                     {styles.icon}
                   </div>
                 </div>
 
-                <p className={`text-2xl md:text-3xl font-bold mb-2 ${styles.color}`}>
+                <p className={`text-xl md:text-3xl font-bold mb-1 md:mb-2 ${styles.color}`}>
                   {period.data.value !== null ? formatPercentageChange(period.data.value) : 'N/A'}
                 </p>
 
@@ -501,17 +502,17 @@ const ValoresActuales = memo(function ValoresActuales() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
           {[1, 2, 3].map((i) => (
             <div key={i} className="group relative">
               <div className="absolute -inset-1 bg-gradient-to-r from-red-600/10 to-orange-400/10 rounded-2xl blur opacity-30"></div>
-              <div className="relative bg-white rounded-2xl p-4 md:p-6 shadow-md border border-red-100 text-center md:text-left">
-                <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
-                  <Skeleton className="h-8 w-8 rounded-lg" />
-                  <Skeleton className="h-4 w-24" />
+              <div className="relative bg-white rounded-2xl p-3 md:p-6 shadow-md border border-red-100 text-center md:text-left h-full">
+                <div className="flex items-center justify-center md:justify-start gap-3 mb-2 md:mb-4">
+                  <Skeleton className="h-6 w-6 md:h-8 md:w-8 rounded-lg" />
+                  <Skeleton className="h-3 w-16 md:h-4 md:w-24" />
                 </div>
-                <Skeleton className="h-10 w-20 mb-2 mx-auto md:mx-0" />
-                <Skeleton className="h-3 w-16 mx-auto md:mx-0" />
+                <Skeleton className="h-8 w-16 md:h-10 md:w-20 mb-1 md:mb-2 mx-auto md:mx-0" />
+                <Skeleton className="h-3 w-12 md:w-16 mx-auto md:mx-0" />
               </div>
             </div>
           ))}
@@ -542,7 +543,7 @@ const ValoresActuales = memo(function ValoresActuales() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
         {/* Valor mínimo */}
         {minData && (
           <motion.div
@@ -552,18 +553,27 @@ const ValoresActuales = memo(function ValoresActuales() {
             className="group relative"
           >
             <div className="absolute -inset-1 bg-gradient-to-r from-green-600/10 to-green-400/10 rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-300"></div>
-            <div className="relative bg-white rounded-2xl p-4 md:p-6 shadow-md border border-green-100 text-center md:text-left">
-              <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
+            <div className="relative bg-white rounded-2xl p-3 md:p-6 shadow-md border border-green-100 text-center md:text-left h-full">
+              <div className="flex items-center justify-center md:justify-start gap-3 mb-2 md:mb-4">
                 <div className="h-8 w-8 bg-green-100 rounded-lg flex items-center justify-center">
                   <TrendingDown className="h-4 w-4 text-green-600" />
                 </div>
-                <div className="h-4 w-4 text-green-600 opacity-50">
-                  <Info className="h-4 w-4" />
-                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <div className="h-4 w-4 text-green-600 opacity-50 hover:opacity-100 transition-opacity">
+                        <Info className="h-4 w-4" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Valor más bajo registrado en los últimos 3 meses</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
 
-              <p className="text-sm font-medium text-gray-600 mb-2">Valor mínimo</p>
-              <p className="text-2xl md:text-3xl font-bold text-green-700 mb-1">{formatRiskValue(minData.value)}</p>
+              <p className="text-sm font-medium text-gray-600 mb-1 md:mb-2">Valor mínimo</p>
+              <p className="text-xl md:text-3xl font-bold text-green-700 mb-1">{formatRiskValue(minData.value)}</p>
               <p className="text-xs text-gray-500">
                 {new Date(minData.date).toLocaleDateString('es-AR', {
                   day: 'numeric',
@@ -584,18 +594,27 @@ const ValoresActuales = memo(function ValoresActuales() {
             className="group relative"
           >
             <div className="absolute -inset-1 bg-gradient-to-r from-red-600/10 to-red-400/10 rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-300"></div>
-            <div className="relative bg-white rounded-2xl p-4 md:p-6 shadow-md border border-red-100 text-center md:text-left">
-              <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
+            <div className="relative bg-white rounded-2xl p-3 md:p-6 shadow-md border border-red-100 text-center md:text-left h-full">
+              <div className="flex items-center justify-center md:justify-start gap-3 mb-2 md:mb-4">
                 <div className="h-8 w-8 bg-red-100 rounded-lg flex items-center justify-center">
                   <TrendingUp className="h-4 w-4 text-red-600" />
                 </div>
-                <div className="h-4 w-4 text-red-600 opacity-50">
-                  <Info className="h-4 w-4" />
-                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <div className="h-4 w-4 text-red-600 opacity-50 hover:opacity-100 transition-opacity">
+                        <Info className="h-4 w-4" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Valor más alto registrado en los últimos 3 meses</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
 
-              <p className="text-sm font-medium text-gray-600 mb-2">Valor máximo</p>
-              <p className="text-2xl md:text-3xl font-bold text-red-700 mb-1">{formatRiskValue(maxData.value)}</p>
+              <p className="text-sm font-medium text-gray-600 mb-1 md:mb-2">Valor máximo</p>
+              <p className="text-xl md:text-3xl font-bold text-red-700 mb-1">{formatRiskValue(maxData.value)}</p>
               <p className="text-xs text-gray-500">
                 {new Date(maxData.date).toLocaleDateString('es-AR', {
                   day: 'numeric',
@@ -616,18 +635,27 @@ const ValoresActuales = memo(function ValoresActuales() {
             className="group relative"
           >
             <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/10 to-blue-400/10 rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-300"></div>
-            <div className="relative bg-white rounded-2xl p-4 md:p-6 shadow-md border border-blue-100 text-center md:text-left">
-              <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
+            <div className="relative bg-white rounded-2xl p-3 md:p-6 shadow-md border border-blue-100 text-center md:text-left h-full">
+              <div className="flex items-center justify-center md:justify-start gap-3 mb-2 md:mb-4">
                 <div className="h-8 w-8 bg-blue-100 rounded-lg flex items-center justify-center">
                   <BarChart3 className="h-4 w-4 text-blue-600" />
                 </div>
-                <div className="h-4 w-4 text-blue-600 opacity-50">
-                  <Info className="h-4 w-4" />
-                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <div className="h-4 w-4 text-blue-600 opacity-50 hover:opacity-100 transition-opacity">
+                        <Info className="h-4 w-4" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Promedio aritmético de los valores en los últimos 3 meses</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
 
-              <p className="text-sm font-medium text-gray-600 mb-2">Promedio del período</p>
-              <p className="text-2xl md:text-3xl font-bold text-blue-700 mb-1">{formatRiskValue(stats.avg_value)}</p>
+              <p className="text-sm font-medium text-gray-600 mb-1 md:mb-2">Promedio del período</p>
+              <p className="text-xl md:text-3xl font-bold text-blue-700 mb-1">{formatRiskValue(stats.avg_value)}</p>
               <p className="text-xs text-gray-500">últimos 3 meses</p>
             </div>
           </motion.div>
@@ -820,7 +848,7 @@ export default function RiesgoPaisPage() {
           <EnhancedRiskChart
             title="Análisis histórico"
             description="Evolución del riesgo país con selector de períodos extendidos"
-            height={450}
+            height={350}
             darkMode={false}
             enableExtendedPeriods={true}
             maxDataPoints={5000}

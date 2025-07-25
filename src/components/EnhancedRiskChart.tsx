@@ -189,26 +189,26 @@ export default function EnhancedRiskChart({
   return (
     <div className="mb-16">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-4 md:mb-6">
         <div className="h-8 w-8 bg-red-100 rounded-lg flex items-center justify-center">
           <BarChart3 className="h-4 w-4 text-red-600" />
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-          <p className="text-gray-600 text-sm">{description}</p>
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900">{title}</h2>
+          <p className="text-gray-600 text-sm hidden md:block">{description}</p>
         </div>
       </div>
       
       <div className="group relative">
         <div className="absolute -inset-1 bg-gradient-to-r from-red-600/10 to-orange-400/10 rounded-2xl blur opacity-30"></div>
-        <div className="relative bg-white rounded-2xl p-6 shadow-md border border-red-100">
+        <div className="relative bg-white rounded-2xl p-3 md:p-6 shadow-md border border-red-100">
           
           {/* Header del gráfico con selector */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
-            <div className="flex items-center gap-4">
-              <Calendar className="h-5 w-5 text-red-600" />
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 md:mb-6 gap-3 md:gap-4">
+            <div className="flex items-center gap-2 md:gap-4">
+              <Calendar className="h-4 w-4 md:h-5 md:w-5 text-red-600" />
               <span className="text-sm font-medium text-gray-700">
-                {periodOptions.find(opt => opt.value === selectedPeriod)?.label}
+                Período seleccionado
               </span>
             </div>
             
@@ -218,7 +218,7 @@ export default function EnhancedRiskChart({
                 <button
                   key={option.value}
                   onClick={() => setSelectedPeriod(option.value)}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${
+                  className={`px-2 md:px-3 py-1 md:py-1.5 text-xs md:text-sm font-medium rounded-md transition-all duration-200 ${
                     selectedPeriod === option.value
                       ? 'bg-red-600 text-white shadow-sm'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
@@ -232,22 +232,22 @@ export default function EnhancedRiskChart({
 
           {/* Estadísticas simples */}
           {stats && !loading && (
-            <div className="grid grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-xl">
+            <div className="grid grid-cols-3 gap-2 md:gap-4 mb-3 md:mb-6 p-2 md:p-4 bg-gray-50 rounded-xl">
               <div className="text-center">
                 <p className="text-xs text-gray-600 mb-1">Promedio</p>
-                <p className="text-sm font-semibold text-gray-900">
+                <p className="text-xs md:text-sm font-semibold text-gray-900">
                   {formatRiskValue(stats.avg)}
                 </p>
               </div>
               <div className="text-center">
                 <p className="text-xs text-gray-600 mb-1">Mínimo</p>
-                <p className="text-sm font-semibold text-green-700">
+                <p className="text-xs md:text-sm font-semibold text-green-700">
                   {formatRiskValue(stats.min)}
                 </p>
               </div>
               <div className="text-center">
                 <p className="text-xs text-gray-600 mb-1">Máximo</p>
-                <p className="text-sm font-semibold text-red-700">
+                <p className="text-xs md:text-sm font-semibold text-red-700">
                   {formatRiskValue(stats.max)}
                 </p>
               </div>
@@ -255,7 +255,7 @@ export default function EnhancedRiskChart({
           )}
 
           {/* Gráfico de área */}
-          <div style={{ height: `${height}px` }}>
+          <div className="w-full h-64 md:h-96" style={{ minHeight: `${Math.min(height, 300)}px` }}>
             {loading ? (
               <div className="h-full flex items-center justify-center">
                 <div className="text-center">
@@ -277,7 +277,7 @@ export default function EnhancedRiskChart({
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 5, right: 40, left: 20, bottom: 5 }}>
+                <AreaChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
                   <defs>
                     <linearGradient id="riskGradient" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#DC2626" stopOpacity={0.3}/>

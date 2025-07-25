@@ -133,8 +133,6 @@ async function getLatestRiskCountry() {
 
     // Calcular fechas para variaciones
     const currentDate = new Date(latest.date);
-    const oneDayAgo = new Date(currentDate);
-    oneDayAgo.setDate(oneDayAgo.getDate() - 1);
     const oneMonthAgo = new Date(currentDate);
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
     const oneYearAgo = new Date(currentDate);
@@ -142,10 +140,10 @@ async function getLatestRiskCountry() {
 
     // Obtener valores históricos para calcular variaciones
     const [dailyResult, monthlyResult, yearlyResult] = await Promise.all([
-      // Valor de hace 1 día
+      // Valor del día anterior (más robusto)
       supabase
         .from('embi_risk')
-        .select('value')
+        .select('date, value')
         .lt('date', latest.date)
         .order('date', { ascending: false })
         .limit(1)
@@ -175,7 +173,7 @@ async function getLatestRiskCountry() {
     let monthlyVariation = null;
     let yearlyVariation = null;
 
-    if (dailyResult.data) {
+    if (dailyResult.data && dailyResult.data.value) {
       dailyVariation = ((latest.value - dailyResult.data.value) / dailyResult.data.value * 100);
     }
 
