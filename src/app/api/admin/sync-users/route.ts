@@ -1,6 +1,6 @@
 // src/app/api/admin/sync-users/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { clerkClient } from '@clerk/clerk-sdk-node'
+import { createClerkClient } from '@clerk/nextjs/server'
 import { createServerComponentClient } from '@/lib/supabase'
 import { headers } from 'next/headers'
 
@@ -14,12 +14,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    console.info('Starting user synchronization...')
+    
     const supabase = createServerComponentClient()
     
     // Get all users from Clerk
-    const clerkUsers = await clerkClient.users.getUserList({
+    console.info('Fetching users from Clerk...')
+    const clerk = createClerkClient({ 
+      secretKey: process.env.CLERK_SECRET_KEY 
+    })
+    const clerkUsersResponse = await clerk.users.getUserList({
       limit: 500, // Adjust as needed
     })
+    const clerkUsers = clerkUsersResponse
 
     console.info(`Found ${clerkUsers.totalCount} users in Clerk`)
 
@@ -58,11 +65,11 @@ export async function POST(request: NextRequest) {
       usersToInsert.push({
         clerk_user_id: user.id,
         email: user.emailAddresses[0]?.emailAddress || null,
-        first_name: user.firstName || null,
-        last_name: user.lastName || null,
+        name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || null,
         image_url: user.imageUrl || null,
         api_key: apiKeyData,
-        subscription_status: 'free',
+        plan_type: 'free',
+        daily_requests_count: 0,
         created_at: user.createdAt ? new Date(user.createdAt).toISOString() : new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -89,7 +96,11 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error in user synchronization:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: errorMessage 
+    }, { status: 500 })
   }
 }
 
@@ -106,7 +117,11 @@ export async function GET(request: NextRequest) {
     const supabase = createServerComponentClient()
     
     // Get counts from both systems
-    const clerkUsers = await clerkClient.users.getUserList({ limit: 1 })
+    const clerk = createClerkClient({ 
+      secretKey: process.env.CLERK_SECRET_KEY 
+    })
+    const clerkUsersResponse = await clerk.users.getUserList({ limit: 1 })
+    const clerkUsers = clerkUsersResponse
     const { count: supabaseCount, error } = await supabase
       .from('users')
       .select('*', { count: 'exact', head: true })

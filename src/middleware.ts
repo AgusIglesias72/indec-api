@@ -30,6 +30,9 @@ const knownApiPaths = [
   '/api/user/alerts',
   '/api/admin/sync-users',
   '/api/admin/check-schema',
+  '/api/admin/simple-sync',
+  '/api/admin/clerk-count',
+  '/api/admin/compare-users',
   '/api/test/webhook'
 ];
 
