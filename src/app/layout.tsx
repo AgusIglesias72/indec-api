@@ -79,6 +79,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link rel="dns-prefetch" href="https://argenstats.com" />
         <link rel="dns-prefetch" href="https://www.google-analytics.com" />
+        <link rel="dns-prefetch" href="https://vitals.vercel-analytics.com" />
         
         {/* Structured data for SEO */}
         <StructuredData data={OrganizationSchema} />
@@ -87,6 +88,14 @@ export default function RootLayout({
         {/* Critical CSS hint */}
         <link rel="preload" href="/fonts/ClearSans-Regular.woff" as="font" type="font/woff" crossOrigin="" />
         <link rel="preload" href="/fonts/ClearSans-Bold.woff" as="font" type="font/woff" crossOrigin="" />
+        
+        {/* Performance hints */}
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+        <meta httpEquiv="x-dns-prefetch-control" content="on" />
+        
+        {/* Resource hints for better performance */}
+        <link rel="prefetch" href="/api/stats" />
+        <link rel="preconnect" href="https://api.argenstats.com" />
       </head>
       <body>
         <AppWrapper>

@@ -36,7 +36,15 @@
       "Bash(npm run:*)",
       "Bash(mkdir:*)",
       "WebFetch(domain:docs.google.com)",
-      "WebFetch(domain:www.indec.gob.ar)"
+      "WebFetch(domain:www.indec.gob.ar)",
+      "Bash(gh pr:*)",
+      "Bash(gh auth:*)",
+      "Bash(git fetch:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(git checkout:*)",
+      "Bash(git pull:*)",
+      "Bash(git reset:*)",
+      "Bash(find:*)"
     ],
     "deny": []
   }

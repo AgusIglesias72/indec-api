@@ -235,12 +235,12 @@ export const contactMetadata: Metadata = {
 
 // Riesgo País page metadata
 export const riesgoPaisMetadata: Metadata = {
-  title: "Riesgo País Argentina",
-  description: "Seguimiento en tiempo real del indicador de riesgo soberano argentino. Análisis histórico, niveles de riesgo y factores que influyen en la percepción del mercado.",
-  keywords: ["riesgo país", "argentina", "bonos soberanos", "spread", "default", "mercados financieros", "deuda externa", "indicador económico"],
+  title: "Riesgo País Argentina en Tiempo Real - Análisis Intradía y Histórico",
+  description: "Seguimiento en tiempo real del riesgo país argentino con datos cada 30 minutos. Visualiza tendencias de 1 día, 7 días y análisis histórico completo con gráficos interactivos y escalado dinámico.",
+  keywords: ["riesgo país", "argentina", "bonos soberanos", "spread", "default", "mercados financieros", "deuda externa", "indicador económico", "tiempo real", "análisis intradía", "EMBI", "riesgo soberano"],
   openGraph: {
-    title: "Riesgo País Argentina | ArgenStats",
-    description: "Seguimiento en tiempo real del indicador de riesgo soberano argentino. Análisis histórico, niveles de riesgo y factores que influyen en la percepción del mercado.",
+    title: "Riesgo País Argentina en Tiempo Real - Análisis Intradía | ArgenStats",
+    description: "Seguimiento en tiempo real del riesgo país argentino con datos cada 30 minutos. Visualiza tendencias de 1 día, 7 días y análisis histórico completo.",
     url: `${BASE_URL}/indicadores/riesgo-pais`,
     images: [
       {
@@ -252,8 +252,8 @@ export const riesgoPaisMetadata: Metadata = {
     ],
   },
   twitter: {
-    title: "Riesgo País Argentina | ArgenStats",
-    description: "Seguimiento en tiempo real del indicador de riesgo soberano argentino. Análisis histórico, niveles de riesgo y factores que influyen en la percepción del mercado.",
+    title: "Riesgo País Argentina en Tiempo Real | ArgenStats",
+    description: "Seguimiento en tiempo real del riesgo país argentino con datos cada 30 minutos. Visualiza tendencias intradía y análisis histórico completo.",
   },
 };
 
@@ -322,6 +322,44 @@ export const empleoMetadata: Metadata = {
 };
 
 // Dollar Converter Landing page metadata
+// Poverty page metadata
+export const povertyMetadata: Metadata = {
+  title: "Índices de Pobreza e Indigencia en Argentina - Datos INDEC Actualizados",
+  description: "Seguimiento de los índices de pobreza e indigencia en Argentina con datos oficiales del INDEC. Análisis por regiones, comparación histórica y tendencias socioeconómicas actualizadas semestralmente.",
+  keywords: [
+    "pobreza argentina", 
+    "indigencia argentina", 
+    "INDEC pobreza", 
+    "índice de pobreza", 
+    "pobreza por regiones", 
+    "estadísticas sociales", 
+    "canasta básica", 
+    "línea de pobreza", 
+    "hogares pobres argentina", 
+    "personas pobres argentina",
+    "pobreza estructural",
+    "indicadores sociales",
+    "EPH encuesta permanente hogares"
+  ],
+  openGraph: {
+    title: "Índices de Pobreza e Indigencia en Argentina | ArgenStats",
+    description: "Seguimiento de los índices de pobreza e indigencia en Argentina con datos oficiales del INDEC. Análisis por regiones y comparación histórica.",
+    url: `${BASE_URL}/indicadores/pobreza`,
+    images: [
+      {
+        url: `${BASE_URL}/images/pobreza-og-image.jpg`,
+        width: 1200,
+        height: 630,
+        alt: "Índices de Pobreza e Indigencia en Argentina",
+      },
+    ],
+  },
+  twitter: {
+    title: "Pobreza e Indigencia Argentina | Datos INDEC | ArgenStats",
+    description: "Índices de pobreza e indigencia en Argentina con datos oficiales del INDEC. Análisis por regiones y tendencias históricas.",
+  },
+};
+
 export const dollarConverterMetadata: Metadata = {
   title: "Conversor de Dólar a Peso Argentino Hoy | Calculadora USD ARS en Tiempo Real",
   description: "Conversor de dólar a peso argentino actualizado. Calculá cuánto valen tus dólares hoy con cotización dólar blue, oficial, MEP, CCL, crypto y tarjeta. Conversor USD ARS gratis.",

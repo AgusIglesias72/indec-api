@@ -92,6 +92,54 @@ export const DatasetSchema = (indicatorType: string, description: string, lastMo
   }
 });
 
+// Enhanced Country Risk schema with real-time features
+export const CountryRiskSchema = (currentValue?: number, lastUpdate?: string, changePercent?: number) => ({
+  "@context": "https://schema.org",
+  "@type": ["Dataset", "FinancialProduct"],
+  "name": "Riesgo País Argentina - EMBI+ en Tiempo Real",
+  "description": "Seguimiento en tiempo real del indicador de riesgo soberano argentino con análisis intradía cada 30 minutos. Incluye visualizaciones de 1 día, 7 días y análisis histórico completo.",
+  "url": "https://argenstats.com/indicadores/riesgo-pais",
+  "keywords": "riesgo país, argentina, EMBI, bonos soberanos, análisis intradía, tiempo real",
+  "dateModified": lastUpdate || new Date().toISOString(),
+  "temporalCoverage": "2016/P8Y",
+  "variableMeasured": [
+    {
+      "@type": "PropertyValue",
+      "name": "Riesgo País (puntos básicos)",
+      "value": currentValue,
+      "unitText": "puntos básicos"
+    },
+    {
+      "@type": "PropertyValue", 
+      "name": "Variación porcentual",
+      "value": changePercent,
+      "unitText": "porcentaje"
+    }
+  ],
+  "updateFrequency": "PT30M",
+  "creator": {
+    "@type": "Organization",
+    "name": "Mercados Financieros Internacionales"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ArgenStats",
+    "url": "https://argenstats.com"
+  },
+  "spatialCoverage": {
+    "@type": "Place",
+    "name": "Argentina"
+  },
+  "mainEntity": {
+    "@type": "WebApplication",
+    "name": "Dashboard Riesgo País Tiempo Real",
+    "description": "Herramienta interactiva para monitorear el riesgo país argentino con datos cada 30 minutos",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Web Browser",
+    "browserRequirements": "Requires JavaScript"
+  }
+});
+
 export const FinancialProductSchema = (dollarType: string, buyPrice?: number, sellPrice?: number, lastUpdate?: string) => ({
   "@context": "https://schema.org",
   "@type": "FinancialProduct",

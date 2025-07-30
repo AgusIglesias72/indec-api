@@ -2,7 +2,7 @@
 import { Metadata } from 'next';
 import { riesgoPaisMetadata } from '@/lib/metadata';
 import { createIndicatorPageSchema, createBreadcrumbSchema } from '@/lib/structured-data-helpers';
-import StructuredData from '@/components/StructuredData';
+import StructuredData, { CountryRiskSchema } from '@/components/StructuredData';
 
 export const metadata: Metadata = riesgoPaisMetadata;
 
@@ -28,6 +28,7 @@ export default function RiskCountryLayout({
     <>
       <StructuredData data={riesgoSchema} />
       <StructuredData data={createBreadcrumbSchema(breadcrumbs)} />
+      <StructuredData data={CountryRiskSchema()} />
       {children}
     </>
   );

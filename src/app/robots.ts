@@ -26,6 +26,8 @@ export default function robots(): MetadataRoute.Robots {
           '/dolar',
           '/conversor-dolar-peso-argentino',
           '/indicadores/*',
+          '/ipc',
+          '/pobreza-argentina',
           '/calendario',
           '/documentacion',
           '/contacto'
@@ -39,7 +41,9 @@ export default function robots(): MetadataRoute.Robots {
           '/',
           '/dolar',
           '/conversor-dolar-peso-argentino',
-          '/indicadores/*'
+          '/indicadores/*',
+          '/ipc',
+          '/pobreza-argentina'
         ],
         crawlDelay: 2,
       }
