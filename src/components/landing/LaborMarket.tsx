@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowRight, Users, TrendingUp, TrendingDown, Activity, BarChart3, Info } from "lucide-react"
+import { ArrowRight, Users, TrendingUp, TrendingDown, Activity, Info } from "lucide-react"
 import { motion } from "framer-motion"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"

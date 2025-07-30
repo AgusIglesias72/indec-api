@@ -1,10 +1,16 @@
 import type { NextConfig } from "next";
 
+// Bundle analyzer setup
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+})
+
 const nextConfig: NextConfig = {
   // Performance optimizations
   experimental: {
     // Enable experimental features for better performance
     scrollRestoration: true,
+    optimizeCss: true,
   },
 
   // Image optimization
@@ -26,27 +32,32 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: '/(.*)',
+        source: '/_next/static/(.*)',
         headers: [
           // Cache static assets aggressively
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
           },
-          // Preconnect to external domains
+        ],
+      },
+      {
+        source: '/fonts/(.*)',
+        headers: [
+          // Cache fonts for a long time
           {
-            key: 'Link',
-            value: '<https://fonts.googleapis.com>; rel=preconnect; crossorigin, <https://fonts.gstatic.com>; rel=preconnect; crossorigin'
-          }
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
         ],
       },
       {
         source: '/api/(.*)',
         headers: [
-          // API caching
+          // No cache for API routes - real-time data
           {
             key: 'Cache-Control',
-            value: 'public, s-maxage=300, stale-while-revalidate=60',
+            value: 'no-store, no-cache, must-revalidate',
           },
         ],
       },
@@ -76,4 +87,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);

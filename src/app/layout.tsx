@@ -7,7 +7,7 @@ import "./globals.css";
 import AppWrapper from "@/lib/AppWrapper";
 import NavBar from "@/components/landing/Navbar";
 import { defaultMetadata } from "@/lib/metadata";
-import { GoogleAnalytics } from '@next/third-parties/google';
+import OptimizedGoogleAnalytics from '@/components/OptimizedGoogleAnalytics';
 import { Analytics } from "@vercel/analytics/next"
 import StructuredData, { OrganizationSchema, WebsiteSchema } from "@/components/StructuredData"
 
@@ -74,9 +74,7 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${clearSans.variable} ${jetbrainsMono.variable} ${righteous.variable}`}>
       <head>
-        {/* Preload critical resources */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        {/* Remove unused preconnects as suggested by PageSpeed */}
         <link rel="dns-prefetch" href="https://argenstats.com" />
         <link rel="dns-prefetch" href="https://www.google-analytics.com" />
         <link rel="dns-prefetch" href="https://vitals.vercel-analytics.com" />
@@ -103,7 +101,7 @@ export default function RootLayout({
           {children}
           <Footer />
         </AppWrapper>
-        <GoogleAnalytics gaId="G-WFK681BVSD" />
+        <OptimizedGoogleAnalytics gaId="G-WFK681BVSD" />
         <Analytics />
 
       </body>

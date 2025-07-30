@@ -9,8 +9,7 @@ import {
   YAxis, 
   CartesianGrid,
   Tooltip,
-  LabelList,
-  Cell
+  LabelList
 } from "recharts"
 import { motion } from "framer-motion"
 import { Skeleton } from "@/components/ui/skeleton"

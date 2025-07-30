@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowRight, Info, TrendingUp, BarChart3, PieChart, DollarSign, Users, Activity, TrendingDown } from "lucide-react"
+import { ArrowRight, Info, TrendingUp, BarChart3, Users, Activity, TrendingDown } from "lucide-react"
 import { motion } from "framer-motion"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip as RechartsTooltip, AreaChart, Area } from "recharts"
+import { XAxis, YAxis, ResponsiveContainer, Tooltip as RechartsTooltip, AreaChart, Area } from "recharts"
 import DataMetric from "@/components/DataMetric"
 import { 
   useHistoricalEmaeData,
@@ -18,7 +18,6 @@ import {
 import EmaeEnhancedChart from "@/components/charts/EmaeEnhancedChart"
 import IPCEnhancedChart from "@/components/charts/IPCEnhancedChart"
 import { useAppData } from '@/lib/DataProvider';
-import ActivitySectorTabContent from "@/components/ActivityTab"
 
 // Interface para datos del dólar
 interface DollarData {

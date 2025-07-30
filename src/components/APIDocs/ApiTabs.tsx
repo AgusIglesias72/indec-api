@@ -1,5 +1,4 @@
 // src/components/APIDocs/ApiTabs.tsx
-import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ApiSection from '@/components/APIDocs/ApiSection';
 import { ApiGroup } from '@/data/api-endpoints';
