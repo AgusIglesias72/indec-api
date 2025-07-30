@@ -27,7 +27,10 @@ const knownApiPaths = [
   '/api/webhook/clerk',
   '/api/user/api-key',
   '/api/user/favorites',
-  '/api/user/alerts'
+  '/api/user/alerts',
+  '/api/admin/sync-users',
+  '/api/admin/check-schema',
+  '/api/test/webhook'
 ];
 
 // Rutas que requieren autenticación

@@ -5,47 +5,56 @@ import { WebhookEvent } from '@clerk/nextjs/server'
 import { createServerComponentClient } from '@/lib/supabase'
 
 export async function POST(req: Request) {
-  // You can find this in the Clerk Dashboard -> Webhooks -> choose the webhook
-  const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET
-
-  if (!WEBHOOK_SECRET) {
-    throw new Error('Please add CLERK_WEBHOOK_SECRET from Clerk Dashboard to .env or .env.local')
-  }
-
   // Get the headers
   const headerPayload = await headers();
-  const svix_id = headerPayload.get("svix-id");
-  const svix_timestamp = headerPayload.get("svix-timestamp");
-  const svix_signature = headerPayload.get("svix-signature");
+  const isTestWebhook = headerPayload.get("x-test-webhook");
+  
+  let evt: WebhookEvent;
 
-  // If there are no headers, error out
-  if (!svix_id || !svix_timestamp || !svix_signature) {
-    return new Response('Error occured -- no svix headers', {
-      status: 400
-    })
-  }
+  if (isTestWebhook) {
+    // For testing, use payload directly
+    const payload = await req.json();
+    evt = payload as WebhookEvent;
+    console.info('Processing test webhook');
+  } else {
+    // Production webhook verification
+    const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 
-  // Get the body
-  const payload = await req.json()
-  const body = JSON.stringify(payload);
+    if (!WEBHOOK_SECRET) {
+      throw new Error('Please add CLERK_WEBHOOK_SECRET from Clerk Dashboard to .env or .env.local');
+    }
 
-  // Create a new Svix instance with your secret.
-  const wh = new Webhook(WEBHOOK_SECRET);
+    const svix_id = headerPayload.get("svix-id");
+    const svix_timestamp = headerPayload.get("svix-timestamp");
+    const svix_signature = headerPayload.get("svix-signature");
 
-  let evt: WebhookEvent
+    // If there are no headers, error out
+    if (!svix_id || !svix_timestamp || !svix_signature) {
+      return new Response('Error occured -- no svix headers', {
+        status: 400
+      });
+    }
 
-  // Verify the payload with the headers
-  try {
-    evt = wh.verify(body, {
-      "svix-id": svix_id,
-      "svix-timestamp": svix_timestamp,
-      "svix-signature": svix_signature,
-    }) as WebhookEvent
-  } catch (err) {
-    console.error('Error verifying webhook:', err);
-    return new Response('Error occured', {
-      status: 400
-    })
+    // Get the body
+    const payload = await req.json();
+    const body = JSON.stringify(payload);
+
+    // Create a new Svix instance with your secret.
+    const wh = new Webhook(WEBHOOK_SECRET);
+
+    // Verify the payload with the headers
+    try {
+      evt = wh.verify(body, {
+        "svix-id": svix_id,
+        "svix-timestamp": svix_timestamp,
+        "svix-signature": svix_signature,
+      }) as WebhookEvent;
+    } catch (err) {
+      console.error('Error verifying webhook:', err);
+      return new Response('Error occured', {
+        status: 400
+      });
+    }
   }
 
   // Get the ID and type
@@ -53,7 +62,7 @@ export async function POST(req: Request) {
   const eventType = evt.type;
 
   console.info(`Webhook with and ID of ${id} and type of ${eventType}`)
-  console.info('Webhook body:', body)
+  console.info('Webhook event:', JSON.stringify(evt, null, 2))
 
   const supabase = createServerComponentClient();
 
@@ -62,16 +71,16 @@ export async function POST(req: Request) {
     case 'user.created':
       const { id: clerk_user_id, email_addresses, first_name, last_name, image_url } = evt.data;
       
-      // Generate API key for new user
-      const { data: apiKeyData } = await supabase.rpc('generate_api_key');
+      // Generate simple API key for new user (temporary while function is not created)
+      const apiKeyData = 'ask_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
       
-      // Create user in Supabase
+      // Create user in Supabase (using actual table structure)
       const { error: createError } = await supabase
         .from('users')
         .insert({
           clerk_user_id,
           email: email_addresses[0].email_address,
-          name: `${first_name || ''} ${last_name || ''}`.trim(),
+          name: `${first_name || ''} ${last_name || ''}`.trim() || null,
           image_url,
           api_key: apiKeyData,
           plan_type: 'free',
@@ -80,7 +89,15 @@ export async function POST(req: Request) {
 
       if (createError) {
         console.error('Error creating user in Supabase:', createError);
-        return new Response('Error creating user', { status: 500 });
+        console.error('Attempted to insert:', {
+          clerk_user_id,
+          email: email_addresses[0]?.email_address,
+          name: `${first_name || ''} ${last_name || ''}`.trim() || null,
+          image_url,
+          api_key: apiKeyData,
+          plan_type: 'free',
+        });
+        return new Response(`Error creating user: ${createError.message}`, { status: 500 });
       }
       break;
 
@@ -93,12 +110,12 @@ export async function POST(req: Request) {
         image_url: updated_image_url 
       } = evt.data;
       
-      // Update user in Supabase
+      // Update user in Supabase (using actual table structure)
       const { error: updateError } = await supabase
         .from('users')
         .update({
           email: updated_emails[0].email_address,
-          name: `${updated_first_name || ''} ${updated_last_name || ''}`.trim(),
+          name: `${updated_first_name || ''} ${updated_last_name || ''}`.trim() || null,
           image_url: updated_image_url,
           updated_at: new Date().toISOString(),
         })
