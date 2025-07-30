@@ -84,7 +84,7 @@ export default function EnhancedRiskChart({
     const roundedMin = Math.floor(yMin / 10) * 10;
     const roundedMax = Math.ceil(yMax / 10) * 10;
     
-    console.log(`Y-axis domain: [${roundedMin}, ${roundedMax}] (data range: ${min.toFixed(0)}-${max.toFixed(0)}, padding: ${padding.toFixed(1)})`);
+    console.info(`Y-axis domain: [${roundedMin}, ${roundedMax}] (data range: ${min.toFixed(0)}-${max.toFixed(0)}, padding: ${padding.toFixed(1)})`);
     
     return [roundedMin, roundedMax];
   }, []);

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   AreaChart,
   Area,
@@ -67,7 +67,7 @@ const PovertyEnhancedChart: React.FC<PovertyEnhancedChartProps> = ({
   const [newRegion, setNewRegion] = useState<string>('Total 31 aglomerados');
   const [targetGroup, setTargetGroup] = useState<'persons' | 'households'>('persons');
 
-  const getFilteredIndicators = () => {
+  const getFilteredIndicators = useCallback(() => {
     const baseIndicators = [
       { value: 'poverty_rate_persons', label: 'Pobreza (%)', color: '#dc2626', shortLabel: 'Pobreza' },
       { value: 'indigence_rate_persons', label: 'Indigencia (%)', color: '#f59e0b', shortLabel: 'Indigencia' }
@@ -79,11 +79,11 @@ const PovertyEnhancedChart: React.FC<PovertyEnhancedChartProps> = ({
     ];
     
     return targetGroup === 'persons' ? baseIndicators : householdIndicators;
-  };
+  }, [targetGroup]);
 
   const colors = ['#dc2626', '#ea580c', '#f59e0b', '#fbbf24', '#3b82f6', '#8b5cf6', '#10b981', '#f97316'];
 
-  const regions = [
+  const regions = useMemo(() => [
     { value: 'Total 31 aglomerados', label: 'Total' },
     { value: 'Gran Buenos Aires', label: 'Gran Buenos Aires' },
     { value: 'Cuyo', label: 'Cuyo' },
@@ -91,7 +91,7 @@ const PovertyEnhancedChart: React.FC<PovertyEnhancedChartProps> = ({
     { value: 'Noroeste', label: 'Noroeste' },
     { value: 'Pampeana', label: 'Pampeana' },
     { value: 'Patagonia', label: 'Patagonia' }
-  ];
+  ], []);
 
   // Removed years filter as requested
 
@@ -180,7 +180,7 @@ const PovertyEnhancedChart: React.FC<PovertyEnhancedChartProps> = ({
     }
     
     fetchData();
-  }, [filters, targetGroup]);
+  }, [filters, targetGroup, getFilteredIndicators, newIndicator, regions]);
 
   const addSelection = () => {
     if (filters.selections.length >= 4) {

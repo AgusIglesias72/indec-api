@@ -55,7 +55,7 @@ function EconomicNetworkGraph({ className }: NetworkGraphProps) {
       opacity: 1,
       scale: 1,
       transition: {
-        type: 'spring',
+        type: 'spring' as const,
         stiffness: 300,
         damping: 20,
       },
@@ -69,7 +69,7 @@ function EconomicNetworkGraph({ className }: NetworkGraphProps) {
       opacity: 1,
       transition: {
         duration: 1.2,
-        ease: 'easeInOut',
+        ease: 'easeInOut' as const,
       },
     },
   };

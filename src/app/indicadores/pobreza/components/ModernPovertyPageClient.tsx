@@ -120,7 +120,7 @@ function ModernMetricCard({ title, value, tooltip, trend, change, changeText, in
       transition={{ duration: 0.5, delay: index * 0.1 }}
       whileHover={{ 
         y: -8,
-        transition: { duration: 0.2, ease: "easeOut" }
+        transition: { duration: 0.2, ease: "easeOut" as const }
       }}
       className="group relative cursor-pointer"
     >

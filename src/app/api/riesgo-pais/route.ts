@@ -51,7 +51,7 @@ async function handler(request: NextRequest) {
     const order = searchParams.get('order') || 'desc';
     const autoPaginate = searchParams.get('auto_paginate') !== 'false';
     const useRawData = searchParams.get('raw_data') === 'true';
-    console.log('useRawData parameter:', useRawData); // Debug log
+    console.info('useRawData parameter:', useRawData); // Debug log
     
     // Validar parámetros
     const validTypes = [
@@ -220,10 +220,16 @@ async function getRecordCount(
   useRawData: boolean = false
 ) {
   // Choose table based on whether raw data is requested
-  const tableName = useRawData ? 'embi_risk' : 'v_embi_daily_closing';
-  let query = supabase
-    .from(tableName)
-    .select('*', { count: 'exact', head: true });
+  let query;
+  if (useRawData) {
+    query = supabase
+      .from('embi_risk')
+      .select('*', { count: 'exact', head: true });
+  } else {
+    query = supabase
+      .from('v_embi_daily_closing')
+      .select('*', { count: 'exact', head: true });
+  }
 
   // Choose date field based on table (use original field names for filtering)
   const dateField = useRawData ? 'date' : 'closing_date';
@@ -292,7 +298,7 @@ async function buildQuery(
   let query;
   
   if (useRawData && (type === 'last_7_days' || type === 'custom')) {
-    console.log('Using raw data for period:', type);
+    console.info('Using raw data for period:', type);
     // Implement raw data for both 7D and 1D (custom) periods
     query = supabase
       .from('embi_risk')  
@@ -304,7 +310,7 @@ async function buildQuery(
       .select('*');
     
     if (useRawData) {
-      console.log('Raw data requested but not implemented yet for type:', type);
+      console.info('Raw data requested but not implemented yet for type:', type);
     }
   }
 
@@ -387,7 +393,7 @@ async function buildQuery(
   
   // Post-process raw data to add missing fields if needed
   if (isUsingRawData && data) {
-    console.log(`Processing ${data.length} raw data points for ${type} period`);
+    console.info(`Processing ${data.length} raw data points for ${type} period`);
     // Map raw data fields to expected format and add missing fields
     const processedData = data.map((item: any) => ({
       closing_date: item.date,        // Map date -> closing_date

@@ -40,7 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-SEO-Report.md
-app-review.md
+# Ignore all markdown files except README.md
+*.md
+!README.md
 
 /.claude/*
