@@ -52,6 +52,42 @@ export default function EnhancedRiskChart({
     max: number;
     avg: number;
   } | null>(null);
+  
+  // Calculate optimal Y-axis domain with smart padding
+  const getYAxisDomain = useCallback((data: ChartDataPoint[]) => {
+    if (!data || data.length === 0) return ['auto', 'auto'];
+    
+    const values = data.map(d => d.value);
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const range = max - min;
+    
+    // Add padding based on the data range
+    // For small ranges, use a minimum padding
+    // For larger ranges, use percentage-based padding
+    let padding;
+    if (range < 50) {
+      // Small range: add fixed padding
+      padding = Math.max(10, range * 0.1);
+    } else if (range < 200) {
+      // Medium range: add 8% padding
+      padding = range * 0.08;
+    } else {
+      // Large range: add 5% padding
+      padding = range * 0.05;
+    }
+    
+    const yMin = Math.max(0, min - padding); // Don't go below 0
+    const yMax = max + padding;
+    
+    // Round to nice numbers for cleaner axis
+    const roundedMin = Math.floor(yMin / 10) * 10;
+    const roundedMax = Math.ceil(yMax / 10) * 10;
+    
+    console.log(`Y-axis domain: [${roundedMin}, ${roundedMax}] (data range: ${min.toFixed(0)}-${max.toFixed(0)}, padding: ${padding.toFixed(1)})`);
+    
+    return [roundedMin, roundedMax];
+  }, []);
 
   const periodOptions = useMemo(() => {
     // Base options available by default
@@ -451,6 +487,7 @@ export default function EnhancedRiskChart({
                     axisLine={false}
                     tickLine={false}
                     tickCount={6}
+                    domain={getYAxisDomain(chartData)}
                   />
                   <Tooltip content={<CustomTooltip />} />
                   
