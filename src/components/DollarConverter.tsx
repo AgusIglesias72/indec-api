@@ -380,6 +380,7 @@ const DollarConverter = memo(function DollarConverter({ dollarRates, loading = f
                 onClick={handleSwapDirection}
                 className="p-3 bg-green-100 hover:bg-green-200 rounded-xl transition-colors duration-200 group"
                 disabled={loadingHistorical}
+                aria-label="Intercambiar monedas"
               >
                 <ArrowUpDown className="h-5 w-5 text-green-600 group-hover:scale-110 transition-transform duration-200" />
               </button>

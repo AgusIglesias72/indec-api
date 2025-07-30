@@ -177,6 +177,7 @@ export function NativeDatePicker({
                 type="button"
                 className="ml-2 text-muted-foreground hover:text-foreground transition-colors"
                 onClick={handleClear}
+                aria-label="Limpiar fecha"
               >
                 <X className="h-3 w-3" />
               </button>
@@ -225,6 +226,7 @@ export function NativeDatePicker({
               <button
                 onClick={goToPreviousMonth}
                 className="absolute left-0 p-1 rounded-md hover:bg-accent transition-colors"
+                aria-label="Mes anterior"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -236,6 +238,7 @@ export function NativeDatePicker({
               <button
                 onClick={goToNextMonth}
                 className="absolute right-0 p-1 rounded-md hover:bg-accent transition-colors"
+                aria-label="Mes siguiente"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>

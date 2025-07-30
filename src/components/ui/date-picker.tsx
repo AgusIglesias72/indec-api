@@ -109,6 +109,7 @@ export function DatePicker({
                 type="button"
                 className="ml-2 text-muted-foreground hover:text-foreground transition-colors"
                 onClick={handleClear}
+                aria-label="Limpiar fecha"
               >
                 <X className="h-3 w-3" />
               </button>
