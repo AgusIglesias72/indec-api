@@ -1,7 +1,7 @@
 // src/app/services/indec/fetcher.ts
 import axios from 'axios';
 import * as XLSX from 'xlsx';
-import { EmaeRow, EmaeByActivityInsert } from '../types';
+import { EmaeRow, EmaeByActivityInsert, IpcRow } from '../types';
 import { fetchIPCData } from './ipc-fetcher';
 
 /**
