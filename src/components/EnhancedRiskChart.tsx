@@ -1,6 +1,8 @@
 // src/components/EnhancedRiskChart.tsx
 'use client';
 
+// Cache buster: Updated 2025-01-30-17:26
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   AreaChart, 
@@ -41,7 +43,8 @@ export default function EnhancedRiskChart({
   enableExtendedPeriods = false,
   maxDataPoints = 5000
 }: EnhancedRiskChartProps) {
-  const [selectedPeriod, setSelectedPeriod] = useState<'30d' | '3m' | '1y' | '5y' | '10y'>('3m');
+  const [selectedPeriod, setSelectedPeriod] = useState<'1d' | '7d' | '30d' | '3m' | '1y' | '5y' | '10y'>('3m');
+  const [isClient, setIsClient] = useState(false);
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<{
@@ -49,17 +52,66 @@ export default function EnhancedRiskChart({
     max: number;
     avg: number;
   } | null>(null);
+  
+  // Calculate optimal Y-axis domain with smart padding
+  const getYAxisDomain = useCallback((data: ChartDataPoint[]) => {
+    if (!data || data.length === 0) return ['auto', 'auto'];
+    
+    const values = data.map(d => d.value);
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const range = max - min;
+    
+    // Add padding based on the data range
+    // For small ranges, use a minimum padding
+    // For larger ranges, use percentage-based padding
+    let padding;
+    if (range < 50) {
+      // Small range: add fixed padding
+      padding = Math.max(10, range * 0.1);
+    } else if (range < 200) {
+      // Medium range: add 8% padding
+      padding = range * 0.08;
+    } else {
+      // Large range: add 5% padding
+      padding = range * 0.05;
+    }
+    
+    const yMin = Math.max(0, min - padding); // Don't go below 0
+    const yMax = max + padding;
+    
+    // Round to nice numbers for cleaner axis
+    const roundedMin = Math.floor(yMin / 10) * 10;
+    const roundedMax = Math.ceil(yMax / 10) * 10;
+    
+    console.log(`Y-axis domain: [${roundedMin}, ${roundedMax}] (data range: ${min.toFixed(0)}-${max.toFixed(0)}, padding: ${padding.toFixed(1)})`);
+    
+    return [roundedMin, roundedMax];
+  }, []);
 
-  const periodOptions = useMemo(() => [
-    { value: '30d' as const, label: '30D', apiType: 'last_30_days' as const },
-    { value: '3m' as const, label: '3M', apiType: 'last_90_days' as const },
-    { value: '1y' as const, label: '1A', apiType: 'custom' as const },
-    { value: '5y' as const, label: '5A', apiType: 'custom' as const },
-    { value: '10y' as const, label: '10A', apiType: 'custom' as const }
-  ], []);
+  const periodOptions = useMemo(() => {
+    // Base options available by default
+    const baseOptions = [
+      { value: '30d' as const, label: '30D', apiType: 'last_30_days' as const },
+      { value: '3m' as const, label: '3M', apiType: 'last_90_days' as const },
+      { value: '1y' as const, label: '1A', apiType: 'custom' as const },
+      { value: '5y' as const, label: '5A', apiType: 'custom' as const },
+      { value: '10y' as const, label: '10A', apiType: 'custom' as const }
+    ];
+
+    if (enableExtendedPeriods && isClient) {
+      return [
+        { value: '1d' as const, label: '1D', apiType: 'custom' as const },
+        { value: '7d' as const, label: '7D', apiType: 'last_7_days' as const },
+        ...baseOptions
+      ];
+    }
+
+    return baseOptions;
+  }, [enableExtendedPeriods, isClient]);
 
   // Cargar datos del gráfico con autopaginación mejorada
-  const fetchChartData = useCallback(async (period: '30d' | '3m' | '1y' | '5y' | '10y') => {
+  const fetchChartData = useCallback(async (period: '1d' | '7d' | '30d' | '3m' | '1y' | '5y' | '10y') => {
     try {
       setLoading(true);
       const selectedOption = periodOptions.find(opt => opt.value === period);
@@ -69,25 +121,92 @@ export default function EnhancedRiskChart({
 
       if (selectedOption.apiType === 'custom') {
         const daysAgo = new Date();
-        if (period === '1y') daysAgo.setDate(daysAgo.getDate() - 365);
-        if (period === '5y') daysAgo.setFullYear(daysAgo.getFullYear() - 5);
-        if (period === '10y') daysAgo.setFullYear(daysAgo.getFullYear() - 10);
         
-        params = {
-          ...params,
-          type: 'custom',
-          date_from: daysAgo.toISOString().split('T')[0],
-          date_to: new Date().toISOString().split('T')[0],
-          limit: maxDataPoints
-        };
+        // Handle specific custom periods
+        if (period === '1d') {
+          daysAgo.setDate(daysAgo.getDate() - 1);
+          // For 1D, we want high resolution - all database rows, not daily aggregates
+          params = {
+            ...params,
+            type: 'custom',
+            date_from: daysAgo.toISOString().split('T')[0],
+            date_to: new Date().toISOString().split('T')[0],
+            limit: maxDataPoints, // Allow more data points for intraday data
+            order: 'asc', // Show chronological order for intraday
+            resolution: 'raw', // Request raw data, not daily aggregates
+            interval: '30min', // Request 30-minute intervals if supported
+            granularity: 'intraday', // Alternative parameter for granularity
+            aggregate: false, // Disable aggregation
+            raw_data: true // Explicit raw data request
+          };
+        } else if (period === '1y') {
+          daysAgo.setDate(daysAgo.getDate() - 365);
+          params = {
+            ...params,
+            type: 'custom',
+            date_from: daysAgo.toISOString().split('T')[0],
+            date_to: new Date().toISOString().split('T')[0],
+            limit: maxDataPoints
+          };
+        } else if (period === '5y') {
+          daysAgo.setFullYear(daysAgo.getFullYear() - 5);
+          params = {
+            ...params,
+            type: 'custom',
+            date_from: daysAgo.toISOString().split('T')[0],
+            date_to: new Date().toISOString().split('T')[0],
+            limit: maxDataPoints
+          };
+        } else if (period === '10y') {
+          daysAgo.setFullYear(daysAgo.getFullYear() - 10);
+          params = {
+            ...params,
+            type: 'custom',
+            date_from: daysAgo.toISOString().split('T')[0],
+            date_to: new Date().toISOString().split('T')[0],
+            limit: maxDataPoints
+          };
+        }
       } else {
         params.type = selectedOption.apiType;
-        params.limit = Math.min(maxDataPoints, 1000); // Para períodos cortos no necesitamos tanto
+        // For 7D, we also want higher resolution data
+        if (period === '7d') {
+          params.limit = maxDataPoints; // Allow more data points for 7D
+          params.order = 'asc'; // Show chronological order
+          params.resolution = 'raw'; // Request raw data, not daily aggregates
+          params.interval = '30min'; // Request 30-minute intervals if supported
+          params.granularity = 'intraday'; // Alternative parameter for granularity
+          params.aggregate = false; // Disable aggregation
+          params.raw_data = true; // Explicit raw data request
+        } else {
+          params.limit = Math.min(maxDataPoints, 1000); // Para períodos cortos no necesitamos tanto
+        }
       }
 
       console.info(`Loading ${period} data with params:`, params);
 
       const response = await getRiskCountryData(params);
+      
+      // Enhanced debugging to check if we're getting unique data points
+      console.info(`Received ${response.data?.length || 0} data points for ${period}`);
+      
+      if (response.data && response.data.length > 0) {
+        const sampleData = response.data.slice(0, 10).map(point => ({
+          date: point.closing_date,
+          value: point.closing_value,
+          timestamp: (point as any).created_at || (point as any).updated_at || (point as any).timestamp
+        }));
+        console.info('Sample data points:', sampleData);
+        
+        // Check for duplicates
+        const uniqueDates = new Set(response.data.map(p => p.closing_date));
+        const uniqueValues = new Set(response.data.map(p => p.closing_value));
+        console.info(`Unique dates: ${uniqueDates.size}, Unique values: ${uniqueValues.size}, Total points: ${response.data.length}`);
+        
+        if (uniqueDates.size === 1 && response.data.length > 1) {
+          console.warn('⚠️ All data points have the same date - likely getting repeated daily data');
+        }
+      }
       
       if (response.success && response.data.length > 0) {
         const finalData = response.data.map((point: RiskCountryDataPoint, index) => ({
@@ -125,6 +244,23 @@ export default function EnhancedRiskChart({
   }, [maxDataPoints, periodOptions]);
 
   useEffect(() => {
+    // Set client flag after hydration to enable 1D and 7D options
+    setIsClient(true);
+    
+    // Force component update by adding timestamp to help with cache issues
+    if (typeof window !== 'undefined') {
+      console.info('EnhancedRiskChart loaded with 1D/7D options [v2]:', new Date().toISOString());
+      console.info('enableExtendedPeriods:', enableExtendedPeriods);
+      
+      // Force a small re-render to break browser cache
+      setTimeout(() => {
+        setIsClient(false);
+        setTimeout(() => setIsClient(true), 10);
+      }, 100);
+    }
+  }, [enableExtendedPeriods]);
+
+  useEffect(() => {
     fetchChartData(selectedPeriod);
   }, [fetchChartData, selectedPeriod]);
 
@@ -134,6 +270,8 @@ export default function EnhancedRiskChart({
     
     // Determinar cuántas etiquetas mostrar según el período
     let showEvery = 1;
+    if (period === '1d') showEvery = Math.floor(totalLength / 8); // ~8 etiquetas para intraday
+    if (period === '7d') showEvery = Math.floor(totalLength / 10); // ~10 etiquetas para 7 días
     if (period === '30d') showEvery = Math.floor(totalLength / 6); // ~6 etiquetas
     if (period === '3m') showEvery = Math.floor(totalLength / 8); // ~8 etiquetas  
     if (period === '1y') showEvery = Math.floor(totalLength / 12); // ~12 etiquetas
@@ -144,6 +282,23 @@ export default function EnhancedRiskChart({
     if (index % Math.max(1, showEvery) !== 0) return '';
     
     switch (period) {
+      case '1d':
+        // For intraday, show time (hour:minute)
+        return date.toLocaleTimeString('es-AR', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: false 
+        });
+      case '7d':
+        // For 7 days, show day and time for more granular view
+        return date.toLocaleDateString('es-AR', { 
+          month: 'short', 
+          day: 'numeric' 
+        }) + ' ' + date.toLocaleTimeString('es-AR', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: false 
+        });
       case '30d':
       case '3m':
         return date.toLocaleDateString('es-AR', { month: 'short', day: 'numeric' });
@@ -163,14 +318,40 @@ export default function EnhancedRiskChart({
       const data = payload[0].payload;
       const fullDate = new Date(data.date);
       
+      // Format date/time based on selected period
+      let dateTimeString = '';
+      if (selectedPeriod === '1d') {
+        dateTimeString = fullDate.toLocaleDateString('es-AR', { 
+          day: 'numeric', 
+          month: 'long', 
+          year: 'numeric' 
+        }) + ' · ' + fullDate.toLocaleTimeString('es-AR', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+      } else if (selectedPeriod === '7d') {
+        dateTimeString = fullDate.toLocaleDateString('es-AR', { 
+          day: 'numeric', 
+          month: 'long', 
+          year: 'numeric' 
+        }) + ' · ' + fullDate.toLocaleTimeString('es-AR', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+      } else {
+        dateTimeString = fullDate.toLocaleDateString('es-AR', { 
+          day: 'numeric', 
+          month: 'long', 
+          year: 'numeric' 
+        });
+      }
+      
       return (
         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
           <p className="text-sm font-medium text-gray-900 mb-2">
-            {fullDate.toLocaleDateString('es-AR', { 
-              day: 'numeric', 
-              month: 'long', 
-              year: 'numeric' 
-            })}
+            {dateTimeString}
           </p>
           <p className="text-sm text-red-600 font-semibold mb-1">
             {formatRiskValue(data.value)} puntos básicos
@@ -306,6 +487,7 @@ export default function EnhancedRiskChart({
                     axisLine={false}
                     tickLine={false}
                     tickCount={6}
+                    domain={getYAxisDomain(chartData)}
                   />
                   <Tooltip content={<CustomTooltip />} />
                   

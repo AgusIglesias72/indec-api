@@ -50,6 +50,8 @@ async function handler(request: NextRequest) {
     const perPageParam = searchParams.get('per_page');
     const order = searchParams.get('order') || 'desc';
     const autoPaginate = searchParams.get('auto_paginate') !== 'false';
+    const useRawData = searchParams.get('raw_data') === 'true';
+    console.log('useRawData parameter:', useRawData); // Debug log
     
     // Validar parámetros
     const validTypes = [
@@ -103,7 +105,7 @@ async function handler(request: NextRequest) {
     
     if (useAutoPagination) {
       // Manejo automático de paginación para datasets grandes
-      const result = await fetchAllData(type, dateFrom, dateTo, limit, order);
+      const result = await fetchAllData(type, dateFrom, dateTo, limit, order, useRawData);
       if (result.error) {
         throw result.error;
       }
@@ -113,7 +115,7 @@ async function handler(request: NextRequest) {
       hasMore = false;
     } else {
       // Paginación manual o consulta simple
-      const result = await buildQuery(type, dateFrom, dateTo, perPage, order, page);
+      const result = await buildQuery(type, dateFrom, dateTo, perPage, order, page, useRawData);
       if (result.error) {
         throw result.error;
       }
@@ -121,7 +123,7 @@ async function handler(request: NextRequest) {
       data = result.data || [];
       
       // Obtener total de registros para paginación
-      const countResult = await getRecordCount(type, dateFrom, dateTo);
+      const countResult = await getRecordCount(type, dateFrom, dateTo, useRawData);
       totalRecords = countResult.count || 0;
       totalPages = Math.ceil(totalRecords / perPage);
       hasMore = currentPage < totalPages;
@@ -174,7 +176,8 @@ async function fetchAllData(
   dateFrom: string | null, 
   dateTo: string | null, 
   totalLimit: number, 
-  order: string
+  order: string,
+  useRawData: boolean = false
 ) {
   const allData: any[] = [];
   let currentPage = 1;
@@ -184,7 +187,7 @@ async function fetchAllData(
   while (hasMore && allData.length < totalLimit) {
     const remainingLimit = Math.min(perPage, totalLimit - allData.length);
     
-    const result = await buildQuery(type, dateFrom, dateTo, remainingLimit, order, currentPage);
+    const result = await buildQuery(type, dateFrom, dateTo, remainingLimit, order, currentPage, useRawData);
     
     if (result.error) {
       return { error: result.error, data: null };
@@ -213,43 +216,49 @@ async function fetchAllData(
 async function getRecordCount(
   type: string,
   dateFrom: string | null,
-  dateTo: string | null
+  dateTo: string | null,
+  useRawData: boolean = false
 ) {
+  // Choose table based on whether raw data is requested
+  const tableName = useRawData ? 'embi_risk' : 'v_embi_daily_closing';
   let query = supabase
-    .from('v_embi_daily_closing')
+    .from(tableName)
     .select('*', { count: 'exact', head: true });
 
+  // Choose date field based on table (use original field names for filtering)
+  const dateField = useRawData ? 'date' : 'closing_date';
+  
   // Aplicar los mismos filtros que en la query principal
   switch (type) {
     case 'latest':
       return { count: 1 };
       
     case 'last_7_days':
-      query = query.gte('closing_date', getDateDaysAgo(7));
+      query = query.gte(dateField, getDateDaysAgo(7));
       break;
       
     case 'last_30_days':
-      query = query.gte('closing_date', getDateDaysAgo(30));
+      query = query.gte(dateField, getDateDaysAgo(30));
       break;
       
     case 'last_90_days':
-      query = query.gte('closing_date', getDateDaysAgo(90));
+      query = query.gte(dateField, getDateDaysAgo(90));
       break;
       
     case 'year_to_date':
       const yearStart = new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0];
-      query = query.gte('closing_date', yearStart);
+      query = query.gte(dateField, yearStart);
       break;
       
     case 'last_year':
       const lastYear = new Date().getFullYear() - 1;
       const lastYearStart = `${lastYear}-01-01`;
       const lastYearEnd = `${lastYear}-12-31`;
-      query = query.gte('closing_date', lastYearStart).lte('closing_date', lastYearEnd);
+      query = query.gte(dateField, lastYearStart).lte(dateField, lastYearEnd);
       break;
       
     case 'last_5_years':
-      query = query.gte('closing_date', getDateDaysAgo(5 * 365));
+      query = query.gte(dateField, getDateDaysAgo(5 * 365));
       break;
       
     case 'all_time':
@@ -258,7 +267,7 @@ async function getRecordCount(
       
     case 'custom':
       if (dateFrom && dateTo) {
-        query = query.gte('closing_date', dateFrom).lte('closing_date', dateTo);
+        query = query.gte(dateField, dateFrom).lte(dateField, dateTo);
       }
       break;
   }
@@ -276,41 +285,63 @@ async function buildQuery(
   dateTo: string | null, 
   limit: number, 
   order: string,
-  page: number = 1
+  page: number = 1,
+  useRawData: boolean = false
 ) {
-  let query = supabase
-    .from('v_embi_daily_closing')
-    .select('*');
+  // Choose table based on raw data request and specific types
+  let query;
+  
+  if (useRawData && (type === 'last_7_days' || type === 'custom')) {
+    console.log('Using raw data for period:', type);
+    // Implement raw data for both 7D and 1D (custom) periods
+    query = supabase
+      .from('embi_risk')  
+      .select('date, value, created_at, updated_at');
+  } else {
+    // Use daily closing view for all other cases
+    query = supabase
+      .from('v_embi_daily_closing')
+      .select('*');
+    
+    if (useRawData) {
+      console.log('Raw data requested but not implemented yet for type:', type);
+    }
+  }
 
+  // Choose field names based on which table we're using
+  const isUsingRawData = useRawData && (type === 'last_7_days' || type === 'custom');
+  const filterDateField = isUsingRawData ? 'date' : 'closing_date';
+  const orderField = isUsingRawData ? 'created_at' : 'closing_date';
+  
   // Aplicar filtros de fecha según el tipo
   switch (type) {
     case 'latest':
-      query = query.order('closing_date', { ascending: false }).limit(1);
+      query = query.order(orderField, { ascending: false }).limit(1);
       break;
       
     case 'last_7_days':
       query = query
-        .gte('closing_date', getDateDaysAgo(7))
-        .order('closing_date', { ascending: order === 'asc' });
+        .gte(filterDateField, getDateDaysAgo(7))
+        .order(orderField, { ascending: order === 'asc' });
       break;
       
     case 'last_30_days':
       query = query
-        .gte('closing_date', getDateDaysAgo(30))
-        .order('closing_date', { ascending: order === 'asc' });
+        .gte(filterDateField, getDateDaysAgo(30))
+        .order(orderField, { ascending: order === 'asc' });
       break;
       
     case 'last_90_days':
       query = query
-        .gte('closing_date', getDateDaysAgo(90))
-        .order('closing_date', { ascending: order === 'asc' });
+        .gte(filterDateField, getDateDaysAgo(90))
+        .order(orderField, { ascending: order === 'asc' });
       break;
       
     case 'year_to_date':
       const yearStart = new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0];
       query = query
-        .gte('closing_date', yearStart)
-        .order('closing_date', { ascending: order === 'asc' });
+        .gte(filterDateField, yearStart)
+        .order(orderField, { ascending: order === 'asc' });
       break;
       
     case 'last_year':
@@ -318,27 +349,27 @@ async function buildQuery(
       const lastYearStart = `${lastYear}-01-01`;
       const lastYearEnd = `${lastYear}-12-31`;
       query = query
-        .gte('closing_date', lastYearStart)
-        .lte('closing_date', lastYearEnd)
-        .order('closing_date', { ascending: order === 'asc' });
+        .gte(filterDateField, lastYearStart)
+        .lte(filterDateField, lastYearEnd)
+        .order(orderField, { ascending: order === 'asc' });
       break;
       
     case 'last_5_years':
       query = query
-        .gte('closing_date', getDateDaysAgo(5 * 365))
-        .order('closing_date', { ascending: order === 'asc' });
+        .gte(filterDateField, getDateDaysAgo(5 * 365))
+        .order(orderField, { ascending: order === 'asc' });
       break;
       
     case 'all_time':
-      query = query.order('closing_date', { ascending: order === 'asc' });
+      query = query.order(orderField, { ascending: order === 'asc' });
       break;
       
     case 'custom':
       if (dateFrom && dateTo) {
         query = query
-          .gte('closing_date', dateFrom)
-          .lte('closing_date', dateTo)
-          .order('closing_date', { ascending: order === 'asc' });
+          .gte(filterDateField, dateFrom)
+          .lte(filterDateField, dateTo)
+          .order(orderField, { ascending: order === 'asc' });
       }
       break;
       
@@ -353,6 +384,21 @@ async function buildQuery(
   }
   
   const { data, error } = await query;
+  
+  // Post-process raw data to add missing fields if needed
+  if (isUsingRawData && data) {
+    console.log(`Processing ${data.length} raw data points for ${type} period`);
+    // Map raw data fields to expected format and add missing fields
+    const processedData = data.map((item: any) => ({
+      closing_date: item.date,        // Map date -> closing_date
+      closing_value: item.value,      // Map value -> closing_value
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+      change_percentage: null,        // Raw data doesn't have this
+      change_value: null
+    }));
+    return { data: processedData, error, query };
+  }
   
   return { data, error, query };
 }
