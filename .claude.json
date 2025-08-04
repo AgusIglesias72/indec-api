@@ -2,8 +2,10 @@
   "compactMode": true,
   "mcpServers": {
     "supabase": {
-      "command": "npx",
+      "command": "cmd",
       "args": [
+        "/c",
+        "npx",
         "-y",
         "@supabase/mcp-server-supabase@latest",
         "--read-only",
@@ -15,11 +17,11 @@
     },
     "playwright": {
       "command": "cmd",
-      "args": ["/c", "npx", "@mcp-servers/playwright"]
+      "args": ["/c", "npx", "-y", "@playwright/mcp@latest"]
     },
     "fetch": {
-      "command": "npx",
-      "args": ["-y", "@kazuph/mcp-fetch"]
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@kazuph/mcp-fetch"]
     }
   }
 }

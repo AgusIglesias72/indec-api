@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 
 export default function RiskCountryPromoSection() {
   return (
-    <section className="relative py-12 overflow-hidden">
+    <section className="relative py-12 overflow-hidden" suppressHydrationWarning>
       <div className="container mx-auto px-4 relative z-10">
         {/* Main Content Container with rounded borders and max width */}
         <div className="max-w-7xl mx-auto bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 rounded-3xl p-8 md:p-12 relative overflow-hidden">
@@ -101,6 +101,7 @@ export default function RiskCountryPromoSection() {
               <Button 
                 size="lg" 
                 className="bg-red-600 hover:bg-red-700 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 group"
+                suppressHydrationWarning
               >
                 Ver Riesgo País
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />

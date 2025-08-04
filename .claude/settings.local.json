@@ -2,6 +2,7 @@
   "permissions": {
     "allow": [
       "mcp__playwright",
+      "mcp__playwright__browser_navigate",
       "WebFetch(domain:docs.anthropic.com)",
       "Bash(claude mcp add:*)",
       "Bash(claude mcp:*)",
@@ -44,8 +45,20 @@
       "Bash(git checkout:*)",
       "Bash(git pull:*)",
       "Bash(git reset:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(git remote get-url:*)",
+      "Bash(git count-objects:*)",
+      "Bash(powershell:*)",
+      "Bash(tasklist:*)",
+      "mcp__supabase__list_tables",
+      "Bash(export SUPABASE_ACCESS_TOKEN=\"cli_AGUSIGLESIAS\\agusi@AgusIglesias_1740501807\")",
+      "Bash(psql:*)"
     ],
     "deny": []
-  }
+  },
+  "enabledMcpjsonServers": [
+    "supabase",
+    "playwright",
+    "fetch"
+  ]
 }

@@ -62,17 +62,20 @@ export async function POST(request: NextRequest) {
       // Generate API key for each user
       const { data: apiKeyData } = await supabase.rpc('generate_api_key')
       
-      usersToInsert.push({
-        clerk_user_id: user.id,
-        email: user.emailAddresses[0]?.emailAddress || null,
-        name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || null,
-        image_url: user.imageUrl || null,
-        api_key: apiKeyData,
-        plan_type: 'free',
-        daily_requests_count: 0,
-        created_at: user.createdAt ? new Date(user.createdAt).toISOString() : new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
+      const email = user.emailAddresses[0]?.emailAddress
+      if (email) {
+        usersToInsert.push({
+          clerk_user_id: user.id,
+          email: email,
+          name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || null,
+          image_url: user.imageUrl || null,
+          api_key: apiKeyData,
+          plan_type: 'free',
+          daily_requests_count: 0,
+          created_at: user.createdAt ? new Date(user.createdAt).toISOString() : new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+      }
     }
 
     // Bulk insert users

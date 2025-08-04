@@ -17,6 +17,7 @@ const NavigationMenu = React.forwardRef<
       "relative z-10 flex max-w-max flex-1 items-center justify-center",
       className
     )}
+    suppressHydrationWarning
     {...props}
   >
     {children}
@@ -35,6 +36,7 @@ const NavigationMenuList = React.forwardRef<
       "group flex flex-1 list-none items-center justify-center space-x-1",
       className
     )}
+    suppressHydrationWarning
     {...props}
   />
 ))

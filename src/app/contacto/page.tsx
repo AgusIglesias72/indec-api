@@ -501,7 +501,7 @@ export default function ContactPage() {
               },
               {
                 question: "¿Hay límites de uso en la API?",
-                answer: "Actualmente no hay límites estrictos, pero implementamos rate limiting para mantener la calidad del servicio."
+                answer: "No, nuestra API es completamente ilimitada. Solo requieres un Access Token para peticiones externas, pero puedes hacer todas las requests que necesites."
               }
             ].map((faq, index) => (
               <motion.div

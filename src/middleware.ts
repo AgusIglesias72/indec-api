@@ -28,6 +28,7 @@ const knownApiPaths = [
   '/api/user/api-key',
   '/api/user/favorites',
   '/api/user/alerts',
+  '/api/user/usage-stats',
   '/api/admin/sync-users',
   '/api/admin/simple-sync',
   '/api/admin/clerk-count',
@@ -37,8 +38,8 @@ const knownApiPaths = [
 
 // Rutas que requieren autenticación
 const protectedRoutes = [
-  '/profile',
-  '/profile/(.*)',
+  // '/profile', // Temporalmente deshabilitado para demo
+  // '/profile/(.*)', // Temporalmente deshabilitado para demo
   '/api/user/(.*)',
   '/api/favorites/(.*)',
   '/api/alerts/(.*)',

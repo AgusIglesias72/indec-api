@@ -7,7 +7,7 @@ import "./globals.css";
 import AppWrapper from "@/lib/AppWrapper";
 import NavBar from "@/components/landing/Navbar";
 import { defaultMetadata } from "@/lib/metadata";
-import OptimizedGoogleAnalytics from '@/components/OptimizedGoogleAnalytics';
+import { GoogleAnalytics } from '@next/third-parties/google'
 import { Analytics } from "@vercel/analytics/next"
 import StructuredData, { OrganizationSchema, WebsiteSchema } from "@/components/StructuredData"
 
@@ -72,7 +72,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={`${clearSans.variable} ${jetbrainsMono.variable} ${righteous.variable}`}>
+    <html lang="es" className={`${clearSans.variable} ${jetbrainsMono.variable} ${righteous.variable}`} suppressHydrationWarning>
       <head>
         {/* Remove unused preconnects as suggested by PageSpeed */}
         <link rel="dns-prefetch" href="https://argenstats.com" />
@@ -95,13 +95,13 @@ export default function RootLayout({
         <link rel="prefetch" href="/api/stats" />
         <link rel="preconnect" href="https://api.argenstats.com" />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         <AppWrapper>
           <NavBar />
           {children}
           <Footer />
         </AppWrapper>
-        <OptimizedGoogleAnalytics gaId="G-WFK681BVSD" />
+        <GoogleAnalytics gaId="G-WFK681BVSD" />
         <Analytics />
 
       </body>

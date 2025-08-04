@@ -6,17 +6,127 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Copy, Key, RefreshCw, Star, Bell, Settings } from 'lucide-react'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { 
+  Copy, 
+  Key, 
+  RefreshCw, 
+  Star, 
+  Mail, 
+  Calendar, 
+  Shield, 
+  User, 
+  MessageSquare, 
+  Bug, 
+  Lightbulb, 
+  Code, 
+  Send, 
+  CheckCircle, 
+  AlertCircle,
+  Loader2,
+  ExternalLink
+} from 'lucide-react'
 import { toast } from 'sonner'
+import Link from 'next/link'
+
+// Skeleton components para loading
+const ProfileSkeleton = () => (
+  <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="bg-gradient-to-r from-indec-blue to-indec-blue-dark text-white">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="flex flex-col md:flex-row items-center gap-8">
+          <div className="h-32 w-32 bg-white/20 rounded-full animate-pulse"></div>
+          <div className="flex-1 text-center md:text-left space-y-3">
+            <div className="h-10 bg-white/20 rounded animate-pulse w-64 mx-auto md:mx-0"></div>
+            <div className="h-6 bg-white/20 rounded animate-pulse w-48 mx-auto md:mx-0"></div>
+            <div className="h-8 bg-white/20 rounded animate-pulse w-32 mx-auto md:mx-0"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="space-y-6">
+        <div className="h-12 bg-gray-200 rounded animate-pulse"></div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="h-96 bg-gray-200 rounded-lg animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+)
+
+// Tipos de contacto
+const contactTypes = [
+  {
+    id: 'general',
+    label: 'Consulta General',
+    icon: MessageSquare,
+    description: 'Preguntas generales sobre ArgenStats',
+  },
+  {
+    id: 'api',
+    label: 'API / Integración',
+    icon: Code,
+    description: 'Dudas técnicas sobre nuestra API',
+  },
+  {
+    id: 'bug',
+    label: 'Reportar Bug',
+    icon: Bug,
+    description: 'Encontraste un error o problema',
+  },
+  {
+    id: 'feature',
+    label: 'Solicitar Feature',
+    icon: Lightbulb,
+    description: 'Ideas para nuevas funcionalidades',
+  }
+]
+
+interface ContactFormData {
+  name: string
+  email: string
+  subject: string
+  message: string
+  contact_type: string
+}
 
 export default function ProfilePage() {
   const { user, isLoaded } = useUser()
   const [apiKey, setApiKey] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  
+  // Contact form state
+  const [contactForm, setContactForm] = useState<ContactFormData>({
+    name: '',
+    email: '',
+    subject: '',
+    message: '',
+    contact_type: 'general'
+  })
+  const [contactLoading, setContactLoading] = useState(false)
+  const [contactStatus, setContactStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [contactMessage, setContactMessage] = useState('')
 
   useEffect(() => {
+    setMounted(true)
     if (isLoaded && user) {
       fetchApiKey()
+      // Pre-rellenar el formulario de contacto con datos del usuario
+      setContactForm(prev => ({
+        ...prev,
+        name: user.fullName || '',
+        email: user.emailAddresses[0]?.emailAddress || ''
+      }))
     }
   }, [isLoaded, user])
 
@@ -60,143 +170,466 @@ export default function ProfilePage() {
     }
   }
 
-  if (!isLoaded) {
-    return <div className="min-h-screen flex items-center justify-center">Cargando...</div>
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    // Validación básica
+    if (!contactForm.message.trim() || contactForm.message.length < 10) {
+      toast.error('El mensaje debe tener al menos 10 caracteres')
+      return
+    }
+
+    setContactLoading(true)
+    setContactStatus('idle')
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(contactForm),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setContactStatus('success')
+        setContactMessage('¡Gracias por tu mensaje! Te responderemos pronto.')
+        
+        // Limpiar formulario (mantener nombre y email)
+        setContactForm(prev => ({
+          ...prev,
+          subject: '',
+          message: '',
+          contact_type: 'general'
+        }))
+      } else {
+        setContactStatus('error')
+        setContactMessage(result.error || 'Error al enviar el mensaje')
+      }
+    } catch (error) {
+      setContactStatus('error')
+      setContactMessage('Error de conexión. Inténtalo nuevamente.')
+    } finally {
+      setContactLoading(false)
+    }
   }
 
+  // Para evitar problemas de hidratación, mostrar skeleton hasta que esté montado
+  if (!mounted || !isLoaded) {
+    return <ProfileSkeleton />
+  }
+
+  // Si no hay usuario, redirigir
   if (!user) {
-    return <div className="min-h-screen flex items-center justify-center">No autorizado</div>
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6 text-center">
+            <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Acceso restringido</h2>
+            <p className="text-gray-600 mb-6">Necesitas iniciar sesión para ver tu perfil</p>
+            <Button asChild className="w-full">
+              <Link href="/sign-in">Iniciar Sesión</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Mi Perfil</h1>
-          <p className="text-gray-600 mt-2">Gestiona tu cuenta y configuraciones</p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Hero Section */}
+      <div className="bg-gradient-to-r from-indec-blue to-indec-blue-dark text-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="flex flex-col md:flex-row items-center gap-8">
+            <div className="relative">
+              <Avatar className="h-32 w-32 ring-4 ring-white/20">
+                <AvatarImage src={user?.imageUrl || undefined} alt={user?.fullName || ""} />
+                <AvatarFallback className="bg-white/20 text-white text-4xl font-bold">
+                  {user?.firstName?.charAt(0) || user?.emailAddresses?.[0]?.emailAddress?.charAt(0)?.toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+            <div className="flex-1 text-center md:text-left">
+              <h1 className="text-4xl font-bold mb-2">{user?.fullName || 'Usuario'}</h1>
+              <p className="text-indec-blue-light flex items-center gap-2 justify-center md:justify-start">
+                <Mail className="h-4 w-4" />
+                {user?.emailAddresses[0]?.emailAddress}
+              </p>
+              <div className="flex items-center gap-4 mt-4 justify-center md:justify-start">
+                <Badge className="bg-white/20 text-white border-white/40 hover:bg-white/30">
+                  <Shield className="h-3 w-3 mr-1" />
+                  Acceso Ilimitado
+                </Badge>
+                <div className="flex items-center gap-1">
+                  <div className="h-2 w-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-sm">Activo</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Profile Info */}
-          <div className="lg:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5" />
-                  Información Personal
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Nombre</label>
-                  <p className="text-gray-900">{user.fullName || 'Sin nombre'}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Email</label>
-                  <p className="text-gray-900">{user.emailAddresses[0].emailAddress}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">ID de Usuario</label>
-                  <p className="text-gray-900 font-mono text-sm">{user.id}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Fecha de registro</label>
-                  <p className="text-gray-900">{new Date(user.createdAt!).toLocaleDateString('es-AR')}</p>
-                </div>
-              </CardContent>
-            </Card>
+      {/* Main Content */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Tabs defaultValue="account" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid">
+            <TabsTrigger value="account" className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              <span className="hidden sm:inline">Perfil</span>
+            </TabsTrigger>
+            <TabsTrigger value="api" className="flex items-center gap-2">
+              <Key className="h-4 w-4" />
+              <span className="hidden sm:inline">API Key</span>
+            </TabsTrigger>
+            <TabsTrigger value="contact" className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" />
+              <span className="hidden sm:inline">Contacto</span>
+            </TabsTrigger>
+          </TabsList>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Key className="h-5 w-5" />
-                  API Key
-                </CardTitle>
-                <CardDescription>
-                  Usa esta clave para acceder a nuestra API
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {apiKey ? (
-                  <div className="flex items-center gap-2">
-                    <code className="flex-1 bg-gray-100 px-3 py-2 rounded-md text-sm font-mono">
-                      {apiKey}
-                    </code>
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="lg:col-span-3 space-y-6">
+              <TabsContent value="account" className="space-y-6 mt-0">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Información Personal</CardTitle>
+                    <CardDescription>Tu información de perfil desde Clerk</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">Nombre completo</label>
+                        <input 
+                          type="text" 
+                          value={user.fullName || ''} 
+                          className="w-full px-3 py-2 border rounded-lg bg-gray-50" 
+                          disabled 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">Email</label>
+                        <input 
+                          type="email" 
+                          value={user.emailAddresses[0]?.emailAddress} 
+                          className="w-full px-3 py-2 border rounded-lg bg-gray-50" 
+                          disabled 
+                        />
+                      </div>
+                    </div>
+                    <div className="pt-4 border-t">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div className="flex items-center gap-3">
+                          <Calendar className="h-4 w-4 text-gray-400" />
+                          <span className="text-gray-600">Miembro desde</span>
+                          <span className="font-medium">{new Date(user.createdAt!).toLocaleDateString('es-AR')}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Shield className="h-4 w-4 text-gray-400" />
+                          <span className="text-gray-600">ID de usuario</span>
+                          <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">{user.id.slice(0, 12)}...</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="pt-4 border-t">
+                      <p className="text-sm text-gray-600">
+                        Para modificar tu información personal, puedes hacerlo desde tu 
+                        <Button variant="link" className="px-1 h-auto text-indec-blue" asChild>
+                          <a href="/profile" target="_blank">
+                            panel de usuario de Clerk
+                            <ExternalLink className="h-3 w-3 ml-1" />
+                          </a>
+                        </Button>
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Favoritos Section (Placeholder) */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Star className="h-5 w-5" />
+                      Indicadores Favoritos
+                    </CardTitle>
+                    <CardDescription>Guarda tus indicadores más consultados</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-8">
+                      <Star className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-600 mb-2">Aún no tienes favoritos</p>
+                      <p className="text-sm text-gray-500 mb-4">
+                        Esta función estará disponible muy pronto. Podrás guardar tus indicadores más consultados para acceso rápido.
+                      </p>
+                      <Badge variant="secondary">Próximamente</Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="api" className="space-y-6 mt-0">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>API Key de Acceso</CardTitle>
+                    <CardDescription>
+                      Tu clave personal para acceso ilimitado a nuestra API desde herramientas externas
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {apiKey ? (
+                      <div className="space-y-4">
+                        <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                          <label className="text-sm font-medium text-gray-700 block mb-2">Tu API Key</label>
+                          <div className="flex items-center gap-2">
+                            <code className="flex-1 bg-white px-4 py-3 rounded-md text-sm font-mono border border-gray-300 break-all">
+                              {apiKey}
+                            </code>
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              onClick={copyApiKey}
+                              className="hover:bg-indec-blue hover:text-white hover:border-indec-blue flex-shrink-0"
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                          <div className="flex items-start gap-3">
+                            <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <p className="font-medium text-green-900">¡Sin límites de uso!</p>
+                              <p className="text-sm text-green-700 mt-1">
+                                Puedes hacer todas las requests que necesites. Solo llevamos un seguimiento para estadísticas internas.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                          <div className="flex items-start gap-3">
+                            <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <p className="font-medium text-amber-900">Importante</p>
+                              <p className="text-sm text-amber-700 mt-1">
+                                Regenerar tu API Key invalidará la anterior inmediatamente. Actualiza tus aplicaciones antes de regenerar.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <Key className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-600 mb-4">No tienes una API Key generada</p>
+                        <p className="text-sm text-gray-500 mb-6">Genera una clave para empezar a usar nuestra API desde herramientas externas</p>
+                      </div>
+                    )}
+                    
                     <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={copyApiKey}
+                      onClick={generateApiKey}
+                      disabled={loading}
+                      className="w-full bg-indec-blue hover:bg-indec-blue-dark"
                     >
-                      <Copy className="h-4 w-4" />
+                      {loading ? (
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Key className="h-4 w-4 mr-2" />
+                      )}
+                      {apiKey ? 'Regenerar API Key' : 'Generar API Key'}
                     </Button>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Cómo usar tu API Key</CardTitle>
+                    <CardDescription>Ejemplos rápidos para empezar</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <h4 className="font-medium mb-2">Usando curl:</h4>
+                      <code className="block bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto">
+                        curl -H &quot;x-api-key: {apiKey || 'tu-api-key'}&quot; \<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;https://argenstats.com/api/dollar
+                      </code>
+                    </div>
+                    <div>
+                      <h4 className="font-medium mb-2">JavaScript/Fetch:</h4>
+                      <code className="block bg-gray-900 text-blue-400 p-3 rounded text-sm overflow-x-auto">
+                        fetch(&apos;https://argenstats.com/api/dollar&apos;, {`{`}<br />
+                        &nbsp;&nbsp;headers: {`{`} &apos;x-api-key&apos;: &apos;{apiKey || 'tu-api-key'}&apos; {`}`}<br />
+                        {`}`})
+                      </code>
+                    </div>
+                    <div className="pt-4 border-t">
+                      <Button variant="outline" asChild className="w-full">
+                        <a href="/documentacion" target="_blank" className="flex items-center gap-2">
+                          Ver Documentación Completa
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="contact" className="space-y-6 mt-0">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Contactanos</CardTitle>
+                    <CardDescription>
+                      ¿Tienes preguntas, sugerencias o encontraste un problema? Nos encanta escuchar de nuestros usuarios.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <form onSubmit={handleContactSubmit} className="space-y-6">
+                      {/* Tipo de Consulta */}
+                      <div className="space-y-3">
+                        <Label className="text-sm font-medium">
+                          Tipo de Consulta
+                        </Label>
+                        <RadioGroup
+                          value={contactForm.contact_type}
+                          onValueChange={(value) => setContactForm(prev => ({ ...prev, contact_type: value }))}
+                          className="grid grid-cols-2 gap-3"
+                        >
+                          {contactTypes.map((type) => {
+                            const IconComponent = type.icon;
+                            return (
+                              <div key={type.id} className="flex items-center space-x-2">
+                                <RadioGroupItem value={type.id} id={type.id} />
+                                <Label 
+                                  htmlFor={type.id} 
+                                  className="flex items-center gap-2 cursor-pointer text-sm"
+                                >
+                                  <IconComponent className="w-4 h-4 text-indec-blue" />
+                                  {type.label}
+                                </Label>
+                              </div>
+                            );
+                          })}
+                        </RadioGroup>
+                      </div>
+
+                      {/* Asunto */}
+                      <div className="space-y-2">
+                        <Label htmlFor="subject">Asunto (opcional)</Label>
+                        <Input
+                          id="subject"
+                          value={contactForm.subject}
+                          onChange={(e) => setContactForm(prev => ({ ...prev, subject: e.target.value }))}
+                          placeholder="Resumen breve de tu consulta"
+                        />
+                      </div>
+
+                      {/* Mensaje */}
+                      <div className="space-y-2">
+                        <Label htmlFor="message">Mensaje *</Label>
+                        <Textarea
+                          id="message"
+                          value={contactForm.message}
+                          onChange={(e) => setContactForm(prev => ({ ...prev, message: e.target.value }))}
+                          placeholder="Describe tu consulta en detalle. Mientras más información nos des, mejor podremos ayudarte."
+                          rows={5}
+                          required
+                        />
+                      </div>
+
+                      {/* Status Message */}
+                      {contactStatus !== 'idle' && (
+                        <Alert className={contactStatus === 'success' ? 'border-green-500' : 'border-red-500'}>
+                          {contactStatus === 'success' ? (
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                          ) : (
+                            <AlertCircle className="h-4 w-4 text-red-600" />
+                          )}
+                          <AlertDescription className={contactStatus === 'success' ? 'text-green-700' : 'text-red-700'}>
+                            {contactMessage}
+                          </AlertDescription>
+                        </Alert>
+                      )}
+
+                      <Button
+                        type="submit"
+                        disabled={contactLoading}
+                        className="w-full bg-indec-blue hover:bg-indec-blue-dark"
+                      >
+                        {contactLoading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Enviando...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-4 h-4 mr-2" />
+                            Enviar Mensaje
+                          </>
+                        )}
+                      </Button>
+
+                      <p className="text-xs text-gray-500">
+                        Te responderemos dentro de las próximas 12 horas al email: {user.emailAddresses[0]?.emailAddress}
+                      </p>
+                    </form>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </div>
+
+            {/* Sidebar */}
+            <div className="space-y-6">
+              <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+                <CardContent className="pt-6">
+                  <div className="text-center">
+                    <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-3" />
+                    <h4 className="font-semibold text-gray-900 mb-2">Acceso Completo</h4>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Tienes acceso ilimitado a toda nuestra API. Sin restricciones, sin límites.
+                    </p>
+                    <Badge className="bg-green-600 text-white">
+                      API Ilimitada
+                    </Badge>
                   </div>
-                ) : (
-                  <p className="text-gray-500 text-sm">No tienes una API Key generada</p>
-                )}
-                <Button
-                  onClick={generateApiKey}
-                  disabled={loading}
-                  className="w-full"
-                >
-                  {loading ? (
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Key className="h-4 w-4 mr-2" />
-                  )}
-                  {apiKey ? 'Regenerar API Key' : 'Generar API Key'}
-                </Button>
-                <p className="text-xs text-gray-500">
-                  ⚠️ Regenerar tu API Key invalidará la anterior
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+                </CardContent>
+              </Card>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Plan Actual</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Badge className="mb-4">Plan Free</Badge>
-                <div className="space-y-2 text-sm">
-                  <p className="flex justify-between">
-                    <span className="text-gray-500">Requests diarios:</span>
-                    <span className="font-medium">100</span>
-                  </p>
-                  <p className="flex justify-between">
-                    <span className="text-gray-500">Favoritos:</span>
-                    <span className="font-medium">10</span>
-                  </p>
-                  <p className="flex justify-between">
-                    <span className="text-gray-500">Alertas:</span>
-                    <span className="font-medium">5</span>
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Acciones Rápidas</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <Button variant="outline" className="w-full justify-start" disabled>
-                  <Star className="h-4 w-4 mr-2" />
-                  Mis Favoritos
-                  <Badge variant="secondary" className="ml-auto">Próximamente</Badge>
-                </Button>
-                <Button variant="outline" className="w-full justify-start" disabled>
-                  <Bell className="h-4 w-4 mr-2" />
-                  Mis Alertas
-                  <Badge variant="secondary" className="ml-auto">Próximamente</Badge>
-                </Button>
-              </CardContent>
-            </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Enlaces Útiles</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Button variant="outline" className="w-full justify-start" asChild>
+                    <a href="/documentacion" target="_blank">
+                      <Code className="h-4 w-4 mr-2" />
+                      Documentación API
+                      <ExternalLink className="h-4 w-4 ml-auto" />
+                    </a>
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start" asChild>
+                    <a href="/dolar" target="_blank">
+                      <Star className="h-4 w-4 mr-2" />
+                      Dólar en Tiempo Real
+                      <ExternalLink className="h-4 w-4 ml-auto" />
+                    </a>
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start" asChild>
+                    <a href="/indicadores/ipc" target="_blank">
+                      <Star className="h-4 w-4 mr-2" />
+                      Inflación (IPC)
+                      <ExternalLink className="h-4 w-4 ml-auto" />
+                    </a>
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
           </div>
-        </div>
+        </Tabs>
       </div>
     </div>
   )

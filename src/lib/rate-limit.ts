@@ -8,6 +8,7 @@ export interface RateLimitResult {
   remaining: number
   reset: Date
   error?: string
+  userId?: string
 }
 
 // Crear cliente de Supabase para rate limiting
@@ -30,15 +31,6 @@ export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult>
     const host = req.headers.get('host')
     const referer = req.headers.get('referer')
     const userAgent = req.headers.get('user-agent') || ''
-    
-    // Log para debugging
-    console.info('Rate limit check:', {
-      origin,
-      host,
-      referer,
-      userAgent: userAgent.substring(0, 50),
-      path: req.url
-    })
     
     // Lista de dominios permitidos sin API key
     const allowedDomains = [
@@ -71,27 +63,10 @@ export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult>
       userAgent.toLowerCase().includes('curl') ||
       userAgent.toLowerCase().includes('wget')
     
-    // Si es una herramienta de desarrollo, siempre requerir API key
-    if (isDevelopmentTool) {
-      const apiKey = req.headers.get('x-api-key')
-      
-      if (!apiKey) {
-        console.info('Development tool detected without API key')
-        return {
-          success: false,
-          limit: 0,
-          remaining: 0,
-          reset: new Date(),
-          error: 'API key required for development tools'
-        }
-      }
-      
-      // Continuar con la verificación de API key más abajo
-    }
-    
+    // NUEVA LÓGICA: SIN RATE LIMITING
     // Si es una petición interna genuina desde el navegador, permitir sin límites
     if (isInternalRequest && !isDevelopmentTool) {
-      console.info('Internal request detected, allowing without rate limit')
+      console.info('Internal request detected, allowing without limits')
       return {
         success: true,
         limit: 999999,
@@ -100,7 +75,7 @@ export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult>
       }
     }
     
-    // Para todas las demás peticiones (externas o de herramientas), verificar API key
+    // Para peticiones externas, verificar API key pero SIN aplicar límites
     const apiKey = req.headers.get('x-api-key')
     
     if (!apiKey) {
@@ -110,24 +85,16 @@ export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult>
         limit: 0,
         remaining: 0,
         reset: new Date(),
-        error: 'API key required'
+        error: 'API key required for external requests'
       }
     }
 
-//    console.log('Checking API key:', apiKey.substring(0, 10) + '...')
-    console.info('Checking API key:', apiKey)
+    console.info('Checking API key:', apiKey.substring(0, 10) + '...')
 
     // Crear cliente de Supabase
     const supabase = createRateLimitSupabaseClient()
 
-    // First, reset daily counts if needed
-    const { error: rpcError } = await supabase.rpc('reset_daily_requests')
-    if (rpcError) {
-      console.error('Error resetting daily requests:', rpcError)
-      // No bloquear si falla el reset
-    }
-
-    // Get user by API key
+    // Get user by API key (para tracking, no para limitar)
     const { data: user, error: userError } = await supabase
       .from('users')
       .select('id, plan_type, daily_requests_count, last_request_reset_at')
@@ -145,36 +112,15 @@ export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult>
       }
     }
 
-    console.info('User found:', { id: user.id, plan: user.plan_type, count: user.daily_requests_count })
+    console.info('User found:', { id: user.id, plan: user.plan_type })
 
-    // Determine rate limit based on plan
-    const limits = {
-      free: 100,
-      pro: 1000,
-      enterprise: 10000
-    }
-
-    const limit = limits[user.plan_type as keyof typeof limits] || limits.free
+    // NUEVO: Sin límites, solo tracking
+    // Devolver límites "infinitos" para que el usuario sepa que no hay restricciones
+    const virtualLimit = 999999
+    
+    // Solo incrementar contador para tracking (sin verificar límites)
     const currentCount = user.daily_requests_count || 0
-
-    // Check if limit exceeded
-    if (currentCount >= limit) {
-      const tomorrow = new Date()
-      tomorrow.setDate(tomorrow.getDate() + 1)
-      tomorrow.setHours(0, 0, 0, 0)
-
-      console.info('Rate limit exceeded:', { limit, currentCount })
-
-      return {
-        success: false,
-        limit,
-        remaining: 0,
-        reset: tomorrow,
-        error: 'Rate limit exceeded'
-      }
-    }
-
-    // Increment counter
+    
     const { error: updateError } = await supabase
       .from('users')
       .update({ 
@@ -185,7 +131,7 @@ export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult>
 
     if (updateError) {
       console.error('Error updating request count:', updateError)
-      // Don't block the request if we can't update the counter
+      // No bloquear la petición si no se puede actualizar el contador
     }
 
     const tomorrow = new Date()
@@ -194,28 +140,33 @@ export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult>
 
     return {
       success: true,
-      limit,
-      remaining: limit - currentCount - 1,
-      reset: tomorrow
+      limit: virtualLimit,
+      remaining: virtualLimit - 1, // Mostrar siempre remaining alto
+      reset: tomorrow,
+      userId: user.id
     }
   } catch (error) {
     console.error('Rate limit check error:', error)
     
-    // En caso de error, permitir la petición pero con límites conservadores
+    // En caso de error, permitir la petición sin límites
     return {
       success: true,
-      limit: 100,
-      remaining: 99,
+      limit: 999999,
+      remaining: 999999,
       reset: new Date(Date.now() + 86400000),
     }
   }
 }
 
-// Helper para aplicar rate limiting a una API route
+// Helper para aplicar rate limiting y tracking a una API route
 export function withRateLimit(handler: (req: NextRequest, ...args: any[]) => Promise<Response>) {
   return async (req: NextRequest, ...args: any[]) => {
+    const startTime = Date.now()
+    let response: Response
+    let rateLimitResult: RateLimitResult | undefined
+    
     try {
-      const rateLimitResult = await checkRateLimit(req)
+      rateLimitResult = await checkRateLimit(req)
 
       // Agregar headers de rate limit
       const headers = new Headers({
@@ -225,17 +176,21 @@ export function withRateLimit(handler: (req: NextRequest, ...args: any[]) => Pro
       })
 
       if (!rateLimitResult.success) {
-        return new Response(
-          JSON.stringify({ error: rateLimitResult.error }),
+        response = new Response(
+          JSON.stringify({ 
+            error: rateLimitResult.error,
+            message: 'Access token required for external API requests. Get yours at https://argenstats.com/profile'
+          }),
           { 
-            status: 429, 
+            status: 401, 
             headers 
           }
         )
+        return response
       }
 
       // Llamar al handler original
-      const response = await handler(req, ...args)
+      response = await handler(req, ...args)
       
       // Agregar headers de rate limit a la respuesta
       if (response instanceof Response) {
@@ -249,7 +204,24 @@ export function withRateLimit(handler: (req: NextRequest, ...args: any[]) => Pro
       console.error('Error in withRateLimit wrapper:', error)
       
       // En caso de error en el rate limiting, permitir que la request continúe
-      return handler(req, ...args)
+      response = await handler(req, ...args)
+      return response
+    } finally {
+      // Trackear la petición de forma asíncrona (importar dinámicamente para evitar circular deps)
+      setTimeout(async () => {
+        try {
+          const { trackRequest } = await import('./request-tracker')
+          const responseTime = Date.now() - startTime
+          await trackRequest(
+            req, 
+            response?.status || 500, 
+            responseTime, 
+            rateLimitResult?.userId
+          )
+        } catch (trackingError) {
+          console.error('Error in request tracking:', trackingError)
+        }
+      }, 0)
     }
   }
 }

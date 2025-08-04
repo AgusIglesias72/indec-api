@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Menu, DollarSign, TrendingUp, BarChart3, Globe, Calendar, FileText, Users, Mail, User, LogOut, Key, Settings, LogIn, Calculator } from "lucide-react"
+import { Menu, DollarSign, TrendingUp, BarChart3, Globe, Calendar, FileText, Users, Mail, User, LogOut, Key, Settings, LogIn, Calculator, Heart, LayoutDashboard, HelpCircle, AlertCircle } from "lucide-react"
 import { useUser, useClerk, SignInButton, SignUpButton } from "@clerk/nextjs"
 
 import { Button } from "@/components/ui/button"
@@ -104,53 +104,143 @@ export default function NavBar() {
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user?.fullName}</p>
-            <p className="text-xs leading-none text-muted-foreground">
-              {user?.emailAddresses?.[0]?.emailAddress}
-            </p>
+      <DropdownMenuContent className="w-72 p-0 mt-2" align="end" forceMount>
+        {/* Header con información del usuario */}
+        <div className="px-4 py-3 bg-gradient-to-r from-indec-blue/5 to-indec-blue/10 border-b">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-12 w-12 ring-2 ring-white">
+              <AvatarImage src={user?.imageUrl} alt={user?.fullName || ""} />
+              <AvatarFallback className="bg-gradient-to-br from-indec-blue to-indec-blue-dark text-white font-semibold text-lg">
+                {user?.firstName?.charAt(0) || user?.emailAddresses?.[0]?.emailAddress?.charAt(0)?.toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col">
+              <p className="text-sm font-semibold text-gray-900">{user?.fullName || 'Usuario'}</p>
+              <p className="text-xs text-gray-600">
+                {user?.emailAddresses?.[0]?.emailAddress}
+              </p>
+              <div className="flex items-center gap-1 mt-1">
+                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">Cliente</span>
+                <div className="flex items-center gap-0.5">
+                  <div className="h-1.5 w-1.5 bg-green-500 rounded-full"></div>
+                  <span className="text-xs text-green-600 font-medium">Online</span>
+                </div>
+              </div>
+            </div>
           </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href="/profile" className="cursor-pointer">
-            <User className="mr-2 h-4 w-4" />
-            <span>Mi Perfil</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/profile/api-keys" className="cursor-pointer">
-            <Key className="mr-2 h-4 w-4" />
-            <span>API Keys</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/profile/settings" className="cursor-pointer">
-            <Settings className="mr-2 h-4 w-4" />
-            <span>Configuración</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          className="cursor-pointer text-red-600 focus:text-red-600"
-          onClick={() => signOut()}
-        >
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Cerrar sesión</span>
-        </DropdownMenuItem>
+        </div>
+        
+        <div className="p-2">
+          {/* Mi Perfil */}
+          <DropdownMenuItem asChild className="px-3 py-2.5 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+            <Link href="/profile" className="flex items-center gap-3">
+              <div className="h-9 w-9 bg-gray-100 rounded-lg flex items-center justify-center">
+                <User className="h-4 w-4 text-gray-700" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-gray-900">Mi Perfil</span>
+                <span className="text-xs text-gray-500">Configuración personal</span>
+              </div>
+            </Link>
+          </DropdownMenuItem>
+          
+          {/* Favoritos */}
+          <DropdownMenuItem className="px-3 py-2.5 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors group">
+            <div className="flex items-center gap-3 w-full">
+              <div className="h-9 w-9 bg-gray-100 rounded-lg flex items-center justify-center relative">
+                <Heart className="h-4 w-4 text-gray-700" />
+                <AlertCircle className="h-3 w-3 text-amber-500 absolute -top-1 -right-1" />
+              </div>
+              <div className="flex flex-col flex-1">
+                <span className="text-sm font-medium text-gray-900">Favoritos</span>
+                <span className="text-xs text-gray-500">Indicadores guardados</span>
+              </div>
+              <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium opacity-0 group-hover:opacity-100 transition-opacity">Próximamente</span>
+            </div>
+          </DropdownMenuItem>
+          
+          {/* Dashboard */}
+          <DropdownMenuItem className="px-3 py-2.5 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors group">
+            <div className="flex items-center gap-3 w-full">
+              <div className="h-9 w-9 bg-gray-100 rounded-lg flex items-center justify-center relative">
+                <LayoutDashboard className="h-4 w-4 text-gray-700" />
+                <AlertCircle className="h-3 w-3 text-amber-500 absolute -top-1 -right-1" />
+              </div>
+              <div className="flex flex-col flex-1">
+                <span className="text-sm font-medium text-gray-900">Dashboard</span>
+                <span className="text-xs text-gray-500">Panel de control</span>
+              </div>
+              <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium opacity-0 group-hover:opacity-100 transition-opacity">Próximamente</span>
+            </div>
+          </DropdownMenuItem>
+          
+          {/* Configuración */}
+          <DropdownMenuItem className="px-3 py-2.5 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors group">
+            <div className="flex items-center gap-3 w-full">
+              <div className="h-9 w-9 bg-gray-100 rounded-lg flex items-center justify-center relative">
+                <Settings className="h-4 w-4 text-gray-700" />
+                <AlertCircle className="h-3 w-3 text-amber-500 absolute -top-1 -right-1" />
+              </div>
+              <div className="flex flex-col flex-1">
+                <span className="text-sm font-medium text-gray-900">Configuración</span>
+                <span className="text-xs text-gray-500">Ajustes de cuenta</span>
+              </div>
+              <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium opacity-0 group-hover:opacity-100 transition-opacity">Próximamente</span>
+            </div>
+          </DropdownMenuItem>
+          
+          {/* Ayuda */}
+          <DropdownMenuItem className="px-3 py-2.5 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors group">
+            <div className="flex items-center gap-3 w-full">
+              <div className="h-9 w-9 bg-gray-100 rounded-lg flex items-center justify-center relative">
+                <HelpCircle className="h-4 w-4 text-gray-700" />
+                <AlertCircle className="h-3 w-3 text-amber-500 absolute -top-1 -right-1" />
+              </div>
+              <div className="flex flex-col flex-1">
+                <span className="text-sm font-medium text-gray-900">Ayuda</span>
+                <span className="text-xs text-gray-500">Soporte técnico</span>
+              </div>
+              <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium opacity-0 group-hover:opacity-100 transition-opacity">Próximamente</span>
+            </div>
+          </DropdownMenuItem>
+        </div>
+        
+        <div className="p-2 border-t">
+          <DropdownMenuItem
+            className="px-3 py-2.5 rounded-lg hover:bg-red-50 cursor-pointer transition-colors"
+            onClick={() => signOut()}
+          >
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 bg-red-100 rounded-lg flex items-center justify-center">
+                <LogOut className="h-4 w-4 text-red-600" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-red-600">Cerrar Sesión</span>
+                <span className="text-xs text-red-500">Salir de la cuenta</span>
+              </div>
+            </div>
+          </DropdownMenuItem>
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   ) : isMounted ? (
     <>
       <SignInButton mode="modal" fallbackRedirectUrl="/">
-        <Button variant="ghost" size="sm" className="text-indec-blue hover:bg-indec-blue hover:text-white transition-colors">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="text-indec-blue hover:bg-indec-blue hover:text-white transition-colors"
+          suppressHydrationWarning
+        >
           <LogIn className="h-4 w-4" />
         </Button>
       </SignInButton>
       <SignUpButton mode="modal" fallbackRedirectUrl="/">
-        <Button size="sm" className="bg-indec-blue text-white hover:bg-indec-blue-dark transition-colors">
+        <Button 
+          size="sm" 
+          className="bg-indec-blue text-white hover:bg-indec-blue-dark transition-colors"
+          suppressHydrationWarning
+        >
           <User className="h-4 w-4" />
         </Button>
       </SignUpButton>
@@ -331,6 +421,7 @@ export default function NavBar() {
                                 variant="outline" 
                                 className="w-full"
                                 onClick={handleMobileNavClick}
+                                suppressHydrationWarning
                               >
                                 Iniciar sesión
                               </Button>
@@ -339,6 +430,7 @@ export default function NavBar() {
                               <Button 
                                 className="w-full"
                                 onClick={handleMobileNavClick}
+                                suppressHydrationWarning
                               >
                                 Registrarse
                               </Button>

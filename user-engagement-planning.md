@@ -4,6 +4,60 @@
 ## Core Concept Overview
 Transform the economic data platform into an engaging prediction game where users bet on upcoming economic releases (inflation rates, unemployment, GDP, etc.) with a points-based ranking system to track accuracy.
 
+## Phase 0: Enhanced User Experience & Authentication Flow (PRIORITY)
+
+### 0.1 Modern Profile Dropdown Design
+- **Visual Design**: Clean, minimalist dropdown with smooth animations
+- **User Avatar**: Display user image with fallback to initials
+- **Menu Structure**:
+  - Mi Perfil (functional)
+  - Favoritos (coming soon with alert icon)
+  - Dashboard (coming soon with alert icon)
+  - Configuración (coming soon with alert icon)
+  - Ayuda (coming soon with alert icon)
+  - Cerrar Sesión
+- **Design Elements**:
+  - Subtle shadows and borders
+  - Hover states with background color transitions
+  - Icon-based navigation for clarity
+  - Status indicator (Online/Offline)
+  - Account type badge (Free/Premium)
+
+### 0.2 Enhanced User Profile Page
+- **Profile Header**:
+  - Large avatar with upload/change functionality
+  - Name and email display
+  - Join date and member status
+  - Edit profile button
+- **Profile Sections**:
+  - Account Information
+  - Notification Preferences
+  - Privacy Settings
+  - Connected Accounts
+  - API Keys (if applicable)
+  - Activity History
+- **Visual Improvements**:
+  - Card-based layout with proper spacing
+  - Clear typography hierarchy
+  - Interactive elements with feedback
+  - Mobile-responsive design
+
+### 0.3 Improved Authentication Flow
+- **Sign In/Sign Up Experience**:
+  - Modal-based authentication (current)
+  - Social login options prominently displayed
+  - Clear error messaging
+  - Password strength indicators
+  - Remember me functionality
+- **Welcome Experience**:
+  - First-time user onboarding
+  - Profile completion prompts
+  - Feature introduction tour
+- **Security Enhancements**:
+  - Two-factor authentication option
+  - Session management
+  - Login history
+
 ## Phase 1: Core Betting System
 
 ### 1.1 Economic Data Prediction Features

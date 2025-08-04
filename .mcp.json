@@ -1,0 +1,27 @@
+{
+    "compactMode": true,
+    "mcpServers": {
+      "supabase": {
+        "command": "cmd",
+        "args": [
+          "/c",
+          "npx",
+          "-y",
+          "@supabase/mcp-server-supabase@latest",
+          "--read-only",
+          "--project-ref=rdyrzmzlabxeazpazhqw"
+        ],
+        "env": {
+          "SUPABASE_ACCESS_TOKEN": "cli_AGUSIGLESIAS\\agusi@AgusIglesias_1740501807"
+        }
+      },
+      "playwright": {
+        "command": "cmd",
+        "args": ["/c", "npx", "-y", "@playwright/mcp@latest"]
+      },
+      "fetch": {
+        "command": "cmd",
+        "args": ["/c", "npx", "-y", "@kazuph/mcp-fetch"]
+      }
+    }
+  }
