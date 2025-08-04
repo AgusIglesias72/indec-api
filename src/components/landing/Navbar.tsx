@@ -249,7 +249,7 @@ export default function NavBar() {
         : "bg-white border-b border-white"
     )}>
       {/* Grid layout - móvil: 2 columnas, desktop: 3 columnas */}
-      <div className="mx-auto h-16 px-4 xl:px-12 grid grid-cols-2 md:grid-cols-3 items-center">
+      <div className="mx-auto h-16 px-4 xl:px-12 grid grid-cols-2 lg:grid-cols-3 items-center">
         {/* Logo - columna izquierda */}
         <div className="flex items-center justify-start">
           <Link href="/" className="flex items-center gap-2">
@@ -258,14 +258,14 @@ export default function NavBar() {
         </div>
 
         {/* Desktop Navigation - columna central, solo visible en desktop */}
-        <div className="hidden md:flex justify-center font-clear-sans font-extrabold">
+        <div className="hidden lg:flex justify-center font-clear-sans font-extrabold">
           <MainNavigation />
         </div>
           
         {/* Contact button, auth buttons and mobile menu - columna derecha */}
         <div className="flex items-center justify-end gap-2">
           {/* Desktop buttons */}
-          <div className="hidden md:flex md:items-center md:gap-2">
+          <div className="hidden lg:flex lg:items-center lg:gap-2">
             <Button 
               asChild
               variant="ghost" 
@@ -282,7 +282,7 @@ export default function NavBar() {
           </div>
           
           {/* Mobile menu trigger */}
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button 
