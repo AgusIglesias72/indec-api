@@ -31,7 +31,9 @@ import {
   AlertCircle,
   Loader2,
   ExternalLink,
-  LayoutDashboard
+  LayoutDashboard,
+  Calculator,
+  Wrench
 } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
@@ -299,7 +301,7 @@ export default function ProfilePage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Información Personal</CardTitle>
-                    <CardDescription>Tu información de perfil desde Clerk</CardDescription>
+                    <CardDescription>Tu información de perfil y datos de cuenta</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -393,6 +395,55 @@ export default function ProfilePage() {
                         Recibe resúmenes semanales con los principales indicadores económicos y análisis de tendencias.
                       </p>
                       <Badge variant="secondary">Próximamente</Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Herramientas Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Wrench className="h-5 w-5" />
+                      Herramientas
+                    </CardTitle>
+                    <CardDescription>Utilidades y calculadoras económicas</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Conversor USD/ARS */}
+                    <div className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                      <Link href="/conversor-dolar-peso-argentino" className="flex items-center gap-3 group">
+                        <div className="h-10 w-10 bg-indec-blue/10 rounded-lg flex items-center justify-center">
+                          <Calculator className="h-5 w-5 text-indec-blue" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-900 group-hover:text-indec-blue transition-colors">
+                            Conversor USD/ARS
+                          </h4>
+                          <p className="text-sm text-gray-600">
+                            Convierte entre dólares y pesos argentinos con cotizaciones en tiempo real
+                          </p>
+                        </div>
+                        <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-indec-blue transition-colors" />
+                      </Link>
+                    </div>
+
+                    {/* Calculadora de Inflación */}
+                    <div className="border rounded-lg p-4 bg-gray-50/50">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 bg-gray-100 rounded-lg flex items-center justify-center relative">
+                          <Calculator className="h-5 w-5 text-gray-400" />
+                          <AlertCircle className="h-3 w-3 text-amber-500 absolute -top-1 -right-1" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-600">
+                            Calculadora de Inflación
+                          </h4>
+                          <p className="text-sm text-gray-500">
+                            Calcula el poder adquisitivo a lo largo del tiempo usando datos del IPC
+                          </p>
+                        </div>
+                        <Badge variant="secondary" className="text-xs">Próximamente</Badge>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
