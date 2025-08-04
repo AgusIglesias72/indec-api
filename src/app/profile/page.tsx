@@ -30,7 +30,8 @@ import {
   CheckCircle, 
   AlertCircle,
   Loader2,
-  ExternalLink
+  ExternalLink,
+  LayoutDashboard
 } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
@@ -328,23 +329,7 @@ export default function ProfilePage() {
                           <span className="text-gray-600">Miembro desde</span>
                           <span className="font-medium">{new Date(user.createdAt!).toLocaleDateString('es-AR')}</span>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <Shield className="h-4 w-4 text-gray-400" />
-                          <span className="text-gray-600">ID de usuario</span>
-                          <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">{user.id.slice(0, 12)}...</span>
-                        </div>
                       </div>
-                    </div>
-                    <div className="pt-4 border-t">
-                      <p className="text-sm text-gray-600">
-                        Para modificar tu información personal, puedes hacerlo desde tu 
-                        <Button variant="link" className="px-1 h-auto text-indec-blue" asChild>
-                          <a href="/profile" target="_blank">
-                            panel de usuario de Clerk
-                            <ExternalLink className="h-3 w-3 ml-1" />
-                          </a>
-                        </Button>
-                      </p>
                     </div>
                   </CardContent>
                 </Card>
@@ -364,6 +349,48 @@ export default function ProfilePage() {
                       <p className="text-gray-600 mb-2">Aún no tienes favoritos</p>
                       <p className="text-sm text-gray-500 mb-4">
                         Esta función estará disponible muy pronto. Podrás guardar tus indicadores más consultados para acceso rápido.
+                      </p>
+                      <Badge variant="secondary">Próximamente</Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Dashboard Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <LayoutDashboard className="h-5 w-5" />
+                      Dashboard Personalizado
+                    </CardTitle>
+                    <CardDescription>Panel de control con tus indicadores favoritos</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-8">
+                      <LayoutDashboard className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-600 mb-2">Dashboard en desarrollo</p>
+                      <p className="text-sm text-gray-500 mb-4">
+                        Tendrás un panel personalizado con gráficos y análisis de tus indicadores favoritos.
+                      </p>
+                      <Badge variant="secondary">Próximamente</Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Newsletter Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Mail className="h-5 w-5" />
+                      Newsletter ArgenStats
+                    </CardTitle>
+                    <CardDescription>Recibe análisis y actualizaciones semanales</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-8">
+                      <Mail className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-600 mb-2">Suscripción al newsletter</p>
+                      <p className="text-sm text-gray-500 mb-4">
+                        Recibe resúmenes semanales con los principales indicadores económicos y análisis de tendencias.
                       </p>
                       <Badge variant="secondary">Próximamente</Badge>
                     </div>

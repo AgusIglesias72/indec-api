@@ -56,7 +56,6 @@ const indicators = [
 
 const mainNavItems = [
   { title: "Dólar", href: "/dolar", icon: DollarSign },
-  { title: "IPC", href: "/ipc", icon: TrendingUp },
   { title: "Conversor USD/ARS", href: "/conversor-dolar-peso-argentino", icon: Calculator },
   { title: "Calendario INDEC", href: "/calendario", icon: Calendar },
   { title: "API Docs", href: "/documentacion", icon: FileText },
@@ -119,13 +118,6 @@ export default function NavBar() {
               <p className="text-xs text-gray-600">
                 {user?.emailAddresses?.[0]?.emailAddress}
               </p>
-              <div className="flex items-center gap-1 mt-1">
-                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">Cliente</span>
-                <div className="flex items-center gap-0.5">
-                  <div className="h-1.5 w-1.5 bg-green-500 rounded-full"></div>
-                  <span className="text-xs text-green-600 font-medium">Online</span>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -232,7 +224,8 @@ export default function NavBar() {
           className="text-indec-blue hover:bg-indec-blue hover:text-white transition-colors"
           suppressHydrationWarning
         >
-          <LogIn className="h-4 w-4" />
+          <LogIn className="h-4 w-4 mr-1" />
+          <span className="hidden sm:inline">Iniciar</span>
         </Button>
       </SignInButton>
       <SignUpButton mode="modal" fallbackRedirectUrl="/">
@@ -241,7 +234,8 @@ export default function NavBar() {
           className="bg-indec-blue text-white hover:bg-indec-blue-dark transition-colors"
           suppressHydrationWarning
         >
-          <User className="h-4 w-4" />
+          <User className="h-4 w-4 mr-1" />
+          <span className="hidden sm:inline">Registrarse</span>
         </Button>
       </SignUpButton>
     </>
