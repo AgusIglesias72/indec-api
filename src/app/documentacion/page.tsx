@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Code, Copy, ExternalLink, Book, Zap, Shield, Globe, CheckCircle, ArrowRight, Terminal, Database, Activity, Users, AlertTriangle, Clock, RefreshCw, BarChart3, TrendingUp, Calendar, DollarSign } from 'lucide-react';
+import { Code, Copy, ExternalLink, Book, Zap, Shield, Globe, CheckCircle, ArrowRight, Terminal, Database, Activity, Users, AlertTriangle, Clock, RefreshCw, BarChart3, TrendingUp, Calendar, DollarSign, Key } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,8 @@ const apiGroupsWithUI = importedApiGroups.map(group => {
     'ipc': { color: 'purple', icon: TrendingUp },
     'dollar': { color: 'green', icon: DollarSign },
     'riesgo-pais': { color: 'red', icon: Globe },
-    'labor-market': { color: 'orange', icon: Users }
+    'labor-market': { color: 'orange', icon: Users },
+    'poverty': { color: 'red', icon: Users }
   };
   
   const config = uiConfig[group.id as keyof typeof uiConfig];
@@ -234,8 +235,8 @@ fetch('https://argenstats.com/api/emae?year=2024')
                   <div className="h-12 w-12 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                     <Shield className="h-6 w-6 text-green-600" />
                   </div>
-                  <h3 className="font-semibold mb-2">Sin Autenticación</h3>
-                  <p className="text-sm text-gray-600">Acceso público para consultas básicas</p>
+                  <h3 className="font-semibold mb-2">Acceso Público + API Keys</h3>
+                  <p className="text-sm text-gray-600">Acceso libre o con API key para usuarios registrados</p>
                 </div>
 
                 <div className="text-center p-4">
@@ -252,6 +253,115 @@ fetch('https://argenstats.com/api/emae?year=2024')
                   </div>
                   <h3 className="font-semibold mb-2">Alta Performance</h3>
                   <p className="text-sm text-gray-600">Respuestas optimizadas y cache inteligente</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* API Authentication */}
+        <div className="mb-12">
+          <SectionHeader title="Autenticación con API Key" icon={Key} />
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            className="group relative"
+          >
+            <div className="absolute -inset-1 bg-gradient-to-r from-indec-blue/20 to-indec-blue/10 rounded-2xl blur opacity-50"></div>
+            <div className="relative bg-white rounded-2xl p-6 shadow-lg border border-indec-blue/20">
+              <div className="mb-6">
+                <p className="text-gray-600 mb-4">
+                  Aunque nuestras APIs son públicas, te recomendamos usar una API Key para obtener beneficios adicionales:
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div className="flex items-start gap-3 p-4 bg-green-50 rounded-lg border border-green-200">
+                    <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-medium text-green-900">Tracking de Uso</h4>
+                      <p className="text-sm text-green-700 mt-1">
+                        Monitorea tus consultas y estadísticas desde tu perfil
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <Activity className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-medium text-blue-900">Soporte Técnico</h4>
+                      <p className="text-sm text-blue-700 mt-1">
+                        Acceso prioritario a soporte para usuarios registrados
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                    <BarChart3 className="h-5 w-5 text-purple-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-medium text-purple-900">Analytics Avanzado</h4>
+                      <p className="text-sm text-purple-700 mt-1">
+                        Estadísticas detalladas de tu uso de la API
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                    <Zap className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-medium text-amber-900">Sin Límites</h4>
+                      <p className="text-sm text-amber-700 mt-1">
+                        Acceso ilimitado sin restricciones de rate limiting
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="font-medium text-gray-900">Cómo usar tu API Key:</h4>
+                
+                <div>
+                  <h5 className="font-medium mb-2 text-gray-800">1. Obtén tu API Key</h5>
+                  <p className="text-sm text-gray-600 mb-2">
+                    Regístrate gratis y genera una API Key desde tu <a href="/profile" className="text-indec-blue hover:underline">perfil de usuario</a>
+                  </p>
+                </div>
+
+                <div>
+                  <h5 className="font-medium mb-2 text-gray-800">2. Incluye el header en tus requests</h5>
+                  <div className="bg-gray-900 text-green-400 p-4 rounded-lg">
+                    <code className="text-sm">
+                      curl -H &quot;x-api-key: tu-api-key-aqui&quot; \<br />
+                      &nbsp;&nbsp;&nbsp;&nbsp;&quot;https://argenstats.com/api/dollar&quot;
+                    </code>
+                  </div>
+                </div>
+
+                <div>
+                  <h5 className="font-medium mb-2 text-gray-800">3. JavaScript/Fetch Example</h5>
+                  <div className="bg-gray-900 text-blue-400 p-4 rounded-lg">
+                    <code className="text-sm">
+                      fetch(&apos;https://argenstats.com/api/dollar&apos;, {`{`}<br />
+                      &nbsp;&nbsp;headers: {`{`}<br />
+                      &nbsp;&nbsp;&nbsp;&nbsp;&apos;x-api-key&apos;: &apos;tu-api-key-aqui&apos;<br />
+                      &nbsp;&nbsp;{`}`}<br />
+                      {`}`})
+                    </code>
+                  </div>
+                </div>
+
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium text-amber-900">Nota Importante</p>
+                      <p className="text-sm text-amber-700 mt-1">
+                        Las APIs funcionan perfectamente sin API Key, pero con ella obtienes beneficios adicionales y mejor soporte.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -347,7 +457,7 @@ fetch('https://argenstats.com/api/emae?year=2024')
             <div className="relative bg-white rounded-2xl shadow-lg border border-gray-200">
               <Tabs defaultValue="calendar" className="w-full">
                 <div className="px-6 pt-6">
-                  <TabsList className="grid w-full grid-cols-6 h-12">
+                  <TabsList className="grid w-full grid-cols-7 h-12">
                     {apiGroups.map(group => (
                       <TabsTrigger
                         key={group.id}

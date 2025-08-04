@@ -525,6 +525,124 @@ export const laborMarketEndpoints: ApiEndpoint[] = [
   }
 ];
 
+// Endpoints de Pobreza e Indigencia
+export const povertyEndpoints: ApiEndpoint[] = [
+  {
+    method: "GET",
+    path: "/api/poverty",
+    description: "Endpoint unificado para datos de pobreza e indigencia con múltiples filtros y vistas.",
+    parameters: [
+      { name: "data_type", type: "string", required: false, description: "Tipo de datos: 'poverty', 'indigence', 'both' (por defecto: 'both')" },
+      { name: "region", type: "string", required: false, description: "Región específica o múltiples separadas por comas" },
+      { name: "time_period", type: "string", required: false, description: "Período temporal específico (ej. '2024-S1', '2023')" },
+      { name: "start_date", type: "string", required: false, description: "Fecha de inicio (YYYY-MM-DD)" },
+      { name: "end_date", type: "string", required: false, description: "Fecha de fin (YYYY-MM-DD)" },
+      { name: "format", type: "string", required: false, description: "Formato: 'json' o 'csv' (por defecto: 'json')" },
+      { name: "include_variations", type: "boolean", required: false, description: "Incluir variaciones vs período anterior (por defecto: true)" },
+      { name: "limit", type: "number", required: false, description: "Número máximo de registros (máx: 1000, por defecto: 100)" }
+    ],
+    notes: [
+      "Los datos incluyen tanto tasas de pobreza como de indigencia por regiones.",
+      "data_type='poverty': Solo datos de pobreza.",
+      "data_type='indigence': Solo datos de indigencia.",
+      "data_type='both': Ambos tipos de datos (por defecto).",
+      "Soporte para filtros semestrales (2024-S1, 2024-S2) y anuales.",
+      "Las variaciones se calculan automáticamente respecto al período anterior."
+    ],
+    responseExample: `{
+  "success": true,
+  "data": [
+    {
+      "time_period": "2024-S1",
+      "region": "Total 31 aglomerados urbanos",
+      "poverty_rate": 38.9,
+      "indigence_rate": 8.8,
+      "poverty_change": -2.1,
+      "indigence_change": -0.5,
+      "population_total": 28800000,
+      "poor_population": 11203200,
+      "indigent_population": 2534400
+    }
+  ],
+  "metadata": {
+    "total_records": 1,
+    "filtered_by": {
+      "data_type": "both",
+      "include_variations": true
+    },
+    "available_regions": [
+      "Total 31 aglomerados urbanos",
+      "Gran Buenos Aires",
+      "Ciudad de Buenos Aires",
+      "Cuyo",
+      "NEA",
+      "NOA",
+      "Pampeana",
+      "Patagónica"
+    ]
+  }
+}`
+  },
+  {
+    method: "GET",
+    path: "/api/poverty/latest",
+    description: "Obtiene los datos más recientes de pobreza e indigencia por región.",
+    parameters: [
+      { name: "region", type: "string", required: false, description: "Región específica (por defecto: todas)" },
+      { name: "data_type", type: "string", required: false, description: "Tipo: 'poverty', 'indigence', 'both' (por defecto: 'both')" }
+    ],
+    notes: [
+      "Devuelve los datos del período más reciente disponible.",
+      "Incluye variaciones respecto al período anterior automáticamente.",
+      "Datos cacheados durante 1 hora para mejor rendimiento."
+    ],
+    responseExample: `{
+  "success": true,
+  "latest_period": "2024-S1",
+  "data": [
+    {
+      "region": "Total 31 aglomerados urbanos",
+      "poverty_rate": 38.9,
+      "indigence_rate": 8.8,
+      "poverty_change": -2.1,
+      "indigence_change": -0.5
+    }
+  ]
+}`
+  },
+  {
+    method: "GET",
+    path: "/api/poverty/comparison",
+    description: "Comparación de tasas de pobreza e indigencia entre regiones y períodos.",
+    parameters: [
+      { name: "regions", type: "string", required: false, description: "Regiones a comparar separadas por comas" },
+      { name: "periods", type: "string", required: false, description: "Períodos a comparar (ej. '2023-S2,2024-S1')" },
+      { name: "metric", type: "string", required: false, description: "Métrica: 'rates', 'population', 'both' (por defecto: 'rates')" }
+    ],
+    notes: [
+      "Facilita comparaciones directas entre regiones y períodos.",
+      "metric='rates': Solo tasas porcentuales.",
+      "metric='population': Solo población afectada.",
+      "metric='both': Tasas y población."
+    ],
+    responseExample: `{
+  "success": true,
+  "comparison": {
+    "regions": ["Total 31 aglomerados urbanos", "Gran Buenos Aires"],
+    "periods": ["2023-S2", "2024-S1"],
+    "data": [
+      {
+        "region": "Total 31 aglomerados urbanos",
+        "period": "2024-S1",
+        "poverty_rate": 38.9,
+        "indigence_rate": 8.8
+      }
+    ]
+  }
+}`
+  }
+];
+
 // Configuración de las pestañas con los grupos de endpoints
 export const apiGroups: ApiGroup[] = [
   {
@@ -562,5 +680,11 @@ export const apiGroups: ApiGroup[] = [
     title: "API de Mercado Laboral",
     description: "Indicadores laborales por región y demografía - Tasas de actividad, empleo y desempleo",
     endpoints: laborMarketEndpoints
+  },
+  {
+    id: "poverty",
+    title: "API de Pobreza",
+    description: "Datos de pobreza e indigencia por regiones - Tasas, población afectada y comparaciones",
+    endpoints: povertyEndpoints
   }
 ];
