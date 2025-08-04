@@ -10,6 +10,7 @@ import { defaultMetadata } from "@/lib/metadata";
 import { GoogleAnalytics } from '@next/third-parties/google'
 import { Analytics } from "@vercel/analytics/next"
 import StructuredData, { OrganizationSchema, WebsiteSchema } from "@/components/StructuredData"
+import { GlobalChunkErrorBoundary } from "@/components/LazyLoadWrapper"
 
 // Lazy load footer to improve initial page load
 const Footer = dynamic(() => import("@/components/landing/CTAFooter"), {
@@ -96,11 +97,13 @@ export default function RootLayout({
         <link rel="preconnect" href="https://api.argenstats.com" />
       </head>
       <body suppressHydrationWarning>
-        <AppWrapper>
-          <NavBar />
-          {children}
-          <Footer />
-        </AppWrapper>
+        <GlobalChunkErrorBoundary>
+          <AppWrapper>
+            <NavBar />
+            {children}
+            <Footer />
+          </AppWrapper>
+        </GlobalChunkErrorBoundary>
         <GoogleAnalytics gaId="G-WFK681BVSD" />
         <Analytics />
 

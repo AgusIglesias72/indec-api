@@ -1,13 +1,30 @@
 'use client';
 
-import React, { useState, useEffect, memo, useMemo, lazy, Suspense } from 'react';
+import React, { useState, useEffect, memo, useMemo } from 'react';
 import { Globe, TrendingUp, TrendingDown, BarChart3, Clock, RefreshCw, ArrowUpRight, ArrowDownRight, Info, Minus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-// Lazy load heavy chart component
-const EnhancedRiskChart = lazy(() => import('@/components/EnhancedRiskChart'));
+// Lazy load heavy chart component with retry
+import { createLazyComponentWithRetry } from '@/components/LazyLoadWrapper';
+
+const EnhancedRiskChart = createLazyComponentWithRetry(
+  () => import('@/components/EnhancedRiskChart'),
+  <div className="bg-white rounded-2xl p-6 shadow-lg border border-red-100">
+    <div className="animate-pulse space-y-4">
+      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+      <div className="h-64 bg-gray-200 rounded"></div>
+      <div className="grid grid-cols-3 gap-4">
+        <div className="h-8 bg-gray-200 rounded"></div>
+        <div className="h-8 bg-gray-200 rounded"></div>
+        <div className="h-8 bg-gray-200 rounded"></div>
+      </div>
+    </div>
+  </div>,
+  3, // maxRetries
+  1500 // retryDelay
+);
 import {
   getRiskCountryData,
   getLatestRiskCountryRate,
@@ -828,32 +845,15 @@ export default function RiesgoPaisPage() {
         {/* Last 3 Months Values Section */}
         <ValoresActuales />
 
-        {/* Historical Analysis with enhanced limits - Lazy loaded */}
-        <Suspense fallback={
-          <div className="mb-16">
-            <SectionHeader title="Análisis histórico" icon={BarChart3} />
-            <div className="bg-white rounded-2xl p-6 shadow-lg border border-red-100">
-              <div className="animate-pulse space-y-4">
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-64 bg-gray-200 rounded"></div>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="h-8 bg-gray-200 rounded"></div>
-                  <div className="h-8 bg-gray-200 rounded"></div>
-                  <div className="h-8 bg-gray-200 rounded"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        }>
-          <EnhancedRiskChart
-            title="Análisis histórico"
-            description="Evolución del riesgo país con selector de períodos extendidos"
-            height={350}
-            darkMode={false}
-            enableExtendedPeriods={true}
-            maxDataPoints={5000}
-          />
-        </Suspense>
+        {/* Historical Analysis with enhanced limits - Lazy loaded with retry */}
+        <EnhancedRiskChart
+          title="Análisis histórico"
+          description="Evolución del riesgo país con selector de períodos extendidos"
+          height={350}
+          darkMode={false}
+          enableExtendedPeriods={true}
+          maxDataPoints={5000}
+        />
 
         {/* Information Sections */}
         <RiskCountryInfo />
