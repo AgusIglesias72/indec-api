@@ -10,6 +10,7 @@ import { defaultMetadata } from "@/lib/metadata";
 import { GoogleAnalytics } from '@next/third-parties/google'
 import { Analytics } from "@vercel/analytics/next"
 import StructuredData, { OrganizationSchema, WebsiteSchema } from "@/components/StructuredData"
+import ClarityScript from "@/components/ClarityScript"
 
 // Lazy load footer to improve initial page load
 const Footer = dynamic(() => import("@/components/landing/CTAFooter"), {
@@ -103,7 +104,7 @@ export default function RootLayout({
         </AppWrapper>
         <GoogleAnalytics gaId="G-WFK681BVSD" />
         <Analytics />
-
+        <ClarityScript />
       </body>
     </html>
   );
