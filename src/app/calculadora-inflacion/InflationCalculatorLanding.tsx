@@ -8,8 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import StructuredData, { InflationCalculatorWebAppSchema, InflationCalculatorFAQSchema, BreadcrumbSchema } from '@/components/StructuredData';
 
-// Lazy load the calculator component
-const InflationCalculator = lazy(() => import('@/components/InflationCalculator'));
+// Lazy load the enhanced calculator component
+const InflationCalculatorEnhanced = lazy(() => import('@/components/InflationCalculatorEnhanced'));
 
 interface CERData {
   date: string;
@@ -118,7 +118,7 @@ export default function InflationCalculatorLanding() {
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="max-w-5xl mx-auto"
               >
-                <InflationCalculator cerData={cerData} loading={loading} />
+                <InflationCalculatorEnhanced cerData={cerData} loading={loading} />
               </motion.div>
             </Suspense>
           </div>
