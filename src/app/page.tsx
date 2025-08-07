@@ -20,6 +20,16 @@ const DollarConverterSection = lazy(() =>
   })
 );
 
+const InflationCalculatorSection = lazy(() => 
+  import('@/components/landing/InflationCalculatorSection').then(module => {
+    // Preload CER API data
+    if (typeof window !== 'undefined') {
+      fetch('/api/cer?type=latest').catch(() => {});
+    }
+    return module;
+  })
+);
+
 const RiskCountryPromoSection = lazy(() => import('@/components/landing/RiskCountryPromoSection'));
 const IPCPromoSection = lazy(() => import('@/components/landing/IPCPromoSection'));
 const PovertyPromoSection = lazy(() => import('@/components/landing/PovertyPromoSection'));
@@ -116,6 +126,11 @@ export default async function HomePage() {
       {/* Dollar Converter Section - High engagement feature */}
       <Suspense fallback={<SectionSkeleton height="800px" title="Conversor de Divisas" />}>
         <DollarConverterSection />
+      </Suspense>
+      
+      {/* Inflation Calculator Section - New feature showcase */}
+      <Suspense fallback={<SectionSkeleton height="800px" title="Calculadora de Inflación" />}>
+        <InflationCalculatorSection />
       </Suspense>
       
       {/* Risk Country Promotion Section - API advantage showcase */}

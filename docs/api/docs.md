@@ -634,6 +634,181 @@ curl -o ipc_data.csv "https://api.econovista.gov.ar/v1/api/ipc?format=csv"
 curl "https://api.econovista.gov.ar/v1/api/calendar?month=8&year=2023"
 ```
 
+## Endpoints del BCRA (Banco Central de la República Argentina)
+
+### GET `/api/cer`
+
+Obtiene datos del CER (Coeficiente de Estabilización de Referencia).
+
+#### Parámetros de consulta
+
+| Parámetro | Tipo | Descripción | Valor por defecto |
+|-----------|------|-------------|-------------------|
+| `type` | string | Tipo de consulta: `latest`, `historical`, `range`, `specific-date` | `historical` |
+| `start_date` | string | Fecha inicial (YYYY-MM-DD) | *null* |
+| `end_date` | string | Fecha final (YYYY-MM-DD) | *null* |
+| `date` | string | Fecha específica (YYYY-MM-DD) para `type=specific-date` | *null* |
+| `limit` | number | Cantidad máxima de registros (máx: 1000) | 100 |
+| `page` | number | Número de página para paginación | 1 |
+| `order` | string | Orden de los resultados: `asc` o `desc` | `desc` |
+| `include_variations` | boolean | Incluir variaciones diarias, mensuales y anuales | `true` |
+| `format` | string | Formato de respuesta: `json` o `csv` | `json` |
+
+#### Notas
+- El CER es publicado diariamente por el BCRA.
+- Los datos históricos están disponibles desde febrero de 2002.
+- Base: 2.2.2002 = 1
+- Las variaciones se calculan automáticamente cuando `include_variations=true`.
+
+#### Ejemplos de uso
+
+```
+GET /api/cer?type=latest
+GET /api/cer?type=specific-date&date=2024-12-31
+GET /api/cer?type=range&start_date=2024-01-01&end_date=2024-12-31
+GET /api/cer?limit=365&include_variations=true
+```
+
+#### Respuesta (JSON)
+
+```json
+{
+  "success": true,
+  "type": "latest",
+  "data": {
+    "id": 8596,
+    "date": "2025-08-15",
+    "value": 616.1395,
+    "daily_pct_change": 0.0506,
+    "monthly_pct_change": 0.3156,
+    "yearly_pct_change": 64.5678,
+    "created_at": "2025-01-08T12:00:00Z",
+    "updated_at": "2025-01-08T12:00:00Z"
+  },
+  "meta": {
+    "type": "latest",
+    "timestamp": "2025-01-08T15:30:00Z",
+    "source": "BCRA",
+    "description": "Coeficiente de Estabilización de Referencia (Base 2.2.2002=1)"
+  }
+}
+```
+
+### GET `/api/uva`
+
+Obtiene datos del UVA (Unidad de Valor Adquisitivo).
+
+#### Parámetros de consulta
+
+| Parámetro | Tipo | Descripción | Valor por defecto |
+|-----------|------|-------------|-------------------|
+| `type` | string | Tipo de consulta: `latest`, `historical`, `range`, `specific-date` | `historical` |
+| `start_date` | string | Fecha inicial (YYYY-MM-DD) | *null* |
+| `end_date` | string | Fecha final (YYYY-MM-DD) | *null* |
+| `date` | string | Fecha específica (YYYY-MM-DD) para `type=specific-date` | *null* |
+| `limit` | number | Cantidad máxima de registros (máx: 1000) | 100 |
+| `page` | number | Número de página para paginación | 1 |
+| `order` | string | Orden de los resultados: `asc` o `desc` | `desc` |
+| `include_variations` | boolean | Incluir variaciones diarias, mensuales y anuales | `true` |
+| `format` | string | Formato de respuesta: `json` o `csv` | `json` |
+
+#### Notas
+- El UVA es publicado diariamente por el BCRA.
+- Los datos históricos están disponibles desde marzo de 2016.
+- Base: 31.3.2016 = 14.05 pesos
+- Las variaciones se calculan automáticamente cuando `include_variations=true`.
+- El valor del UVA se expresa en pesos con dos decimales.
+
+#### Ejemplos de uso
+
+```
+GET /api/uva?type=latest
+GET /api/uva?type=specific-date&date=2024-12-31
+GET /api/uva?type=range&start_date=2024-01-01&end_date=2024-12-31
+GET /api/uva?limit=365&include_variations=true
+```
+
+#### Respuesta (JSON)
+
+```json
+{
+  "success": true,
+  "type": "latest",
+  "data": {
+    "id": 3425,
+    "date": "2025-08-15",
+    "value": 1555.16,
+    "daily_pct_change": 0.0516,
+    "monthly_pct_change": 0.3256,
+    "yearly_pct_change": 65.1234,
+    "created_at": "2025-01-08T12:00:00Z",
+    "updated_at": "2025-01-08T12:00:00Z"
+  },
+  "meta": {
+    "type": "latest",
+    "timestamp": "2025-01-08T15:30:00Z",
+    "source": "BCRA",
+    "description": "Unidad de Valor Adquisitivo (en pesos, base 31.3.2016=14.05)"
+  }
+}
+```
+
+#### Respuesta para consultas históricas
+
+```json
+{
+  "success": true,
+  "type": "historical",
+  "data": [
+    {
+      "id": 3425,
+      "date": "2025-08-15",
+      "value": 1555.16,
+      "daily_pct_change": 0.0516,
+      "monthly_pct_change": 0.3256,
+      "yearly_pct_change": 65.1234
+    },
+    {
+      "id": 3424,
+      "date": "2025-08-14",
+      "value": 1554.36,
+      "daily_pct_change": 0.0515,
+      "monthly_pct_change": 0.2740,
+      "yearly_pct_change": 65.0718
+    }
+  ],
+  "pagination": {
+    "current_page": 1,
+    "per_page": 100,
+    "total_pages": 35,
+    "total_records": 3425,
+    "has_more": true,
+    "has_previous": false
+  },
+  "stats": {
+    "latest_value": 1555.16,
+    "latest_date": "2025-08-15",
+    "min_value": 14.05,
+    "max_value": 1555.16,
+    "avg_value": 245.78,
+    "total_records": 100,
+    "latest_daily_change": 0.0516,
+    "latest_monthly_change": 0.3256,
+    "latest_yearly_change": 65.1234,
+    "period_change": {
+      "absolute": 155.45,
+      "percentage": 11.10
+    }
+  },
+  "meta": {
+    "type": "historical",
+    "timestamp": "2025-01-08T15:30:00Z",
+    "source": "BCRA",
+    "description": "Unidad de Valor Adquisitivo (en pesos, base 31.3.2016=14.05)"
+  }
+}
+```
+
 ## Notas adicionales
 
 - Todos los valores numéricos en las respuestas se devuelven como números, no como cadenas.
@@ -641,3 +816,4 @@ curl "https://api.econovista.gov.ar/v1/api/calendar?month=8&year=2023"
 - En caso de no encontrar datos que coincidan con los filtros, se devolverá un array vacío en el campo `data`, no un error.
 - La API implementa caché con stale-while-revalidate para ofrecer mejor rendimiento.
 - Las variaciones del IPC por defecto se muestran en puntos porcentuales, no en porcentajes base 100.
+- Los índices del BCRA (CER y UVA) se actualizan diariamente mediante cron jobs automatizados.

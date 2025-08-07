@@ -111,3 +111,6 @@ export interface EmaeResponse {
   monthly_pct_change?: number;
   yearly_pct_change?: number;
 }
+
+// Exportar tipos del BCRA
+export * from './bcra';

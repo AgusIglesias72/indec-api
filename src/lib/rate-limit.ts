@@ -35,7 +35,17 @@ export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult>
     // Lista de dominios permitidos sin API key
     const allowedDomains = [
       'localhost:3000',
+      'localhost:3001',
+      'localhost:3002',
+      'localhost:3003',
+      'localhost:3004',
+      'localhost:3005',
       '127.0.0.1:3000',
+      '127.0.0.1:3001',
+      '127.0.0.1:3002', 
+      '127.0.0.1:3003',
+      '127.0.0.1:3004',
+      '127.0.0.1:3005',
       'argenstats.com',
       'www.argenstats.com',
       'argenstats.vercel.app',

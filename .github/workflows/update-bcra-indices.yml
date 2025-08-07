@@ -1,0 +1,45 @@
+name: Update BCRA Indices (CER & UVA)
+
+on:
+  schedule:
+    # Ejecutar todos los días a las 10:00 AM UTC (7:00 AM Argentina)
+    - cron: '0 10 * * *'
+  workflow_dispatch: # Permite ejecutar manualmente desde GitHub
+
+jobs:
+  update-bcra-indices:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Call update BCRA indices endpoint
+      run: |
+        response=$(curl -s -w "\n%{http_code}" -X GET \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET_KEY }}" \
+          "${{ secrets.API_BASE_URL }}/api/cron/update-bcra-indices")
+        
+        http_code=$(echo "$response" | tail -n1)
+        body=$(echo "$response" | sed '$d')
+        
+        echo "Response body:"
+        echo "$body"
+        echo "HTTP status code: $http_code"
+        
+        if [ "$http_code" != "200" ]; then
+          echo "Error: Failed to update BCRA indices"
+          exit 1
+        fi
+        
+    - name: Notify on failure
+      if: failure()
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const issue = {
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: '🚨 BCRA Indices Update Failed',
+            body: `The scheduled update for BCRA indices (CER & UVA) failed at ${new Date().toISOString()}.
+            
+            Check the [workflow run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}) for details.`
+          };
+          github.rest.issues.create(issue);

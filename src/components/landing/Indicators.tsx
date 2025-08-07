@@ -15,8 +15,8 @@ import {
   useHistoricalEmaeData,
   useHistoricalIPCData 
 } from "@/hooks/useApiData"
-import EmaeEnhancedChart from "@/components/charts/EmaeEnhancedChart"
-import IPCEnhancedChart from "@/components/charts/IPCEnhancedChart"
+import EmaeEnhancedChart from "@/components/EMAEEnhancedChart"
+import IPCEnhancedChart from "@/components/IPCEnhancedChart"
 import { useAppData } from '@/lib/DataProvider';
 
 // Interface para datos del dólar
@@ -486,9 +486,6 @@ export default function ImprovedIndicators() {
                     <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/20 to-blue-400/20 rounded-2xl blur opacity-50 group-hover:opacity-75 transition duration-500"></div>
                     <div className="relative bg-white shadow-xl border border-blue-100 rounded-2xl p-4 h-full">
                       <EmaeEnhancedChart 
-                        data={emaeHistorical} 
-                        loading={emaeHistoricalLoading} 
-                        error={emaeHistoricalError}
                         height={400} 
                       />
                     </div>
@@ -618,9 +615,6 @@ export default function ImprovedIndicators() {
                     <div className="absolute -inset-1 bg-gradient-to-r from-purple-600/20 to-purple-400/20 rounded-2xl blur opacity-50 group-hover:opacity-75 transition duration-500"></div>
                     <div className="relative bg-white shadow-xl border border-purple-100 rounded-2xl p-4 h-full">
                       <IPCEnhancedChart 
-                        data={ipcHistorical} 
-                        loading={ipcHistoricalLoading} 
-                        error={ipcHistoricalError} 
                         height={320} 
                       />
                     </div>

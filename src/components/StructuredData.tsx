@@ -249,6 +249,84 @@ export const DollarConverterFAQSchema = {
   ]
 };
 
+// Inflation Calculator WebApp Schema
+export const InflationCalculatorWebAppSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Calculadora de Inflación Argentina",
+  "description": "Calculadora de inflación argentina con índice CER del BCRA. Calculá cuánto valen hoy tus pesos del pasado y el poder adquisitivo desde 2002.",
+  "url": "https://argenstats.com/calculadora-inflacion",
+  "applicationCategory": "FinanceApplication",
+  "operatingSystem": "Web Browser",
+  "browserRequirements": "Requires HTML5 support",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD",
+    "category": "Free"
+  },
+  "featureList": [
+    "Cálculo de inflación con índice CER oficial",
+    "Datos del BCRA desde febrero 2002",
+    "Cálculo bidireccional de poder adquisitivo",
+    "Interfaz responsive",
+    "Actualización diaria de datos"
+  ],
+  "provider": {
+    "@type": "Organization",
+    "name": "ArgenStats",
+    "url": "https://argenstats.com"
+  }
+};
+
+// FAQ Schema for Inflation Calculator
+export const InflationCalculatorFAQSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "¿Cuánto valen hoy $1000 de 2010?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Usando nuestra calculadora podés ver exactamente cuánto valen $1000 de 2010 en pesos actuales. La respuesta varía según la fecha específica y la evolución de la inflación medida por el índice CER."
+      }
+    },
+    {
+      "@type": "Question", 
+      "name": "¿Cómo se calcula la inflación acumulada?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "La inflación acumulada se calcula comparando el índice CER entre dos fechas. Nuestra calculadora hace este cálculo automáticamente mostrando tanto el valor equivalente como el porcentaje de inflación del período."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Qué es el índice CER?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "El CER (Coeficiente de Estabilización de Referencia) es un índice que refleja la evolución del IPC publicado por el BCRA. Se usa para ajustar contratos y medir el poder adquisitivo desde febrero de 2002."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Desde cuándo están disponibles los datos?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Los datos del índice CER están disponibles desde el 2 de febrero de 2002, fecha de implementación de este coeficiente por parte del Banco Central de la República Argentina."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Con qué frecuencia se actualizan los datos?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Los datos del CER se actualizan diariamente siguiendo las publicaciones oficiales del Banco Central, reflejando la evolución del Índice de Precios al Consumidor."
+      }
+    }
+  ]
+};
+
 // Breadcrumb Schema Generator
 export const BreadcrumbSchema = (items: Array<{ name: string; url: string }>) => ({
   "@context": "https://schema.org",

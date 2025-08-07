@@ -66,11 +66,11 @@ export const defaultMetadata: Metadata = {
 
 // Homepage metadata
 export const homeMetadata: Metadata = {
-  title: "ArgenStats - Datos económicos en tiempo real",
-  description: "Potencia la visualización de indicadores económicos con datos actualizados. Mejora tu toma de decisiones con información relevante del INDEC a través de una interfaz moderna y una API potente.",
+  title: "ArgenStats - Indicadores Económicos Argentina en Tiempo Real | Datos INDEC",
+  description: "Datos económicos oficiales de Argentina actualizados en tiempo real. Dólar, inflación, EMAE, riesgo país y más indicadores del INDEC. API gratuita y visualizaciones modernas.",
   openGraph: {
-    title: "ArgenStats - Datos económicos en tiempo real",
-    description: "Potencia la visualización de indicadores económicos con datos actualizados. Mejora tu toma de decisiones con información relevante del INDEC a través de una interfaz moderna y una API potente.",
+    title: "ArgenStats - Indicadores Económicos Argentina en Tiempo Real | Datos INDEC",
+    description: "Datos económicos oficiales de Argentina actualizados en tiempo real. Dólar, inflación, EMAE, riesgo país y más indicadores del INDEC. API gratuita y visualizaciones modernas.",
     url: BASE_URL,
     images: [
       {
@@ -82,8 +82,8 @@ export const homeMetadata: Metadata = {
     ],
   },
   twitter: {
-    title: "ArgenStats - Datos económicos en tiempo real",
-    description: "Potencia la visualización de indicadores económicos con datos actualizados. Mejora tu toma de decisiones con información relevante del INDEC a través de una interfaz moderna y una API potente.",
+    title: "ArgenStats - Indicadores Económicos Argentina en Tiempo Real | Datos INDEC",
+    description: "Datos económicos oficiales de Argentina actualizados en tiempo real. Dólar, inflación, EMAE, riesgo país y más indicadores del INDEC. API gratuita.",
   },
 };
 
@@ -404,6 +404,64 @@ export const dollarConverterMetadata: Metadata = {
     title: "Conversor USD ARS | Dólar a Peso Argentino Hoy",
     description: "Convertí dólares a pesos argentinos con las últimas cotizaciones. Blue, oficial, MEP, CCL y más.",
     images: [`${BASE_URL}/images/conversor-dolar-twitter.jpg`],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1
+    }
+  }
+};
+
+export const inflationCalculatorMetadata: Metadata = {
+  title: "Calculadora de Inflación Argentina | ¿Cuánto valen tus pesos de antes?",
+  description: "Calculadora de inflación argentina con índice CER del BCRA. Descubrí cuánto valen hoy $1000 de hace años o cuánto necesitabas antes para tener el poder de compra actual.",
+  keywords: [
+    "calculadora inflacion argentina",
+    "cer inflacion",
+    "poder adquisitivo argentina", 
+    "cuanto valen pesos del pasado",
+    "inflacion acumulada argentina",
+    "coeficiente estabilizacion referencia",
+    "calculadora cer",
+    "bcra cer indice",
+    "valor dinero tiempo argentina",
+    "inflacion historica argentina",
+    "que valen 1000 pesos 2010",
+    "calculadora poder adquisitivo",
+    "indice precios consumidor",
+    "devaluacion peso argentino",
+    "inflacion argentina 2002"
+  ],
+  alternates: {
+    canonical: `${BASE_URL}/calculadora-inflacion`
+  },
+  openGraph: {
+    title: "Calculadora de Inflación Argentina | Poder Adquisitivo CER",
+    description: "Calculá cuánto valen hoy tus pesos del pasado usando el índice CER. Medí el impacto de la inflación en tu dinero desde 2002.",
+    type: "website",
+    locale: "es_AR",
+    siteName: "ArgenStats",
+    url: `${BASE_URL}/calculadora-inflacion`,
+    images: [
+      {
+        url: `${BASE_URL}/images/calculadora-inflacion-og.jpg`,
+        width: 1200,
+        height: 630,
+        alt: "Calculadora de Inflación Argentina",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Calculadora de Inflación Argentina | CER BCRA",
+    description: "¿Cuánto valen hoy $1000 de 2010? Calculá el poder adquisitivo usando el índice CER oficial.",
+    images: [`${BASE_URL}/images/calculadora-inflacion-twitter.jpg`],
   },
   robots: {
     index: true,

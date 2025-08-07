@@ -223,7 +223,7 @@ export default function ContactPage() {
                 </p>
                 
                 <p>
-                  No importa si es una pregunta “tonta”;, una crítica constructiva, o una sugerencia 
+                  No importa si es una pregunta &quot;tonta&quot;, una crítica constructiva, o una sugerencia 
                   que puede parecer descabellada. Cada mensaje que recibimos nos ayuda a entender 
                   mejor las necesidades de nuestra comunidad.
                 </p>

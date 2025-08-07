@@ -173,14 +173,21 @@ export function NativeDatePicker({
               </span>
             </div>
             {date && (
-              <button
-                type="button"
-                className="ml-2 text-muted-foreground hover:text-foreground transition-colors"
+              <div
+                className="ml-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                 onClick={handleClear}
                 aria-label="Limpiar fecha"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleClear(e as any);
+                  }
+                }}
               >
                 <X className="h-3 w-3" />
-              </button>
+              </div>
             )}
           </Button>
         </PopoverTrigger>

@@ -136,50 +136,7 @@ export default function NavBar() {
             </Link>
           </DropdownMenuItem>
           
-          {/* Favoritos */}
-          <DropdownMenuItem className="px-3 py-2.5 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors group">
-            <div className="flex items-center gap-3 w-full">
-              <div className="h-9 w-9 bg-gray-100 rounded-lg flex items-center justify-center relative">
-                <Heart className="h-4 w-4 text-gray-700" />
-                <AlertCircle className="h-3 w-3 text-amber-500 absolute -top-1 -right-1" />
-              </div>
-              <div className="flex flex-col flex-1">
-                <span className="text-sm font-medium text-gray-900">Favoritos</span>
-                <span className="text-xs text-gray-500">Indicadores guardados</span>
-              </div>
-              <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium opacity-0 group-hover:opacity-100 transition-opacity">Próximamente</span>
-            </div>
-          </DropdownMenuItem>
-          
-          {/* Dashboard */}
-          <DropdownMenuItem className="px-3 py-2.5 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors group">
-            <div className="flex items-center gap-3 w-full">
-              <div className="h-9 w-9 bg-gray-100 rounded-lg flex items-center justify-center relative">
-                <LayoutDashboard className="h-4 w-4 text-gray-700" />
-                <AlertCircle className="h-3 w-3 text-amber-500 absolute -top-1 -right-1" />
-              </div>
-              <div className="flex flex-col flex-1">
-                <span className="text-sm font-medium text-gray-900">Dashboard</span>
-                <span className="text-xs text-gray-500">Panel de control</span>
-              </div>
-              <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium opacity-0 group-hover:opacity-100 transition-opacity">Próximamente</span>
-            </div>
-          </DropdownMenuItem>
-          
-          {/* Configuración */}
-          <DropdownMenuItem className="px-3 py-2.5 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors group">
-            <div className="flex items-center gap-3 w-full">
-              <div className="h-9 w-9 bg-gray-100 rounded-lg flex items-center justify-center relative">
-                <Settings className="h-4 w-4 text-gray-700" />
-                <AlertCircle className="h-3 w-3 text-amber-500 absolute -top-1 -right-1" />
-              </div>
-              <div className="flex flex-col flex-1">
-                <span className="text-sm font-medium text-gray-900">Configuración</span>
-                <span className="text-xs text-gray-500">Ajustes de cuenta</span>
-              </div>
-              <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium opacity-0 group-hover:opacity-100 transition-opacity">Próximamente</span>
-            </div>
-          </DropdownMenuItem>
+          {/* Elementos 'Próximamente' removidos para mejorar UX */}
           
           {/* Ayuda */}
           <DropdownMenuItem className="px-3 py-2.5 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors group">
@@ -249,7 +206,7 @@ export default function NavBar() {
         : "bg-white border-b border-white"
     )}>
       {/* Grid layout - móvil: 2 columnas, desktop: 3 columnas */}
-      <div className="mx-auto h-16 px-4 xl:px-12 grid grid-cols-2 lg:grid-cols-3 items-center">
+      <div className="mx-auto h-16 px-4 xl:px-12 grid grid-cols-2 md:grid-cols-3 items-center">
         {/* Logo - columna izquierda */}
         <div className="flex items-center justify-start">
           <Link href="/" className="flex items-center gap-2">
@@ -258,14 +215,14 @@ export default function NavBar() {
         </div>
 
         {/* Desktop Navigation - columna central, solo visible en desktop */}
-        <div className="hidden lg:flex justify-center font-clear-sans font-extrabold">
+        <div className="hidden md:flex justify-center font-clear-sans font-extrabold">
           <MainNavigation />
         </div>
           
         {/* Contact button, auth buttons and mobile menu - columna derecha */}
         <div className="flex items-center justify-end gap-2">
           {/* Desktop buttons */}
-          <div className="hidden lg:flex lg:items-center lg:gap-2">
+          <div className="hidden md:flex md:items-center md:gap-2">
             <Button 
               asChild
               variant="ghost" 
@@ -282,7 +239,7 @@ export default function NavBar() {
           </div>
           
           {/* Mobile menu trigger */}
-          <div className="lg:hidden">
+          <div className="md:hidden">
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button 

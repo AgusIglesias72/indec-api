@@ -14,6 +14,89 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_requests: {
+        Row: {
+          api_key_used: string | null
+          created_at: string | null
+          endpoint: string
+          id: string
+          ip_address: unknown | null
+          is_internal: boolean | null
+          method: string
+          referer: string | null
+          request_params: Json | null
+          response_time_ms: number | null
+          status_code: number
+          updated_at: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          api_key_used?: string | null
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          ip_address?: unknown | null
+          is_internal?: boolean | null
+          method?: string
+          referer?: string | null
+          request_params?: Json | null
+          response_time_ms?: number | null
+          status_code: number
+          updated_at?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          api_key_used?: string | null
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          ip_address?: unknown | null
+          is_internal?: boolean | null
+          method?: string
+          referer?: string | null
+          request_params?: Json | null
+          response_time_ms?: number | null
+          status_code?: number
+          updated_at?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cer: {
+        Row: {
+          created_at: string | null
+          date: string
+          id: number
+          updated_at: string | null
+          value: number
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          id?: number
+          updated_at?: string | null
+          value: number
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          id?: number
+          updated_at?: string | null
+          value?: number
+        }
+        Relationships: []
+      }
       contact_submissions: {
         Row: {
           admin_notes: string | null
@@ -573,8 +656,45 @@ export type Database = {
         }
         Relationships: []
       }
+      uva: {
+        Row: {
+          created_at: string | null
+          date: string
+          id: number
+          updated_at: string | null
+          value: number
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          id?: number
+          updated_at?: string | null
+          value: number
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          id?: number
+          updated_at?: string | null
+          value?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
+      cer_with_variations: {
+        Row: {
+          created_at: string | null
+          daily_pct_change: number | null
+          date: string | null
+          id: number | null
+          monthly_pct_change: number | null
+          updated_at: string | null
+          value: number | null
+          yearly_pct_change: number | null
+        }
+        Relationships: []
+      }
       contact_stats: {
         Row: {
           avg_resolution_hours: number | null
@@ -907,6 +1027,130 @@ export type Database = {
         }
         Relationships: []
       }
+      poverty_gaps_evolution: {
+        Row: {
+          date: string | null
+          indigence_gap: number | null
+          indigence_severity: number | null
+          period: string | null
+          poverty_gap: number | null
+          poverty_severity: number | null
+          semester: number | null
+          year: number | null
+        }
+        Insert: {
+          date?: string | null
+          indigence_gap?: number | null
+          indigence_severity?: number | null
+          period?: string | null
+          poverty_gap?: number | null
+          poverty_severity?: number | null
+          semester?: number | null
+          year?: number | null
+        }
+        Update: {
+          date?: string | null
+          indigence_gap?: number | null
+          indigence_severity?: number | null
+          period?: string | null
+          poverty_gap?: number | null
+          poverty_severity?: number | null
+          semester?: number | null
+          year?: number | null
+        }
+        Relationships: []
+      }
+      poverty_latest_by_region: {
+        Row: {
+          cuadro_source: string | null
+          data_type: string | null
+          date: string | null
+          id: string | null
+          indigence_rate_households: number | null
+          indigence_rate_persons: number | null
+          period: string | null
+          poverty_rate_households: number | null
+          poverty_rate_persons: number | null
+          region: string | null
+          semester: number | null
+          year: number | null
+        }
+        Relationships: []
+      }
+      poverty_national_series: {
+        Row: {
+          date: string | null
+          indigence_rate_households: number | null
+          indigence_rate_persons: number | null
+          period: string | null
+          poverty_rate_households: number | null
+          poverty_rate_persons: number | null
+          semester: number | null
+          year: number | null
+        }
+        Insert: {
+          date?: string | null
+          indigence_rate_households?: number | null
+          indigence_rate_persons?: number | null
+          period?: string | null
+          poverty_rate_households?: number | null
+          poverty_rate_persons?: number | null
+          semester?: number | null
+          year?: number | null
+        }
+        Update: {
+          date?: string | null
+          indigence_rate_households?: number | null
+          indigence_rate_persons?: number | null
+          period?: string | null
+          poverty_rate_households?: number | null
+          poverty_rate_persons?: number | null
+          semester?: number | null
+          year?: number | null
+        }
+        Relationships: []
+      }
+      poverty_regional_comparison: {
+        Row: {
+          date: string | null
+          indigence_rate_households: number | null
+          indigence_rate_persons: number | null
+          period: string | null
+          poverty_rate_households: number | null
+          poverty_rate_persons: number | null
+          region: string | null
+        }
+        Relationships: []
+      }
+      poverty_stats_summary: {
+        Row: {
+          avg_indigence_households: number | null
+          avg_indigence_persons: number | null
+          avg_poverty_households: number | null
+          avg_poverty_persons: number | null
+          date: string | null
+          indigence_change: number | null
+          period: string | null
+          poverty_change: number | null
+          prev_indigence_persons: number | null
+          prev_poverty_persons: number | null
+          regions_count: number | null
+        }
+        Relationships: []
+      }
+      uva_with_variations: {
+        Row: {
+          created_at: string | null
+          daily_pct_change: number | null
+          date: string | null
+          id: number | null
+          monthly_pct_change: number | null
+          updated_at: string | null
+          value: number | null
+          yearly_pct_change: number | null
+        }
+        Relationships: []
+      }
       v_dollar_daily_closing: {
         Row: {
           buy_price: number | null
@@ -961,6 +1205,10 @@ export type Database = {
       }
     }
     Functions: {
+      cleanup_old_api_requests: {
+        Args: { days_to_keep?: number }
+        Returns: number
+      }
       generate_api_key: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -985,6 +1233,15 @@ export type Database = {
           change_percentage: number
           trend: string
           risk_level: string
+        }[]
+      }
+      get_user_api_stats: {
+        Args: { user_id_param: string; start_date?: string; end_date?: string }
+        Returns: {
+          endpoint: string
+          request_count: number
+          avg_response_time: number
+          last_request: string
         }[]
       }
       reset_daily_requests: {
