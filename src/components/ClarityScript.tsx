@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { clarity } from '@microsoft/clarity';
+import Clarity from '@microsoft/clarity';
 
 export default function ClarityScript() {
   useEffect(() => {
@@ -15,7 +15,7 @@ export default function ClarityScript() {
 
     // Initialize Clarity only once
     if (typeof window !== 'undefined' && !window.clarity) {
-      clarity.init(projectId);
+      Clarity.init(projectId);
       
       // Optional: Log initialization in development
       if (process.env.NODE_ENV === 'development') {
