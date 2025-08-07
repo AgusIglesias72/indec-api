@@ -54,9 +54,13 @@ const indicators = [
   },
 ]
 
+const tools = [
+  { title: "Conversor USD/ARS", href: "/conversor-dolar-peso-argentino", icon: Calculator },
+  { title: "Calculadora de Inflación", href: "/calculadora-inflacion", icon: TrendingUp },
+]
+
 const mainNavItems = [
   { title: "Dólar", href: "/dolar", icon: DollarSign },
-  { title: "Conversor USD/ARS", href: "/conversor-dolar-peso-argentino", icon: Calculator },
   { title: "Calendario INDEC", href: "/calendario", icon: Calendar },
   { title: "API Docs", href: "/documentacion", icon: FileText },
 ]
@@ -293,6 +297,36 @@ export default function NavBar() {
                                   <div className="text-sm text-gray-600 mt-1 font-clear-sans font-light">
                                     {indicator.description}
                                   </div>
+                                </div>
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </div>
+                      
+                      {/* Separador */}
+                      <div className="border-t border-gray-200"></div>
+                      
+                      {/* Sección Herramientas */}
+                      <div className="space-y-3">
+                        <h3 className="text-sm font-semibold text-indec-blue uppercase tracking-wider">
+                          Herramientas
+                        </h3>
+                        <div className="space-y-1">
+                          {tools.map((tool) => {
+                            const IconComponent = tool.icon;
+                            return (
+                              <Link
+                                key={tool.title}
+                                href={tool.href}
+                                onClick={handleMobileNavClick}
+                                className="flex items-center gap-3 rounded-lg p-3 hover:bg-indec-blue/5 transition-colors group"
+                              >
+                                <div className="flex-shrink-0">
+                                  <IconComponent className="h-5 w-5 text-indec-blue group-hover:text-indec-blue-dark transition-colors" />
+                                </div>
+                                <div className="font-medium text-gray-900 group-hover:text-indec-blue transition-colors">
+                                  {tool.title}
                                 </div>
                               </Link>
                             );

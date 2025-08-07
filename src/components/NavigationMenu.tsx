@@ -41,6 +41,19 @@ const indicators = [
   }, 
 ]
 
+const tools = [
+  {
+    title: "Conversor USD/ARS",
+    href: "/conversor-dolar-peso-argentino",
+    description: "Convertir dólares a pesos argentinos",
+  },
+  {
+    title: "Calculadora de Inflación",
+    href: "/calculadora-inflacion",
+    description: "Calcular el poder adquisitivo a través del tiempo",
+  }
+]
+
 const ListItem = React.forwardRef<
   React.ElementRef<"a">,
   React.ComponentPropsWithoutRef<"a">
@@ -95,9 +108,20 @@ export function MainNavigation() {
         </NavigationMenuItem>
 
         <NavigationMenuItem>
-            <NavigationMenuLink className={navigationMenuTriggerStyle()} href="/conversor-dolar-peso-argentino">
-              Conversor USD/ARS
-            </NavigationMenuLink>
+          <NavigationMenuTrigger className="">Herramientas</NavigationMenuTrigger>
+          <NavigationMenuContent>
+            <ul className="grid gap-3 p-4 md:w-[300px] lg:w-[350px] lg:grid-cols-1">
+              {tools.map((tool) => (
+                <ListItem
+                  key={tool.title}
+                  title={tool.title}
+                  href={tool.href}
+                >
+                  {tool.description}
+                </ListItem>
+              ))}
+            </ul>
+          </NavigationMenuContent>
         </NavigationMenuItem>
 
         <NavigationMenuItem>
