@@ -1,11 +1,25 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, memo, useCallback } from 'react';
-import { Calculator, TrendingUp, ArrowRight, Clock, Calendar, ArrowUpDown, Settings } from 'lucide-react';
+import { Calculator, TrendingUp, ArrowRight, Clock, Calendar, ArrowUpDown, Settings, ChevronDown, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NativeDatePicker } from '@/components/ui/native-date-picker';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import Flag from 'react-world-flags';
 
 interface CERData {
@@ -28,10 +42,10 @@ interface PeriodButton {
 }
 
 const periodButtons: PeriodButton[] = [
-  { label: 'Hace 1 año', years: 1, description: '1 año atrás' },
-  { label: 'Hace 5 años', years: 5, description: '5 años atrás' },
-  { label: 'Hace 10 años', years: 10, description: '10 años atrás' },
-  { label: 'Hace 15 años', years: 15, description: '15 años atrás' }
+  { label: '1 año', years: 1, description: '1 año atrás' },
+  { label: '5 años', years: 5, description: '5 años atrás' },
+  { label: '10 años', years: 10, description: '10 años atrás' },
+  { label: '15 años', years: 15, description: '15 años atrás' }
 ];
 
 // Flag component for Argentina
@@ -201,11 +215,35 @@ const SimpleInflationCalculatorWithDates = memo(function SimpleInflationCalculat
   }, [fromCER, toCER, amount, calculationDirection, fromDate, toDate]);
 
   const handleAmountChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (value === '' || /^\d*\.?\d*$/.test(value)) {
-      setAmount(value);
+    // Remove all non-digit characters except dots
+    const rawValue = e.target.value.replace(/[^\d.]/g, '');
+    
+    // Prevent multiple dots
+    const parts = rawValue.split('.');
+    if (parts.length > 2) return;
+    
+    // Format the integer part with thousand separators
+    if (parts[0]) {
+      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     }
+    
+    // Join back together
+    const formattedValue = parts.length === 2 ? `${parts[0]},${parts[1]}` : parts[0];
+    
+    // Store the raw number value (without formatting)
+    const numericValue = rawValue.replace(/\./g, '').replace(',', '.');
+    setAmount(numericValue);
   }, []);
+
+  // Format amount for display
+  const displayAmount = useMemo(() => {
+    if (!amount) return '';
+    const parts = amount.split('.');
+    if (parts[0]) {
+      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+    return parts.length === 2 ? `${parts[0]},${parts[1]}` : parts[0];
+  }, [amount]);
 
   // Format currency for display
   const formatCurrency = useCallback((value: number) => {
@@ -219,13 +257,24 @@ const SimpleInflationCalculatorWithDates = memo(function SimpleInflationCalculat
 
   if (loading) {
     return (
-      <div className="w-full max-w-lg mx-auto bg-white rounded-2xl shadow-xl p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-6 bg-gray-200 rounded w-3/4 mx-auto"></div>
-          <div className="h-20 bg-gray-200 rounded"></div>
-          <div className="h-16 bg-gray-200 rounded"></div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="group relative"
+      >
+        <div className="absolute -inset-1 bg-gradient-to-r from-orange-600/20 to-orange-400/20 rounded-2xl blur opacity-50"></div>
+        <div className="relative bg-white rounded-2xl p-8 shadow-lg border border-orange-100">
+          <div className="animate-pulse space-y-6">
+            <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+            <div className="space-y-4">
+              <div className="h-12 bg-gray-200 rounded"></div>
+              <div className="h-12 bg-gray-200 rounded"></div>
+              <div className="h-16 bg-gray-200 rounded"></div>
+            </div>
+          </div>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
@@ -233,162 +282,206 @@ const SimpleInflationCalculatorWithDates = memo(function SimpleInflationCalculat
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="w-full max-w-lg mx-auto bg-white rounded-2xl shadow-xl overflow-hidden"
+      transition={{ duration: 0.6, delay: 0.2 }}
+      className="group relative"
     >
-      {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500 to-red-600 p-6 text-white">
-        <div className="text-center">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Calculator className="h-6 w-6" />
-            <h3 className="text-xl font-bold">Calculadora de Inflación</h3>
-          </div>
-          <p className="text-orange-100 text-sm">
-            {calculationDirection === 'PAST_TO_PRESENT' 
-              ? '¿Cuánto vale hoy este dinero de...' 
-              : '¿Cuánto necesitabas en...'}
-          </p>
-        </div>
-      </div>
+      {/* Gradient background effect */}
+      <div className="absolute -inset-1 bg-gradient-to-r from-orange-600/20 to-orange-400/20 rounded-2xl blur opacity-50 group-hover:opacity-75 transition duration-500"></div>
 
-      <div className="p-6 space-y-6">
-        {/* Direction Toggle */}
-        <div className="text-center">
+      {/* Main calculator card */}
+      <div className="relative bg-white rounded-2xl p-8 shadow-lg border border-orange-100">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 bg-orange-100 rounded-xl flex items-center justify-center">
+              <Calculator className="h-5 w-5 text-orange-600" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">Calculadora de Inflación</h3>
+              <p className="text-sm text-gray-500">
+                {calculationDirection === 'PAST_TO_PRESENT' 
+                  ? 'Valor actualizado por inflación' 
+                  : 'Valor necesario en el pasado'}
+              </p>
+            </div>
+          </div>
+
+          {/* Direction toggle */}
           <Button
             variant="outline"
             size="sm"
             onClick={() => setCalculationDirection(prev => 
               prev === 'PAST_TO_PRESENT' ? 'PRESENT_TO_PAST' : 'PAST_TO_PRESENT'
             )}
-            className="hover:bg-orange-50 hover:border-orange-200"
+            className="hover:bg-orange-50 hover:border-orange-200 shrink-0"
           >
             <ArrowUpDown className="h-4 w-4 mr-2" />
-            Invertir cálculo
+            Invertir
           </Button>
         </div>
 
-        {/* Period Selection */}
-        <div>
-          <div className="grid grid-cols-2 gap-2 mb-3">
+        {/* Quick Period Selection Buttons */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-3">Períodos rápidos</label>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             {periodButtons.map((period) => (
-              <Button
+              <button
                 key={period.years}
-                variant={selectedPeriod.years === period.years ? "default" : "outline"}
-                size="sm"
                 onClick={() => setSelectedPeriod(period)}
-                className={selectedPeriod.years === period.years 
-                  ? "bg-orange-600 hover:bg-orange-700 text-white" 
-                  : "hover:bg-orange-50 hover:border-orange-200 text-sm"
-                }
+                className={cn(
+                  "px-4 py-2.5 rounded-lg font-medium transition-all duration-200",
+                  "border-2 hover:shadow-md",
+                  selectedPeriod.years === period.years
+                    ? "bg-orange-500 text-white border-orange-500 shadow-md"
+                    : "bg-white text-gray-700 border-gray-200 hover:border-orange-300 hover:bg-orange-50"
+                )}
                 disabled={loadingCER}
               >
-                {period.label}
-              </Button>
+                <div className="text-sm font-semibold">Hace {period.label}</div>
+                <div className="text-xs opacity-80 mt-0.5">{period.description}</div>
+              </button>
             ))}
           </div>
         </div>
 
-        {/* Date Pickers - Always visible */}
-        <div className="space-y-3 bg-gray-50 rounded-lg p-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-gray-600">
-                {calculationDirection === 'PAST_TO_PRESENT' ? 'Desde' : 'Hasta'}
-              </label>
-              <NativeDatePicker
-                date={fromDate}
-                onDateChange={setFromDate}
-                className="w-full text-sm"
-                placeholder="Fecha"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-gray-600">
-                {calculationDirection === 'PAST_TO_PRESENT' ? 'Hasta' : 'Desde'}
-              </label>
-              <NativeDatePicker
-                date={toDate}
-                onDateChange={setToDate}
-                className="w-full text-sm"
-                placeholder="Fecha"
-              />
-            </div>
+        {/* Date Configuration Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          {/* Date From */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {calculationDirection === 'PAST_TO_PRESENT' ? 'Desde' : 'Hasta'}
+            </label>
+            <NativeDatePicker
+              date={fromDate}
+              onDateChange={setFromDate}
+              className="w-full h-10"
+              placeholder="Fecha inicial"
+              disabled={loadingCER}
+            />
           </div>
-        </div>
 
-        {/* Amount Input */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 mb-2">
-            <ArgentinaFlag className="w-6 h-4" />
-            <span className="text-sm font-medium text-gray-700">Monto en pesos</span>
-          </div>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold">$</span>
-            <Input
-              type="text"
-              value={amount}
-              onChange={handleAmountChange}
-              className="pl-8 text-lg font-bold text-center border-2 focus:border-orange-500"
-              placeholder="1.000"
+          {/* Date To */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {calculationDirection === 'PAST_TO_PRESENT' ? 'Hasta' : 'Desde'}
+            </label>
+            <NativeDatePicker
+              date={toDate}
+              onDateChange={setToDate}
+              className="w-full h-10"
+              placeholder="Fecha final"
               disabled={loadingCER}
             />
           </div>
         </div>
 
-        {/* Error Display */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-            <p className="text-red-700 text-sm">{error}</p>
-          </div>
-        )}
+        {/* Conversion Interface */}
+        <div className="space-y-4">
 
-        {/* Results */}
-        {calculationResults && !loadingCER && !error && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-4"
-          >
-            {/* Main Result */}
-            <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-xl p-4 text-center border border-orange-100">
-              <div className="text-xs text-orange-600 font-medium mb-1">Resultado</div>
-              <div className="text-2xl font-bold text-gray-900 mb-2">
-                ${calculationResults.equivalentAmount.toLocaleString('es-AR', { 
-                  minimumFractionDigits: 2, 
-                  maximumFractionDigits: 2 
-                })}
+          {/* Amount Input */}
+          <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 p-4 border border-gray-300 rounded-xl focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500 focus-within:ring-opacity-20">
+                <ArgentinaFlag className="w-8 h-6" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-medium text-gray-500 mb-1 truncate">
+                    {calculationDirection === 'PAST_TO_PRESENT' ? 'Pesos del pasado' : 'Pesos de hoy'}
+                  </div>
+                  <input
+                    type="text"
+                    value={displayAmount}
+                    onChange={handleAmountChange}
+                    placeholder="1.000"
+                    className="w-full text-lg font-bold text-gray-900 bg-transparent border-none outline-none"
+                    disabled={loadingCER}
+                  />
+                </div>
+                <div className="text-lg font-bold text-gray-600 shrink-0">
+                  ARS
+                </div>
               </div>
-              <p className="text-gray-700 text-sm">
-                {calculationResults.description}
-              </p>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white border rounded-lg p-3 text-center">
-                <TrendingUp className="h-4 w-4 text-red-500 mx-auto mb-1" />
-                <div className="text-lg font-bold text-red-600">
-                  +{calculationResults.inflationPercentage.toFixed(2)}%
-                </div>
-                <div className="text-xs text-gray-600">Inflación</div>
+            {/* Arrow indicator */}
+            <div className="flex justify-center lg:block">
+              <div className="p-3 bg-orange-100 rounded-xl">
+                <ArrowRight className="h-5 w-5 text-orange-600" />
               </div>
-              <div className="bg-white border rounded-lg p-3 text-center">
-                <Calculator className="h-4 w-4 text-orange-500 mx-auto mb-1" />
-                <div className="text-lg font-bold text-orange-600">
-                  {calculationResults.inflationMultiplier.toFixed(2)}x
+            </div>
+
+            {/* Result Display */}
+            <div className="flex-1">
+              <div className="flex items-center gap-3 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                <ArgentinaFlag className="w-8 h-6" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-medium text-gray-500 mb-1 truncate">
+                    {calculationDirection === 'PAST_TO_PRESENT' ? 'Equivalente hoy' : 'Necesario entonces'}
+                  </div>
+                  <div className="text-lg font-bold text-gray-900 truncate">
+                    {loadingCER || !calculationResults ? '...' : calculationResults.equivalentAmount.toLocaleString('es-AR', { 
+                      minimumFractionDigits: 2, 
+                      maximumFractionDigits: 2 
+                    })}
+                  </div>
                 </div>
-                <div className="text-xs text-gray-600">Multiplicador</div>
+                <div className="text-lg font-bold text-gray-600 shrink-0">
+                  ARS
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Result Phrase */}
+        {calculationResults && !loadingCER && !error && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="mt-6 p-4 bg-orange-50/50 border border-orange-200 rounded-xl"
+          >
+            <div className="flex items-start gap-3">
+              <TrendingUp className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
+              <div className="space-y-3">
+                <p className="text-sm text-orange-800 leading-relaxed">
+                  {calculationResults.description}
+                </p>
+                
+                {/* Stats Row */}
+                <div className="flex gap-4 text-xs">
+                  <div className="flex items-center gap-1">
+                    <div className="h-2 w-2 bg-red-500 rounded-full"></div>
+                    <span className="text-gray-600">Inflación: </span>
+                    <span className="font-bold text-red-600">+{calculationResults.inflationPercentage.toFixed(2)}%</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="h-2 w-2 bg-orange-500 rounded-full"></div>
+                    <span className="text-gray-600">Factor: </span>
+                    <span className="font-bold text-orange-600">{calculationResults.inflationMultiplier.toFixed(2)}x</span>
+                  </div>
+                </div>
               </div>
             </div>
           </motion.div>
         )}
 
-        {/* Loading State */}
+        {/* Error Display */}
+        {error && (
+          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+            <div className="flex items-center gap-3">
+              <Calendar className="h-4 w-4 text-red-600" />
+              <span className="text-sm text-red-800">{error}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Loading indicator */}
         {loadingCER && (
-          <div className="text-center py-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600 mx-auto mb-2"></div>
-            <p className="text-gray-600 text-sm">Calculando...</p>
+          <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+            <div className="flex items-center gap-3">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-600"></div>
+              <span className="text-sm text-gray-600">Calculando inflación...</span>
+            </div>
           </div>
         )}
       </div>

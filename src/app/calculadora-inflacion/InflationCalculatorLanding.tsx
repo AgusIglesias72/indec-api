@@ -61,7 +61,7 @@ export default function InflationCalculatorLanding() {
       <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
         {/* Compact Hero + Immediate Calculator */}
         <section className="relative py-8 md:py-12 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-100 via-amber-50 to-yellow-50 opacity-30"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-100 via-orange-50 to-red-50 opacity-30"></div>
           
           <div className="container mx-auto px-4 relative z-10">
             {/* Compact Title */}
@@ -108,7 +108,7 @@ export default function InflationCalculatorLanding() {
 
             {/* Immediate Calculator - Hero Position */}
             <Suspense fallback={
-              <div className="max-w-lg mx-auto">
+              <div className="max-w-5xl mx-auto">
                 <Skeleton className="h-96 w-full rounded-2xl" />
               </div>
             }>
@@ -116,7 +116,7 @@ export default function InflationCalculatorLanding() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="max-w-lg mx-auto"
+                className="max-w-5xl mx-auto"
               >
                 <SimpleInflationCalculatorWithDates cerData={cerData} loading={loading} />
               </motion.div>

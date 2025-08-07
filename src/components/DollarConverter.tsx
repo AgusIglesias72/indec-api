@@ -50,6 +50,30 @@ const DollarConverter = memo(function DollarConverter({ dollarRates, loading = f
   const [loadingHistorical, setLoadingHistorical] = useState(false);
   const [dollarTypeOpen, setDollarTypeOpen] = useState(false);
 
+  // Handle amount input with thousand separators
+  const handleAmountChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    // Remove all non-digit characters except dots
+    const rawValue = e.target.value.replace(/[^\d.]/g, '');
+    
+    // Prevent multiple dots
+    const parts = rawValue.split('.');
+    if (parts.length > 2) return;
+    
+    // Store the raw number value (without formatting)
+    const numericValue = rawValue.replace(/\./g, '').replace(',', '.');
+    setAmount(numericValue);
+  }, []);
+
+  // Format amount for display
+  const displayAmount = useMemo(() => {
+    if (!amount) return '';
+    const parts = amount.split('.');
+    if (parts[0]) {
+      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+    return parts.length === 2 ? `${parts[0]},${parts[1]}` : parts[0];
+  }, [amount]);
+
   // Dollar type options with friendly names and colors
   const dollarTypeOptions = useMemo(() => [
     { value: 'OFICIAL' as DollarType, label: 'Oficial', description: 'Cotización oficial del BCRA', color: 'blue' },
@@ -358,13 +382,11 @@ const DollarConverter = memo(function DollarConverter({ dollarRates, loading = f
                     {isFromUSD ? 'Dólares estadounidenses' : 'Pesos argentinos'}
                   </div>
                   <input
-                    type="number"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="0.00"
+                    type="text"
+                    value={displayAmount}
+                    onChange={handleAmountChange}
+                    placeholder="100"
                     className="w-full text-lg font-bold text-gray-900 bg-transparent border-none outline-none"
-                    step="0.01"
-                    min="0"
                     disabled={loadingHistorical}
                   />
                 </div>
