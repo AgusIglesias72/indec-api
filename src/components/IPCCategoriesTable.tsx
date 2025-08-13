@@ -72,7 +72,12 @@ export default function IPCCategoriesTable({ lastUpdate, className }: IPCCategor
       setIsRefreshing(true);
       
       // Obtener la lista de componentes disponibles con sus metadatos
-      const metadataResponse = await fetch('/api/ipc?type=metadata');
+      const metadataResponse = await fetch('/api/ipc?type=metadata', {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      });
       if (!metadataResponse.ok) {
         const errorText = await metadataResponse.text();
         console.error('Error response from metadata endpoint:', errorText);
@@ -130,7 +135,12 @@ export default function IPCCategoriesTable({ lastUpdate, className }: IPCCategor
       const fetchPromises = categoriesToFetch.map(async (categoryCode) => {
         try {
           // Usar el endpoint /api/ipc con type=latest para obtener el último valor
-          const response = await fetch(`/api/ipc?type=latest&category=${categoryCode}&region=Nacional`);
+          const response = await fetch(`/api/ipc?type=latest&category=${categoryCode}&region=Nacional`, {
+            cache: 'no-store',
+            headers: {
+              'Cache-Control': 'no-cache'
+            }
+          });
           
           if (!response.ok) {
             console.warn(`Error al obtener datos para ${categoryCode}: ${response.status}`);

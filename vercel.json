@@ -1,20 +1,12 @@
 {
   "crons": [
     {
-      "path": "/api/cron/update-embi",
-      "schedule": "*/20 * * * *"
+      "path": "/api/cron/update-emae",
+      "schedule": "0 1 * * *"
     },
     {
-      "path": "/api/cron/update-dollar",
-      "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/cron/update-indec-data",
-      "schedule": "1 16 * * *"
-    },
-    {
-      "path": "/api/cron/update-bcra-indices",
-      "schedule": "0 10 * * *"
+      "path": "/api/cron/update-ipc",
+      "schedule": "0 1 * * *"
     }
   ],
   "headers": [

@@ -30,9 +30,15 @@ async function fetchEmaeData(): Promise<Omit<EmaeRow, 'id'>[]> {
     
     console.info(`Descargando Excel del INDEC desde: ${url}`);
     
-    // Descargar archivo
+    // Descargar archivo con timeout extendido
     const response = await axios.get(url, {
-      responseType: 'arraybuffer'
+      responseType: 'arraybuffer',
+      timeout: 0, // Sin timeout - esperará hasta que se complete
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
     });
     
     // Procesar el archivo Excel
@@ -187,9 +193,15 @@ async function fetchEmaeByActivityData(): Promise<Omit<EmaeByActivityInsert, 'id
       
       console.info(`Descargando Excel de EMAE por actividad desde: ${url}`);
       
-      // Descargar archivo
+      // Descargar archivo con timeout extendido
       const response = await axios.get(url, {
-        responseType: 'arraybuffer'
+        responseType: 'arraybuffer',
+        timeout: 0, // Sin timeout - esperará hasta que se complete
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
       });
       
       // Procesar el archivo Excel

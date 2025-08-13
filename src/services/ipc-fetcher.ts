@@ -209,12 +209,56 @@ export async function fetchIPCData(): Promise<Omit<IpcRow, "id">[]> {
 
     console.info(`Descargando Excel del IPC desde: ${url}`);
 
-    // Descargar archivo
+    // Descargar archivo con timeout extendido y reintentos
     let response;
+    const axiosConfig = {
+      responseType: "arraybuffer" as const,
+      timeout: 0, // Sin timeout - esperará hasta que la descarga se complete
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    };
+
+    // Función auxiliar para realizar reintentos con demora progresiva
+    const downloadWithRetry = async (downloadUrl: string, retries = 3, delay = 5000): Promise<any> => {
+      for (let i = 0; i < retries; i++) {
+        try {
+          console.info(`Intento ${i + 1} de ${retries} para descargar desde: ${downloadUrl}`);
+          console.info(`Sin timeout configurado - esperando hasta que se complete la descarga...`);
+          
+          const startTime = Date.now();
+          const result = await axios.get(downloadUrl, axiosConfig);
+          const elapsedTime = (Date.now() - startTime) / 1000;
+          
+          console.info(`Descarga completada en ${elapsedTime.toFixed(1)} segundos`);
+          return result;
+        } catch (err: any) {
+          const isLastAttempt = i === retries - 1;
+          
+          if (err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT') {
+            console.warn(`Timeout en intento ${i + 1}: ${err.message}`);
+          } else if (err.code === 'ECONNRESET') {
+            console.warn(`Conexión reiniciada en intento ${i + 1}: ${err.message}`);
+          } else {
+            console.warn(`Error en intento ${i + 1}: ${err.message}`);
+          }
+          
+          if (!isLastAttempt) {
+            const waitTime = delay * (i + 1); // Demora progresiva
+            console.info(`Esperando ${waitTime / 1000} segundos antes del siguiente intento...`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+          } else {
+            throw err;
+          }
+        }
+      }
+      throw new Error('No se pudo descargar el archivo después de todos los intentos');
+    };
+
     try {
-      response = await axios.get(url, {
-        responseType: "arraybuffer",
-      });
+      response = await downloadWithRetry(url, 3, 10000);
     } catch (error) {
       console.warn(
         `Error descargando el archivo del mes actual. Intentando con el mes anterior...`, error
@@ -225,9 +269,13 @@ export async function fetchIPCData(): Promise<Omit<IpcRow, "id">[]> {
         "0"
       );
       const prevUrl = `https://www.indec.gob.ar/ftp/cuadros/economia/sh_ipc_${prevMonth}_25.xls`;
-      response = await axios.get(prevUrl, {
-        responseType: "arraybuffer",
-      });
+      
+      try {
+        response = await downloadWithRetry(prevUrl, 3, 10000);
+      } catch (finalError) {
+        console.error('No se pudo descargar el archivo del IPC de ningún mes');
+        throw finalError;
+      }
     }
 
     // Procesar el archivo Excel

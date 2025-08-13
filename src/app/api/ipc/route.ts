@@ -127,10 +127,10 @@ async function handler(request: NextRequest) {
       }
     }
     
-    // Respuesta JSON con caché
+    // Respuesta JSON sin caché
     const headers = new Headers({
       'Content-Type': 'application/json',
-      'Cache-Control': 'public, max-age=300, stale-while-revalidate=600'
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0'
     });
     
     return new NextResponse(JSON.stringify({
