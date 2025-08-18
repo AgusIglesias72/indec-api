@@ -21,6 +21,8 @@ const knownApiPaths = [
   '/api/contact',
   '/api/newsletter/subscribe',
   '/api/cron/update-indec-data',
+  '/api/cron/update-ipc',
+  '/api/cron/update-emae',
   '/api/cron/update-dollar',
   '/api/cron/update-labor-market',
   '/api/cron/update-embi',

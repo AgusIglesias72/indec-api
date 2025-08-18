@@ -11,7 +11,7 @@ interface KPICardProps {
 
 export function KPICard({ children, href, className }: KPICardProps) {
   const handleClick = () => {
-    window.open(href, '_blank');
+    window.location.href = href;
   };
 
   return (

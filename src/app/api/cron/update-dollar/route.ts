@@ -203,8 +203,11 @@ async function updateDollarData() {
           .limit(1)
           .single();
         
+        // Para Dolar Oficial y Mayorista, siempre guardar con timestamp actual
+        const alwaysUpdate = ['OFICIAL', 'MAYORISTA'].includes(dollarType);
+        
         // Si existe un registro previo, verificar si la fecha de actualización cambió
-        if (lastRecord) {
+        if (lastRecord && !alwaysUpdate) {
           // Comparar la fecha de actualización de la API con la última guardada
           const lastUpdateTime = new Date(lastRecord.updated_at).getTime();
           const apiUpdateTime = apiUpdatedAt.getTime();
@@ -219,13 +222,17 @@ async function updateDollarData() {
         
         // Si la fecha de la API es de hoy, usar los datos actuales
         if (apiDateOnly.getTime() === todayArgentina.getTime()) {
+          // Para OFICIAL y MAYORISTA, usar timestamp actual en lugar del de la API
+          const currentTimestamp = new Date().toISOString();
+          const useCurrentTime = alwaysUpdate;
+          
           const dollarRecord = {
             dollar_type: dollarType,
-            date: apiUpdatedAt.toISOString(),
+            date: useCurrentTime ? currentTimestamp : apiUpdatedAt.toISOString(),
             buy_price: dollar.compra,
             sell_price: dollar.venta,
-            updated_at: apiUpdatedAt.toISOString(),
-            created_at: new Date().toISOString()
+            updated_at: useCurrentTime ? currentTimestamp : apiUpdatedAt.toISOString(),
+            created_at: currentTimestamp
           };
           
           const { error } = await supabase
@@ -245,16 +252,18 @@ async function updateDollarData() {
             
             if (isSameDay) {
               intradayUpdates++;
-              if (priceChanged) {
+              if (alwaysUpdate) {
+                console.info(`🔄 Actualización forzada (${dollarType}): ${currentTimestamp} - ${dollar.compra}/${dollar.venta}`);
+              } else if (priceChanged) {
                 console.info(`📈 Actualización intradiaria con cambio: ${dollarType} - ${apiUpdatedAt.toISOString()} (${lastRecord.buy_price}/${lastRecord.sell_price} → ${dollar.compra}/${dollar.venta})`);
               } else {
                 console.info(`📊 Actualización intradiaria sin cambio de precio: ${dollarType} - ${apiUpdatedAt.toISOString()} (mantiene ${dollar.compra}/${dollar.venta})`);
               }
             } else {
-              console.info(`✨ Nuevo registro del día: ${dollarType} - ${apiUpdatedAt.toISOString()}`);
+              console.info(`✨ Nuevo registro del día: ${dollarType} - ${useCurrentTime ? currentTimestamp : apiUpdatedAt.toISOString()}`);
             }
           } else {
-            console.info(`✨ Primer registro: ${dollarType} - ${apiUpdatedAt.toISOString()}`);
+            console.info(`✨ Primer registro: ${dollarType} - ${useCurrentTime ? currentTimestamp : apiUpdatedAt.toISOString()}`);
           }        } else {
           // Si la fecha de la API es anterior (mercados cerrados)
           console.info(`📋 ${dollarType}: Mercado cerrado (última actualización: ${apiUpdatedAt.toISOString()})`);

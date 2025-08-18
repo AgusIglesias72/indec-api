@@ -61,73 +61,71 @@ export async function POST(req: Request) {
   const { id } = evt.data;
   const eventType = evt.type;
 
-  console.info(`Webhook with and ID of ${id} and type of ${eventType}`)
-  console.info('Webhook event:', JSON.stringify(evt, null, 2))
+  console.info(`Webhook con ID ${id} y tipo ${eventType}`);
+
+  // This is handled in the test webhook section above
+  // No need for additional logging here
 
   const supabase = createServerComponentClient();
 
-  // Handle the webhook
-  switch (eventType) {
-    case 'user.created':
-      const { id: clerk_user_id, email_addresses, first_name, last_name, image_url } = evt.data;
-      
-      // Generate simple API key for new user (temporary while function is not created)
-      const apiKeyData = 'ask_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-      
-      // Create user in Supabase (using actual table structure)
-      const { error: createError } = await supabase
-        .from('users')
-        .insert({
-          clerk_user_id,
-          email: email_addresses[0].email_address,
-          name: `${first_name || ''} ${last_name || ''}`.trim() || null,
-          image_url,
-          api_key: apiKeyData,
-          plan_type: 'free',
-          daily_requests_count: 0,
-        });
+  // Handle webhook events
+  try {
+    switch (eventType) {
+      case 'user.created': {
+        const { id: clerk_user_id, email_addresses, first_name, last_name, image_url } = evt.data;
+        
+        // Generate API key for new user
+        const { data: apiKeyData } = await supabase.rpc('generate_api_key');
+        
+        // Create user in Supabase
+        const { error: createError } = await supabase
+          .from('users')
+          .insert({
+            clerk_user_id,
+            email: email_addresses[0].email_address,
+            first_name: first_name || null,
+            last_name: last_name || null,
+            image_url,
+            api_key: apiKeyData,
+            subscription_status: 'free',
+          });
 
-      if (createError) {
-        console.error('Error creating user in Supabase:', createError);
-        console.error('Attempted to insert:', {
-          clerk_user_id,
-          email: email_addresses[0]?.email_address,
-          name: `${first_name || ''} ${last_name || ''}`.trim() || null,
-          image_url,
-          api_key: apiKeyData,
-          plan_type: 'free',
-        });
-        return new Response(`Error creating user: ${createError.message}`, { status: 500 });
+        if (createError) {
+          console.error('Error creating user in Supabase:', createError);
+          return new Response('Error creating user', { status: 500 });
+        }
+        break;
       }
-      break;
 
-    case 'user.updated':
-      const { 
-        id: updated_clerk_user_id, 
-        email_addresses: updated_emails, 
-        first_name: updated_first_name, 
-        last_name: updated_last_name,
-        image_url: updated_image_url 
-      } = evt.data;
-      
-      // Update user in Supabase (using actual table structure)
-      const { error: updateError } = await supabase
-        .from('users')
-        .update({
-          email: updated_emails[0].email_address,
-          name: `${updated_first_name || ''} ${updated_last_name || ''}`.trim() || null,
-          image_url: updated_image_url,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('clerk_user_id', updated_clerk_user_id);
+      case 'user.updated': {
+        const { 
+          id: updated_clerk_user_id, 
+          email_addresses: updated_emails, 
+          first_name: updated_first_name, 
+          last_name: updated_last_name,
+          image_url: updated_image_url 
+        } = evt.data;
+        
+        // Update user in Supabase
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({
+            email: updated_emails[0].email_address,
+            first_name: updated_first_name || null,
+            last_name: updated_last_name || null,
+            image_url: updated_image_url,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('clerk_user_id', updated_clerk_user_id);
 
-      if (updateError) {
-        console.error('Error updating user in Supabase:', updateError);
-        return new Response('Error updating user', { status: 500 });
+        if (updateError) {
+          console.error('Error updating user in Supabase:', updateError);
+          return new Response('Error updating user', { status: 500 });
+        }
+        break;
       }
-      break;
 
-      case 'user.deleted':
+      case 'user.deleted': {
         const { id: deleted_clerk_user_id } = evt.data;
         
         // Verificar que el ID existe
@@ -136,21 +134,27 @@ export async function POST(req: Request) {
           return new Response('No user ID provided', { status: 400 });
         }
         
-        // Ahora TypeScript sabe que deleted_clerk_user_id es string
+        // Delete user from Supabase
         const { error: deleteError } = await supabase
           .from('users')
           .delete()
           .eq('clerk_user_id', deleted_clerk_user_id);
 
-      if (deleteError) {
-        console.error('Error deleting user from Supabase:', deleteError);
-        return new Response('Error deleting user', { status: 500 });
+        if (deleteError) {
+          console.error('Error deleting user from Supabase:', deleteError);
+          return new Response('Error deleting user', { status: 500 });
+        }
+        break;
       }
-      break;
 
-    default:
-      console.info(`Unhandled webhook event type: ${eventType}`);
+      default:
+        console.info(`Unhandled webhook event type: ${eventType}`);
+        break;
+    }
+  } catch (error) {
+    console.error('Error processing webhook:', error);
+    return new Response('Internal server error', { status: 500 });
   }
 
-  return new Response('', { status: 200 })
+  return new Response('', { status: 200 });
 }

@@ -7,7 +7,7 @@ import { Database } from '@/types/supabase';
 
 //export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
-export const maxDuration = 300; // 5 minutos como máximo para completar la tarea
+//export const maxDuration = 300; // 5 minutos como máximo para completar la tarea
 
 // Configurar cliente de Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
@@ -19,7 +19,7 @@ const supabase = createClient<Database>(supabaseUrl, supabaseKey);
  */
 export async function GET(request: NextRequest) {
   try {
-    // Verificar autenticación para el cron job
+   /* // Verificar autenticación para el cron job
     const authHeader = request.headers.get('authorization');
     const isVercelCron = request.headers.get('x-vercel-cron') === 'true';
     const isVercelDeployment = process.env.VERCEL_ENV !== undefined;
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
         { status: 401 }
       );
     }
-      
+     */ 
     
     console.info('Iniciando cron job de actualización de datos INDEC');
     const results: CronTaskResult[] = [];

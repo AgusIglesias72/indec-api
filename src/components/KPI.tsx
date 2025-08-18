@@ -178,7 +178,7 @@ const HeroWithMetrics = () => {
               <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-green-400 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
               <div 
                 className="relative bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 min-h-[320px] flex flex-col cursor-pointer"
-                onClick={() => window.open('/dolar', '_blank')}
+                onClick={() => window.location.href = '/dolar'}
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
@@ -240,7 +240,7 @@ const HeroWithMetrics = () => {
               <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-purple-400 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
               <div 
                 className="relative bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 min-h-[320px] flex flex-col cursor-pointer"
-                onClick={() => window.open('/indicadores/ipc', '_blank')}
+                onClick={() => window.location.href = '/indicadores/ipc'}
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="h-12 w-12 bg-purple-100 rounded-full flex items-center justify-center">
@@ -292,7 +292,7 @@ const HeroWithMetrics = () => {
               <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-blue-400 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
               <div 
                 className="relative bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 min-h-[320px] flex flex-col cursor-pointer"
-                onClick={() => window.open('/indicadores/emae', '_blank')}
+                onClick={() => window.location.href = '/indicadores/emae'}
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center">
@@ -341,7 +341,7 @@ const HeroWithMetrics = () => {
               <div className="absolute -inset-1 bg-gradient-to-r from-red-600 to-red-400 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
               <div 
                 className="relative bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 min-h-[320px] flex flex-col cursor-pointer"
-                onClick={() => window.open('/indicadores/riesgo-pais', '_blank')}
+                onClick={() => window.location.href = '/indicadores/riesgo-pais'}
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center">

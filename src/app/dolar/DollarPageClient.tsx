@@ -369,10 +369,20 @@ const dollarTypesConfig = {
   ]
 };
 
+interface ModernCotizacionesPageProps {
+  initialData?: {
+    rates: Record<string, ExtendedDollarRateData>;
+    historicalData: any[];
+    lastUpdate: string;
+  };
+}
+
 // Main optimized component with performance improvements
-export default function ModernCotizacionesPage() {
-  const [dollarRates, setDollarRates] = useState<Record<DollarType, ExtendedDollarRateData | null>>({} as any);
-  const [loading, setLoading] = useState(true);
+export default function ModernCotizacionesPage({ initialData }: ModernCotizacionesPageProps) {
+  const [dollarRates, setDollarRates] = useState<Record<DollarType, ExtendedDollarRateData | null>>(
+    initialData?.rates || {} as any
+  );
+  const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState<string | null>(null);
   
   // Memoized dollar types to prevent object recreation
@@ -413,13 +423,16 @@ export default function ModernCotizacionesPage() {
   };
 
   useEffect(() => {
-    fetchAllRates();
+    // Only fetch if we don't have initial data
+    if (!initialData) {
+      fetchAllRates();
+    }
 
     // Actualizar cada 5 minutos
     const interval = setInterval(fetchAllRates, 5 * 60 * 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [initialData]);
 
   return (
     <div className="relative min-h-screen">
