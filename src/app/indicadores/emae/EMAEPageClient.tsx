@@ -321,7 +321,6 @@ export default function ModernEMAEPage({ initialData }: ModernEMAEPageProps) {
           <EMAEEnhancedChart 
             title="Evolución del EMAE"
             description="Selecciona el sector, tipo de visualización y rango de tiempo"
-            initialData={initialData?.historical}
             height={450}
           />
         </div>
@@ -329,7 +328,7 @@ export default function ModernEMAEPage({ initialData }: ModernEMAEPageProps) {
         {/* Sectors Table Section */}
         <div className="mb-16">
           <SectionHeader title="Sectores económicos" icon={BarChart3} />
-          <EMAESectorsTable lastUpdate={formatDate(emaeData?.date)} initialData={initialData?.sectors} />
+          <EMAESectorsTable lastUpdate={formatDate(emaeData?.date)} />
         </div>
 
         {/* Sector Information Section */}

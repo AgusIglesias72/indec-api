@@ -117,7 +117,12 @@ export default async function IPCPage() {
         iconColor="bg-purple-500"
       />
       
-      <IPCMetricsGrid data={data.latest} />
+      <IPCMetricsGrid data={data.latest ? {
+        monthly_pct_change: data.latest.monthly_pct_change ?? undefined,
+        yearly_pct_change: data.latest.yearly_pct_change ?? undefined,
+        accumulated_pct_change: data.latest.accumulated_pct_change ?? undefined,
+        date: data.latest.date ?? undefined
+      } : null} />
       
       {/* Client-rendered interactive chart */}
       <ErrorBoundary>
@@ -142,7 +147,6 @@ export default async function IPCPage() {
             <IPCEnhancedChart 
               title="Evolución del IPC"
               description="Selecciona el rango de tiempo, región y rubro para visualizar"
-              initialData={data.historical}
               height={450}
             />
           </div>
@@ -170,7 +174,6 @@ export default async function IPCPage() {
             <SectionHeader title="Rubros y categorías" icon={PieChart} />
             <IPCCategoriesTable 
               lastUpdate={data.latest?.date ? new Date(data.latest.date).toLocaleDateString() : ""}
-              initialData={data.categories}
             />
           </div>
         </Suspense>

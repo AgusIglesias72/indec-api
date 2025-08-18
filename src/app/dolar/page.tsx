@@ -9,7 +9,7 @@ export const revalidate = 60; // Revalidate every 60 seconds
 
 // Lazy load heavy components that require client-side features
 const EnhancedDollarChart = lazy(() => import('@/components/EnhancedDollarChart'));
-const DollarConverter = lazy(() => import('@/components/DollarConverter'));
+// const DollarConverter = lazy(() => import('@/components/DollarConverter'));
 const ConverterPromoSection = lazy(() => import('@/components/landing/ConverterPromoSection'));
 
 // Fetch all dollar data on the server
@@ -22,6 +22,9 @@ async function getDollarPageData() {
     const ratesMap: Record<string, any> = {};
     
     for (const rate of latestRates) {
+      // Skip if no dollar_type
+      if (!rate.dollar_type) continue;
+      
       // Calculate variations if we have previous data
       const previousData = await getDollarHistoricalData(rate.dollar_type, 2);
       let buyVariation = 0;
@@ -42,7 +45,7 @@ async function getDollarPageData() {
         ? Math.floor((Date.now() - new Date(rate.updated_at).getTime()) / (1000 * 60))
         : 0;
       
-      ratesMap[rate.dollar_type] = {
+      ratesMap[rate.dollar_type!] = {
         ...rate,
         buy_variation: buyVariation,
         sell_variation: sellVariation,
@@ -183,10 +186,11 @@ export default async function DollarPage() {
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Evolución histórica</h2>
           </div>
-          <EnhancedDollarChart historicalData={data.historicalData} />
+          <EnhancedDollarChart />
         </div>
       </Suspense>
 
+      {/* DollarConverter temporarily disabled for build fix
       <Suspense fallback={
         <div className="container mx-auto px-4 mb-16">
           <div className="bg-white rounded-2xl p-6 shadow-lg">
@@ -200,7 +204,7 @@ export default async function DollarPage() {
         <div className="container mx-auto px-4 mb-16">
           <DollarConverter />
         </div>
-      </Suspense>
+      </Suspense> */}
 
       {/* Server-rendered static info */}
       <DollarInfo />

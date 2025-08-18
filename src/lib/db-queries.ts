@@ -103,7 +103,7 @@ export async function getIPCByCategories() {
       .limit(1)
       .single();
 
-    if (!latestDate) return [];
+    if (!latestDate || !latestDate.date) return [];
 
     // Get all categories for the latest date
     const { data, error } = await supabase
@@ -171,7 +171,7 @@ export async function getEMAEBySectors() {
       .limit(1)
       .single();
 
-    if (!latestDate) return [];
+    if (!latestDate || !latestDate.date) return [];
 
     // Get all sectors for the latest date
     const { data, error } = await supabase
@@ -274,7 +274,7 @@ export async function getRiskCountryHistoricalData(days: number = 365) {
 export async function getLatestEmploymentData() {
   try {
     const { data, error } = await supabase
-      .from('empleo')
+      .from('labor_market')
       .select('*')
       .order('date', { ascending: false })
       .limit(1)
@@ -291,7 +291,7 @@ export async function getLatestEmploymentData() {
 export async function getEmploymentHistoricalData(quarters: number = 8) {
   try {
     const { data, error } = await supabase
-      .from('empleo')
+      .from('labor_market')
       .select('*')
       .order('date', { ascending: false })
       .limit(quarters);
@@ -305,7 +305,8 @@ export async function getEmploymentHistoricalData(quarters: number = 8) {
 }
 
 // ============= POVERTY QUERIES =============
-
+// Commented out until correct table name is determined
+/*
 export async function getLatestPovertyData() {
   try {
     const { data, error } = await supabase
@@ -322,7 +323,9 @@ export async function getLatestPovertyData() {
     return null;
   }
 }
+*/
 
+/*
 export async function getPovertyHistoricalData() {
   try {
     const { data, error } = await supabase
@@ -337,3 +340,4 @@ export async function getPovertyHistoricalData() {
     return [];
   }
 }
+*/

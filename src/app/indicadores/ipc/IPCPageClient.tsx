@@ -417,7 +417,6 @@ export default function ModernIPCPage({ initialData }: ModernIPCPageProps) {
           <IPCEnhancedChart 
             title="Evolución del IPC"
             description="Selecciona el rango de tiempo, región y rubro para visualizar"
-            initialData={initialData?.historical}
             height={450}
           />
         </div>
@@ -425,7 +424,7 @@ export default function ModernIPCPage({ initialData }: ModernIPCPageProps) {
         {/* Categories Table Section */}
         <div className="mb-16">
           <SectionHeader title="Rubros y categorías" icon={PieChart} />
-          <IPCCategoriesTable lastUpdate={formatDate(ipcData?.date)} initialData={initialData?.categories} />
+          <IPCCategoriesTable lastUpdate={formatDate(ipcData?.date)} />
         </div>
         
         {/* IPC Rubros Information Section */}

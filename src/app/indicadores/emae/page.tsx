@@ -254,7 +254,6 @@ export default async function EMAEPage() {
             <EMAEEnhancedChart 
               title="Evolución del EMAE"
               description="Selecciona el sector, tipo de visualización y rango de tiempo"
-              initialData={data.historical}
               height={450}
             />
           </div>
@@ -282,7 +281,6 @@ export default async function EMAEPage() {
             <SectionHeader title="Sectores económicos" icon={BarChart3} />
             <EMAESectorsTable 
               lastUpdate={data.latest?.date ? formatDate(data.latest.date) : ""}
-              initialData={data.sectors}
             />
           </div>
         </Suspense>
