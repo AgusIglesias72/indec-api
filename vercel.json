@@ -1,12 +1,32 @@
 {
   "crons": [
     {
+      "path": "/api/cron/update-dollar",
+      "schedule": "0 */4 * * *"
+    },
+    {
+      "path": "/api/cron/update-embi",
+      "schedule": "0 */6 * * *"
+    },
+    {
       "path": "/api/cron/update-emae",
       "schedule": "0 1 * * *"
     },
     {
       "path": "/api/cron/update-ipc",
       "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/cron/update-labor-market",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/update-poverty",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/update-bcra-indices",
+      "schedule": "0 */12 * * *"
     }
   ],
   "headers": [

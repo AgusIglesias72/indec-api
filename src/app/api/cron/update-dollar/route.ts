@@ -206,7 +206,7 @@ async function updateDollarData() {
         // Para Dolar Oficial y Mayorista, siempre guardar con timestamp actual
         const alwaysUpdate = ['OFICIAL', 'MAYORISTA'].includes(dollarType);
         
-        // Si existe un registro previo, verificar si la fecha de actualización cambió
+        // Si existe un registro previo Y NO es un tipo que siempre se actualiza, verificar cambios
         if (lastRecord && !alwaysUpdate) {
           // Comparar la fecha de actualización de la API con la última guardada
           const lastUpdateTime = new Date(lastRecord.updated_at).getTime();
@@ -218,6 +218,11 @@ async function updateDollarData() {
             duplicatesSkipped++;
             continue;
           }
+        }
+        
+        // Para OFICIAL y MAYORISTA, siempre procesar sin verificar duplicados
+        if (alwaysUpdate) {
+          console.info(`🔄 Procesando actualización forzada para: ${dollarType}`);
         }
         
         // Si la fecha de la API es de hoy, usar los datos actuales
