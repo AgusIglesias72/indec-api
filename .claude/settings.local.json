@@ -59,10 +59,13 @@
       "Bash(npx supabase:*)",
       "mcp__supabase__apply_migration",
       "Bash(mv:*)",
-      "mcp__supabase__execute_sql"
+      "mcp__supabase__execute_sql",
+      "Bash(npx next:*)"
     ],
-    "deny": []
+    "deny": [],
+    "defaultMode": "acceptEdits"
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "supabase",
     "playwright",
