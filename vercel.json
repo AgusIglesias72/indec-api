@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/update-dollar",
-      "schedule": "0 */4 * * *"
+      "schedule": "*/30 * * * *"
     },
     {
       "path": "/api/cron/update-embi",
