@@ -105,6 +105,12 @@ export async function trackRequest(
     const clientIP = getClientIP(req)
     const isInternal = isInternalRequest(req)
     
+    // IMPORTANTE: Solo trackear si la petición usa API key o NO es interna
+    // Esto evita contar las peticiones del propio sitio web que no usan API key
+    if (!apiKey && isInternal) {
+      return // No trackear peticiones internas sin API key
+    }
+    
     // Extraer parámetros de query (sin información sensible)
     const { searchParams } = new URL(req.url)
     const params: any = {}

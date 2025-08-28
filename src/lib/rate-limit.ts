@@ -32,6 +32,9 @@ export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult>
     const referer = req.headers.get('referer')
     const userAgent = req.headers.get('user-agent') || ''
     
+    // Debug logging para headers
+    console.log('Rate limit headers:', { origin, host, referer, userAgent: userAgent.substring(0, 50) + '...' })
+    
     // Lista de dominios permitidos sin API key
     const allowedDomains = [
       'localhost:3000',
@@ -74,6 +77,17 @@ export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult>
       userAgent.toLowerCase().includes('wget')
     
     // NUEVA LÓGICA: SIN RATE LIMITING
+    // Si es desde localhost, permitir sin límites (desarrollo)
+    if (host && host.includes('localhost')) {
+      console.info('Localhost request detected, allowing without limits', { host, origin, referer })
+      return {
+        success: true,
+        limit: 999999,
+        remaining: 999999,
+        reset: new Date(Date.now() + 86400000), // 24 horas
+      }
+    }
+    
     // Si es una petición interna genuina desde el navegador, permitir sin límites
     if (isInternalRequest && !isDevelopmentTool) {
       console.info('Internal request detected, allowing without limits')

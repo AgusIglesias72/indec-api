@@ -1,7 +1,13 @@
 // src/services/bcra-fetcher.ts
 import axios from 'axios';
+import https from 'https';
 
 const BCRA_API_BASE = 'https://api.bcra.gob.ar/estadisticas/v3.0';
+
+// Configurar axios para ignorar certificados SSL en desarrollo
+const httpsAgent = new https.Agent({
+  rejectUnauthorized: false
+});
 
 export interface BCRADataPoint {
   idVariable: number;
@@ -40,7 +46,11 @@ export async function fetchBCRAData(
     
     console.log(`Fetching BCRA data: ${url}`, params);
     
-    const response = await axios.get<BCRAResponse>(url, { params });
+    const response = await axios.get<BCRAResponse>(url, { 
+      params,
+      httpsAgent,
+      timeout: 30000
+    });
     
     if (response.data.status !== 200) {
       throw new Error(`BCRA API returned status ${response.data.status}`);

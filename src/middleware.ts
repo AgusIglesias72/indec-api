@@ -39,6 +39,7 @@ const knownApiPaths = [
   '/api/admin/clerk-count',
   '/api/admin/compare-users',
   '/api/admin/backfill-dollar',
+  '/api/admin/backfill-bcra',
   '/api/test/webhook'
 ];
 

@@ -15,10 +15,11 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-clear-sans)", "system-ui", "sans-serif"],
+        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
         mono: ["var(--font-mono)", "monospace"],
         righteous: ["var(--font-righteous)", "cursive"],
-
+        display: ["var(--font-righteous)", "cursive"], // Para títulos
+        'clear-sans': ["var(--font-clear-sans)", "system-ui", "sans-serif"], // Mantener como opción
       },
       colors: {
         // Paleta principal inspirada en INDEC (azules, blancos, grises)

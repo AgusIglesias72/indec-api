@@ -28,7 +28,7 @@ const AppWrapper: React.FC<AppWrapperProps> = ({ children }) => {
           colorSuccess: '#10b981',
           colorDanger: '#ef4444',
           borderRadius: '0.5rem',
-          fontFamily: 'var(--font-clear-sans), system-ui, sans-serif',
+          fontFamily: 'var(--font-inter), system-ui, sans-serif',
         },
         elements: {
           formButtonPrimary: 

@@ -1,357 +1,204 @@
-"use client"
+'use client';
 
-import Link from "next/link"
-import { motion, AnimatePresence } from "framer-motion"
-import { useState } from "react"
-import { 
-  Code, 
-  TrendingUp, 
-  Share2, 
-  ExternalLink,
-  Database,
-  LineChart,
-  DollarSign,
-  BarChart3,
-  Globe,
-  Filter
-} from "lucide-react"
-
-import { Button } from "@/components/ui/button"
-
-const apiExamples = [
-  {
-    id: 'emae',
-    title: 'EMAE',
-    subtitle: 'Actividad Económica',
-    icon: BarChart3,
-    color: 'text-blue-400',
-    endpoint: '/api/emae',
-    description: 'Obtener datos del Estimador Mensual de Actividad Económica',
-    code: `// Obtener datos del EMAE con variación interanual
-fetch('https://argenstats.com/api/emae?start_date=2023-01-01&include_variations=true')
-  .then(response => response.json())
-  .then(data => {
-    console.log('Último valor EMAE:', data.data[data.data.length - 1]);
-    
-    // Procesar datos para visualización
-    const chartData = data.data.map(item => ({
-      date: item.date,
-      value: item.original_value,
-      yearOverYear: item.year_over_year_change
-    }));
-    
-    // Usar los datos en tu aplicación...
-  });`,
-    endpoints: ['GET /api/emae', 'GET /api/emae-by-activity', 'GET /api/emae/latest']
-  },
-  {
-    id: 'ipc',
-    title: 'IPC',
-    subtitle: 'Índice de Precios',
-    icon: TrendingUp,
-    color: 'text-purple-400',
-    endpoint: '/api/ipc',
-    description: 'Acceder a datos de inflación y variaciones de precios',
-    code: `// Obtener datos de inflación mensual para el IPC General
-fetch('https://argenstats.com/api/ipc?type=historical&category=GENERAL&limit=12')
-  .then(response => response.json())
-  .then(data => {
-    const inflation = data.data;
-    
-    // Mostrar último valor e índice
-    const latest = inflation[0];
-    console.log('IPC actual:', latest.index_value);
-    console.log('Variación mensual:', latest.monthly_pct_change, '%');
-    console.log('Variación interanual:', latest.yearly_pct_change, '%');
-  });`,
-    endpoints: ['GET /api/ipc?type=historical', 'GET /api/ipc?type=latest', 'GET /api/ipc?type=metadata']
-  },
-  {
-    id: 'dollar',
-    title: 'Dólar',
-    subtitle: 'Cotizaciones',
-    icon: DollarSign,
-    color: 'text-green-400',
-    endpoint: '/api/dollar',
-    description: 'Cotizaciones actualizadas del dólar en sus diferentes tipos',
-    code: `// Obtener cotizaciones del dólar oficial y blue
-fetch('https://argenstats.com/api/dollar?type=latest')
-  .then(response => response.json())
-  .then(data => {
-    const official = data.data.find(d => d.dollar_type === 'OFICIAL');
-    const blue = data.data.find(d => d.dollar_type === 'BLUE');
-    
-    console.log('Dólar Oficial:', official.sell_price);
-    console.log('Dólar Blue:', blue.sell_price);
-    console.log('Brecha:', ((blue.sell_price / official.sell_price - 1) * 100).toFixed(1) + '%');
-  });`,
-    endpoints: ['GET /api/dollar?type=latest', 'GET /api/dollar?type=historical', 'GET /api/dollar?type=metadata']
-  },
-  {
-    id: 'risk',
-    title: 'Riesgo País',
-    subtitle: 'Indicador Soberano',
-    icon: Globe,
-    color: 'text-red-400',
-    endpoint: '/api/riesgo-pais',
-    description: 'Seguimiento del riesgo soberano argentino',
-    code: `// Obtener riesgo país de los últimos 30 días
-fetch('https://argenstats.com/api/riesgo-pais?type=last_30_days&limit=30')
-  .then(response => response.json())
-  .then(data => {
-    const latest = data.data[0];
-    
-    console.log('Riesgo País actual:', latest.closing_value, 'puntos básicos');
-    console.log('Variación mensual:', latest.monthly_change, '%');
-    console.log('Variación anual:', latest.yearly_change, '%');
-    
-    // Estadísticas de volatilidad
-    console.log('Promedio 30 días:', data.stats.average);
-    console.log('Volatilidad:', data.stats.std_deviation);
-  });`,
-    endpoints: ['GET /api/riesgo-pais?type=last_30_days', 'GET /api/riesgo-pais?type=latest', 'GET /api/riesgo-pais?type=custom']
-  },
-  {
-    id: 'labor',
-    title: 'Mercado Laboral',
-    subtitle: 'Empleo y Desempleo',
-    icon: LineChart,
-    color: 'text-orange-400',
-    endpoint: '/api/labor-market',
-    description: 'Datos del mercado laboral argentino por región y demografía',
-    code: `// Obtener datos laborales nacionales recientes
-fetch('https://argenstats.com/api/labor-market?view=latest&data_type=national')
-  .then(response => response.json())
-  .then(data => {
-    const national = data.data.national[0];
-    
-    console.log('Período:', national.period);
-    console.log('Tasa de actividad:', national.activity_rate, '%');
-    console.log('Tasa de empleo:', national.employment_rate, '%');
-    console.log('Tasa de desempleo:', national.unemployment_rate, '%');
-    
-    // Ver variaciones vs período anterior
-    if (national.activity_rate_change) {
-      console.log('Cambio actividad:', national.activity_rate_change, 'pp');
-    }
-  });`,
-    endpoints: ['GET /api/labor-market?view=latest', 'GET /api/labor-market?view=temporal', 'GET /api/labor-market?view=comparison']
-  },
-  {
-    id: 'filters',
-    title: 'Filtros',
-    subtitle: 'Consultas Avanzadas',
-    icon: Filter,
-    color: 'text-cyan-400',
-    endpoint: '/api/*',
-    description: 'Utilizar filtros y parámetros para consultas específicas',
-    code: `// Ejemplo de filtros avanzados en diferentes endpoints
-const params = new URLSearchParams({
-  start_date: '2024-01-01',
-  end_date: '2024-12-31',
-  format: 'csv',
-  limit: '100',
-  order: 'desc'
-});
-
-// Obtener datos históricos del dólar en CSV
-fetch(\`https://argenstats.com/api/dollar?type=historical&\${params}\`)
-  .then(response => response.text()) // CSV response
-  .then(csvData => {
-    console.log('Datos de dólar en CSV:', csvData);
-  });
-
-// Filtrar mercado laboral por región y demografía
-fetch('https://argenstats.com/api/labor-market?view=temporal&data_type=regional&region=GBA')
-  .then(response => response.json())
-  .then(data => {
-    console.log('Datos laborales del GBA:', data.data.regional);
-  });`,
-    endpoints: ['?start_date=YYYY-MM-DD', '?format=json|csv', '?limit=N&order=asc|desc']
-  }
-];
+import React from 'react';
+import { Code, ArrowRight, Sparkles, Zap, Database, Share2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 export default function APISection() {
-  const [activeExample, setActiveExample] = useState('emae');
-  
-  const currentExample = apiExamples.find(example => example.id === activeExample) || apiExamples[0];
-
   return (
-    <section className="py-20 bg-indec-blue text-white relative overflow-hidden">      
-      {/* Decorative circles */}
-      <div className="absolute top-0 left-0 w-[400px] h-[400px] rounded-full bg-white/5 -translate-x-1/2 -translate-y-1/2"></div>
-      <div className="absolute bottom-0 right-0 w-[600px] h-[600px] rounded-full bg-white/5 translate-x-1/3 translate-y-1/3"></div>
-      
-      <div className="container mx-auto px-4 md:px-8 lg:px-12 max-w-7xl relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.7 }}
-          >
-            <div className="flex items-center gap-2 mb-6">
-              <div className="h-10 w-10 bg-white/10 rounded-full flex items-center justify-center">
-                <Code className="h-5 w-5" />
-              </div>
-              <span className="text-sm font-semibold">API RESTFUL</span>
-            </div>
-            
-            <h2 className="text-3xl md:text-4xl font-bold leading-tight mb-6">
-              API potente y fácil de integrar
-            </h2>
-            
-            <p className="text-indec-gray-light text-lg font-light leading-relaxed mb-8 text-pretty text-center md:text-left">
-              Accede programáticamente a todos los datos económicos para integrarlos en tus aplicaciones, 
-              dashboards o análisis personalizados. Nuestra API está diseñada para ser intuitiva y flexible.
-            </p>
-            
-            <div className="space-y-6 mb-8">
-              <div className="flex gap-4">
-                <div className="h-12 w-12 bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Code className="h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="font-medium text-lg">Endpoints RESTful intuitivos</h3>
-                  <p className="text-indec-gray-light font-light">Estructura clara y consistente con filtrado flexible</p>
-                </div>
-              </div>
-              
-              <div className="flex gap-4">
-                <div className="h-12 w-12 bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <TrendingUp className="h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="font-medium text-lg">Series completas y actualizadas</h3>
-                  <p className="text-indec-gray-light font-light">Datos históricos y actualizaciones automáticas</p>
-                </div>
-              </div>
-              
-              <div className="flex gap-4">
-                <div className="h-12 w-12 bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Share2 className="h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="font-medium text-lg">Múltiples formatos de salida</h3>
-                  <p className="text-indec-gray-light font-light">Respuestas en JSON y CSV según tus necesidades</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex flex-wrap gap-4">
-              <Button asChild size="lg" className="bg-white text-indec-blue hover:bg-indec-gray-light flex-1 lg:flex-none">
-                <Link href="/documentacion">
-                  Documentación API <ExternalLink className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-          </motion.div>
+    <section className="relative py-12 overflow-hidden">
+      <div className="container mx-auto px-4 relative z-10">
+        {/* Main Content Container with rounded borders and max width */}
+        <div className="max-w-7xl mx-auto bg-gradient-to-br from-blue-50 via-cyan-50 to-indigo-50 rounded-3xl p-8 md:p-12 relative overflow-hidden">
+          {/* Background decorative elements */}
+          <div className="absolute top-10 right-10 w-32 h-32 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+          <div className="absolute bottom-10 left-10 w-40 h-40 bg-cyan-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse" style={{ animationDelay: '2s' }}></div>
           
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="space-y-6"
-          >
-            {/* Interactive Tabs */}
-            <div className="flex flex-wrap gap-2 mb-6">
-              {apiExamples.map((example) => {
-                const IconComponent = example.icon;
-                return (
-                  <motion.button
-                    key={example.id}
-                    onClick={() => setActiveExample(example.id)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                      activeExample === example.id
-                        ? 'bg-white/20 text-white border border-white/30'
-                        : 'bg-white/5 text-indec-gray-light hover:bg-white/10 hover:text-white border border-transparent'
-                    }`}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    suppressHydrationWarning
-
-                  >
-                    <IconComponent className={`h-4 w-4 ${example.color}`} />
-                    <span>{example.title}</span>
-                  </motion.button>
-                );
-              })}
-            </div>
-
-            {/* Code Block Container */}
-            <AnimatePresence mode="wait">
+          <div className="relative z-10 grid lg:grid-cols-2 gap-12 items-center">
+            {/* Content Side */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+              className="space-y-6"
+            >
+              {/* Badge */}
               <motion.div
-                key={activeExample}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-                className="bg-indec-blue-dark/80 rounded-lg shadow-lg overflow-hidden border border-white/10 min-h-[500px] flex flex-col"
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                viewport={{ once: true }}
+                className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium"
               >
-                {/* Code header */}
-                <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-                  <div className="flex items-center gap-3">
-                    <div className="flex gap-2">
-                      <div className="h-3 w-3 rounded-full bg-red-500"></div>
-                      <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
-                      <div className="h-3 w-3 rounded-full bg-green-500"></div>
-                    </div>
-                    <div className="text-xs text-indec-gray-light font-mono">
-                      {currentExample.subtitle} - {currentExample.description}
-                    </div>
+                <Sparkles className="h-4 w-4" />
+                API RESTful
+              </motion.div>
+
+              {/* Title */}
+              <motion.h3
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                viewport={{ once: true }}
+                className="text-3xl md:text-4xl font-bold text-gray-900"
+              >
+                Integración Simple y Poderosa
+                <span className="block text-blue-600">API para Desarrolladores</span>
+              </motion.h3>
+
+              {/* Description */}
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                viewport={{ once: true }}
+                className="text-lg text-gray-700 leading-relaxed"
+              >
+                Accede programáticamente a todos los datos económicos argentinos. 
+                Integra fácilmente en tus aplicaciones, dashboards o análisis con nuestra API intuitiva y bien documentada.
+              </motion.p>
+
+              {/* Features */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                viewport={{ once: true }}
+                className="space-y-3"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Code className="h-4 w-4 text-blue-600" />
                   </div>
-                  <div className={`flex items-center gap-1 ${currentExample.color}`}>
-                    <currentExample.icon className="h-4 w-4" />
-                  </div>
+                  <span className="text-gray-700 font-medium">Endpoints RESTful intuitivos y bien estructurados</span>
                 </div>
-                
-                {/* Code block */}
-                <div className="relative flex-1">
-                  {/* Line numbers */}
-                  <div className="absolute top-0 left-0 bottom-0 w-8 bg-black/20 flex flex-col items-center pt-5 text-xs font-mono text-white/30">
-                    {currentExample.code.split('\n').map((_, index) => (
-                      <div key={index}>{index + 1}</div>
-                    ))}
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 bg-cyan-100 rounded-lg flex items-center justify-center">
+                    <Database className="h-4 w-4 text-cyan-600" />
                   </div>
-                  
-                  {/* Code content */}
-                  <div className="h-full min-h-[300px]">
-                    <pre className="font-mono text-xs sm:text-sm text-indec-gray-light p-5 pl-10 overflow-x-auto h-full">
-                      <code className="language-javascript">{currentExample.code}</code>
-                    </pre>
-                  </div>
-                  
-                  {/* Floating icons for visual effect */}
-                  <div className="absolute -bottom-3 -right-3 text-indec-blue-light/10 transform rotate-12">
-                    <Database className="h-16 w-16" />
-                  </div>
-                  <div className={`absolute top-4 right-10 text-indec-blue-light/10 transform -rotate-6`}>
-                    <currentExample.icon className="h-8 w-8" />
-                  </div>
+                  <span className="text-gray-700 font-medium">Datos históricos completos y actualizaciones automáticas</span>
                 </div>
-                
-                {/* API endpoint examples */}
-                <div className="bg-black/20 px-4 py-3 border-t border-white/10">
-                  <div className="flex flex-wrap gap-2 text-xs">
-                    {currentExample.endpoints.map((endpoint, index) => (
-                      <motion.div
-                        key={`${activeExample}-${index}`}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="bg-indec-blue-dark rounded-full px-3 py-1 border border-white/10"
-                      >
-                        {endpoint}
-                      </motion.div>
-                    ))}
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 bg-indigo-100 rounded-lg flex items-center justify-center">
+                    <Share2 className="h-4 w-4 text-indigo-600" />
                   </div>
+                  <span className="text-gray-700 font-medium">Respuestas en JSON y CSV según tus necesidades</span>
                 </div>
               </motion.div>
-            </AnimatePresence>
-          </motion.div>
+
+              {/* CTA */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.5 }}
+                viewport={{ once: true }}
+                className="pt-4"
+              >
+                <Button 
+                  asChild 
+                  size="lg"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-6 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  <Link href="/documentacion" className="flex items-center gap-2">
+                    Ver Documentación API <ArrowRight className="h-5 w-5" />
+                  </Link>
+                </Button>
+                
+                {/* Secondary info */}
+                <p className="text-sm text-gray-600 mt-4">
+                  Documentación completa • Ejemplos de código • Sin autenticación requerida
+                </p>
+              </motion.div>
+            </motion.div>
+
+            {/* Visual Side - Terminal */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              viewport={{ once: true }}
+              className="relative"
+            >
+              {/* Terminal Window */}
+              <div className="bg-gray-900 rounded-xl shadow-2xl overflow-hidden border border-gray-800">
+                {/* Terminal Header */}
+                <div className="bg-gray-800 px-4 py-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full bg-red-500"></div>
+                    <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
+                    <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                  </div>
+                  <div className="text-xs text-gray-400 font-mono">argenstats.com/api</div>
+                </div>
+                
+                {/* Terminal Content */}
+                <div className="p-6 space-y-4 font-mono text-sm">
+                  {/* Example API calls */}
+                  <div className="text-gray-400">
+                    <span className="text-green-400">$</span> curl https://argenstats.com/api/ipc?type=latest
+                  </div>
+                  
+                  <div className="text-gray-300 bg-gray-800/50 p-3 rounded">
+                    <div className="text-yellow-400">{"{"}</div>
+                    <div className="pl-4">
+                      <span className="text-blue-400">&quot;status&quot;</span>: <span className="text-green-400">&quot;success&quot;</span>,
+                    </div>
+                    <div className="pl-4">
+                      <span className="text-blue-400">&quot;data&quot;</span>: {"["}
+                    </div>
+                    <div className="pl-8">
+                      <span className="text-blue-400">&quot;index_value&quot;</span>: <span className="text-orange-400">145.2</span>,
+                    </div>
+                    <div className="pl-8">
+                      <span className="text-blue-400">&quot;monthly_change&quot;</span>: <span className="text-orange-400">3.5</span>,
+                    </div>
+                    <div className="pl-8">
+                      <span className="text-blue-400">&quot;date&quot;</span>: <span className="text-green-400">&quot;2024-11&quot;</span>
+                    </div>
+                    <div className="pl-4">{"]"}</div>
+                    <div className="text-yellow-400">{"}"}</div>
+                  </div>
+
+                  <div className="text-gray-400">
+                    <span className="text-green-400">$</span> curl https://argenstats.com/api/dollar?type=latest
+                  </div>
+                  
+                  <div className="text-gray-300 bg-gray-800/50 p-3 rounded">
+                    <div className="text-green-400">✓ 200 OK</div>
+                    <div className="text-gray-400">Response time: 45ms</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Floating badges */}
+              <motion.div 
+                initial={{ opacity: 0, scale: 0 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.7 }}
+                viewport={{ once: true }}
+                className="absolute -top-6 -right-6 bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 shadow-lg"
+              >
+                <Zap className="h-4 w-4" />
+                Ultra rápida
+              </motion.div>
+              
+              <motion.div 
+                initial={{ opacity: 0, scale: 0 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.9 }}
+                viewport={{ once: true }}
+                className="absolute -bottom-4 -left-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 shadow-lg"
+              >
+                <Database className="h-4 w-4" />
+                Datos actualizados
+              </motion.div>
+            </motion.div>
+          </div>
         </div>
       </div>
     </section>
-  )
+  );
 }

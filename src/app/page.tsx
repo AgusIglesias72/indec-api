@@ -33,9 +33,11 @@ const InflationCalculatorSection = lazy(() =>
 const RiskCountryPromoSection = lazy(() => import('@/components/landing/RiskCountryPromoSection'));
 const IPCPromoSection = lazy(() => import('@/components/landing/IPCPromoSection'));
 const PovertyPromoSection = lazy(() => import('@/components/landing/PovertyPromoSection'));
-const APISection = lazy(() => import("@/components/landing/ApiSection"));
-const Indicators = lazy(() => import("@/components/landing/Indicators"));
-const EmploymentSection = lazy(() => import('@/components/landing/LaborMarket'));
+const APISection = lazy(() => import("@/components/landing/ApiSection").then(module => ({
+  default: module.default
+})));
+// const Indicators = lazy(() => import("@/components/landing/Indicators"));
+// const EmploymentSection = lazy(() => import('@/components/landing/LaborMarket'));
 const NetworkGraph = lazy(() => import('@/components/Newsletter'));
 
 // Preload commented components for potential future use
@@ -149,17 +151,19 @@ export default async function HomePage() {
       </Suspense>
       
       {/* Heavy components are lazy loaded with professional skeletons */}
-      <Suspense fallback={<SectionSkeleton height="500px" title="Mercado Laboral" />}>
+      {/* Employment section removed from landing */}
+      {/* <Suspense fallback={<SectionSkeleton height="500px" title="Mercado Laboral" />}>
         <EmploymentSection />
-      </Suspense>
+      </Suspense> */}
       
       <Suspense fallback={<SectionSkeleton height="400px" title="API Documentation" />}>
         <APISection />
       </Suspense>
       
-      <Suspense fallback={<SectionSkeleton height="600px" title="Indicadores Económicos" />}>
+      {/* Indicators section removed from landing */}
+      {/* <Suspense fallback={<SectionSkeleton height="600px" title="Indicadores Económicos" />}>
         <Indicators />
-      </Suspense>
+      </Suspense> */}
       
       <Suspense fallback={<SectionSkeleton height="300px" />}>
         <NetworkGraph />

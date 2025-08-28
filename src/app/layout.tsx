@@ -1,7 +1,6 @@
 // src/app/layout.tsx - Optimized for performance
 import type { Metadata } from "next";
-import { JetBrains_Mono, Righteous } from "next/font/google";
-import localFont from "next/font/local";
+import { JetBrains_Mono, Righteous, Inter } from "next/font/google";
 import dynamic from "next/dynamic";
 import "./globals.css";
 import AppWrapper from "@/lib/AppWrapper";
@@ -19,35 +18,6 @@ const Footer = dynamic(() => import("@/components/landing/CTAFooter"), {
   )
 });
 
-// Optimized font loading - load only essential weights first
-const clearSans = localFont({
-  src: [
-    {
-      path: '../fonts/ClearSans-Regular.woff',
-      weight: '400',
-      style: 'normal',
-    },
-    {
-      path: '../fonts/ClearSans-Medium.woff',
-      weight: '500',
-      style: 'normal',
-    },
-    {
-      path: '../fonts/ClearSans-Bold.woff',
-      weight: '700',
-      style: 'normal',
-    },
-    // Additional weights loaded on-demand
-    {
-      path: '../fonts/ClearSans-Light.woff',
-      weight: '300',
-      style: 'normal',
-    },
-  ],
-  variable: '--font-clear-sans',
-  display: 'swap',
-  preload: true, // Preload critical font weights
-});
 
 export const metadata: Metadata = defaultMetadata;
 
@@ -59,12 +29,20 @@ const jetbrainsMono = JetBrains_Mono({
   variable: "--font-mono",
 });
 
-// Import Righteous font
+// Import Righteous font (solo para títulos)
 const righteous = Righteous({
   weight: '400', // Righteous only comes in regular 400 weight
   subsets: ["latin"],
   display: "swap",
   variable: "--font-righteous",
+});
+
+// Import Inter font (fuente principal)
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+  weight: ['300', '400', '500', '600', '700'],
 });
 
 export default function RootLayout({
@@ -73,7 +51,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={`${clearSans.variable} ${jetbrainsMono.variable} ${righteous.variable}`} suppressHydrationWarning>
+    <html lang="es" className={`${inter.variable} ${jetbrainsMono.variable} ${righteous.variable}`} suppressHydrationWarning>
       <head>
         {/* Remove unused preconnects as suggested by PageSpeed */}
         <link rel="dns-prefetch" href="https://argenstats.com" />
@@ -84,9 +62,6 @@ export default function RootLayout({
         <StructuredData data={OrganizationSchema} />
         <StructuredData data={WebsiteSchema} />
         
-        {/* Critical CSS hint */}
-        <link rel="preload" href="/fonts/ClearSans-Regular.woff" as="font" type="font/woff" crossOrigin="" />
-        <link rel="preload" href="/fonts/ClearSans-Bold.woff" as="font" type="font/woff" crossOrigin="" />
         
         {/* Performance hints */}
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
