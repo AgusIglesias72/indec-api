@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Menu, DollarSign, TrendingUp, BarChart3, Globe, Calendar, FileText, Users, Mail, User, LogOut, Key, Settings, LogIn, Calculator, Heart, LayoutDashboard, HelpCircle, AlertCircle } from "lucide-react"
+import { Menu, DollarSign, TrendingUp, BarChart3, Globe, Calendar, FileText, Users, Mail, User, LogOut, Key, Settings, LogIn, Calculator, Trophy, LayoutDashboard, HelpCircle, AlertCircle } from "lucide-react"
 import { useUser, useClerk, SignInButton, SignUpButton } from "@clerk/nextjs"
 
 import { Button } from "@/components/ui/button"
@@ -55,13 +55,14 @@ const indicators = [
 ]
 
 const tools = [
-  { title: "Conversor USD/ARS", href: "/conversor-dolar-peso-argentino", icon: Calculator },
-  { title: "Calculadora de Inflación", href: "/calculadora-inflacion", icon: TrendingUp },
+  { title: "Conversor USD/ARS", href: "/conversor-dolar-peso-argentino", icon: DollarSign },
+  { title: "Calculadora de Inflación", href: "/calculadora-inflacion", icon: Calculator },
+  { title: "Calendario INDEC", href: "/calendario", icon: Calendar },
 ]
 
 const mainNavItems = [
   { title: "Dólar", href: "/dolar", icon: DollarSign },
-  { title: "Calendario INDEC", href: "/calendario", icon: Calendar },
+  { title: "Eventos", href: "/eventos", icon: Trophy },
   { title: "API Docs", href: "/documentacion", icon: FileText },
 ]
 
@@ -270,111 +271,105 @@ export default function NavBar() {
                   </div>
                   
                   {/* Contenido de navegación */}
-                  <div className="flex-1 overflow-y-auto py-6 px-6">
-                    <nav className="space-y-6">
-                      {/* Sección Indicadores */}
-                      <div className="space-y-3">
-                        <h3 className="text-sm font-semibold text-indec-blue uppercase tracking-wider">
-                          Indicadores
-                        </h3>
-                        <div className="space-y-1">
-                          {indicators.map((indicator) => {
-                            const IconComponent = indicator.icon;
-                            return (
-                              <Link
-                                key={indicator.title}
-                                href={indicator.href}
-                                onClick={handleMobileNavClick}
-                                className="flex items-start gap-3 rounded-lg p-3 hover:bg-indec-blue/5 transition-colors group"
-                              >
-                                <div className="flex-shrink-0 mt-0.5">
-                                  <IconComponent className="h-5 w-5 text-indec-blue group-hover:text-indec-blue-dark transition-colors" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="font-medium text-gray-900 group-hover:text-indec-blue transition-colors">
-                                    {indicator.title}
-                                  </div>
-                                  <div className="text-sm text-gray-600 mt-1 font-clear-sans font-light">
-                                    {indicator.description}
-                                  </div>
-                                </div>
-                              </Link>
-                            );
-                          })}
-                        </div>
+                  <div className="flex-1 overflow-y-auto py-4 px-4">
+                    <nav className="space-y-4">
+                      {/* Indicadores - Compacto */}
+                      <div className="space-y-2">
+                        {indicators.map((indicator) => {
+                          const IconComponent = indicator.icon;
+                          return (
+                            <Link
+                              key={indicator.title}
+                              href={indicator.href}
+                              onClick={handleMobileNavClick}
+                              className="flex items-center gap-3 rounded-lg p-2.5 hover:bg-indec-blue/5 transition-colors group"
+                            >
+                              <div className="flex-shrink-0">
+                                <IconComponent className="h-5 w-5 text-indec-blue group-hover:text-indec-blue-dark transition-colors" />
+                              </div>
+                              <div className="font-medium text-gray-900 group-hover:text-indec-blue transition-colors">
+                                {indicator.title}
+                              </div>
+                            </Link>
+                          );
+                        })}
                       </div>
                       
                       {/* Separador */}
-                      <div className="border-t border-gray-200"></div>
+                      <div className="border-t border-gray-200 my-3"></div>
                       
-                      {/* Sección Herramientas */}
-                      <div className="space-y-3">
-                        <h3 className="text-sm font-semibold text-indec-blue uppercase tracking-wider">
-                          Herramientas
-                        </h3>
-                        <div className="space-y-1">
-                          {tools.map((tool) => {
-                            const IconComponent = tool.icon;
-                            return (
-                              <Link
-                                key={tool.title}
-                                href={tool.href}
-                                onClick={handleMobileNavClick}
-                                className="flex items-center gap-3 rounded-lg p-3 hover:bg-indec-blue/5 transition-colors group"
-                              >
-                                <div className="flex-shrink-0">
-                                  <IconComponent className="h-5 w-5 text-indec-blue group-hover:text-indec-blue-dark transition-colors" />
-                                </div>
-                                <div className="font-medium text-gray-900 group-hover:text-indec-blue transition-colors">
-                                  {tool.title}
-                                </div>
-                              </Link>
-                            );
-                          })}
-                        </div>
+                      {/* Herramientas - Compacto */}
+                      <div className="space-y-2">
+                        {tools.map((tool) => {
+                          const IconComponent = tool.icon;
+                          return (
+                            <Link
+                              key={tool.title}
+                              href={tool.href}
+                              onClick={handleMobileNavClick}
+                              className="flex items-center gap-3 rounded-lg p-2.5 hover:bg-indec-blue/5 transition-colors group"
+                            >
+                              <div className="flex-shrink-0">
+                                <IconComponent className="h-5 w-5 text-indec-blue group-hover:text-indec-blue-dark transition-colors" />
+                              </div>
+                              <div className="font-medium text-gray-900 group-hover:text-indec-blue transition-colors">
+                                {tool.title}
+                              </div>
+                            </Link>
+                          );
+                        })}
                       </div>
                       
                       {/* Separador */}
-                      <div className="border-t border-gray-200"></div>
+                      <div className="border-t border-gray-200 my-3"></div>
                       
-                      {/* Sección Principal */}
-                      <div className="space-y-3">
-                        <h3 className="text-sm font-semibold text-indec-blue uppercase tracking-wider">
-                          Navegación
-                        </h3>
-                        <div className="space-y-1">
-                          {mainNavItems.map((item) => {
-                            const IconComponent = item.icon;
-                            return (
-                              <Link
-                                key={item.title}
-                                href={item.href}
-                                onClick={handleMobileNavClick}
-                                className="flex items-center gap-3 rounded-lg p-3 hover:bg-indec-blue/5 transition-colors group"
-                              >
-                                <div className="flex-shrink-0">
-                                  <IconComponent className="h-5 w-5 text-indec-blue group-hover:text-indec-blue-dark transition-colors" />
-                                </div>
-                                <div className="font-medium text-gray-900 group-hover:text-indec-blue transition-colors">
-                                  {item.title}
-                                </div>
-                              </Link>
-                            );
-                          })}
-                        </div>
+                      {/* Navegación Principal - Compacto */}
+                      <div className="space-y-2">
+                        {mainNavItems.map((item) => {
+                          const IconComponent = item.icon;
+                          return (
+                            <Link
+                              key={item.title}
+                              href={item.href}
+                              onClick={handleMobileNavClick}
+                              className="flex items-center gap-3 rounded-lg p-2.5 hover:bg-indec-blue/5 transition-colors group"
+                            >
+                              <div className="flex-shrink-0">
+                                <IconComponent className="h-5 w-5 text-indec-blue group-hover:text-indec-blue-dark transition-colors" />
+                              </div>
+                              <div className="font-medium text-gray-900 group-hover:text-indec-blue transition-colors">
+                                {item.title}
+                              </div>
+                            </Link>
+                          );
+                        })}
                       </div>
                       
                       {/* Separador */}
-                      <div className="border-t border-gray-200"></div>
+                      <div className="border-t border-gray-200 my-3"></div>
                       
-                      {/* Enlaces adicionales y auth */}
-                      <div className="space-y-1">
+                      {/* Enlaces Adicionales */}
+                      <div className="space-y-2">
+                        <Link 
+                          href="/contacto"
+                          onClick={handleMobileNavClick}
+                          className="flex items-center gap-3 rounded-lg p-2.5 hover:bg-indec-blue/5 transition-colors group"
+                        >
+                          <div className="flex-shrink-0">
+                            <Mail className="h-5 w-5 text-indec-blue group-hover:text-indec-blue-dark transition-colors" />
+                          </div>
+                          <div className="font-medium text-gray-900 group-hover:text-indec-blue transition-colors">
+                            Contacto
+                          </div>
+                        </Link>
+                        
+                        {/* Sección Auth */}
                         {isMounted && isSignedIn ? (
                           <>
                             <Link 
                               href="/profile"
                               onClick={handleMobileNavClick}
-                              className="flex items-center gap-3 rounded-lg p-3 hover:bg-indec-blue/5 transition-colors group"
+                              className="flex items-center gap-3 rounded-lg p-2.5 hover:bg-indec-blue/5 transition-colors group"
                             >
                               <div className="flex-shrink-0">
                                 <User className="h-5 w-5 text-indec-blue group-hover:text-indec-blue-dark transition-colors" />
@@ -389,7 +384,7 @@ export default function NavBar() {
                                 signOut()
                                 handleMobileNavClick()
                               }}
-                              className="w-full flex items-center gap-3 rounded-lg p-3 hover:bg-red-50 transition-colors group text-left"
+                              className="w-full flex items-center gap-3 rounded-lg p-2.5 hover:bg-red-50 transition-colors group text-left"
                             >
                               <div className="flex-shrink-0">
                                 <LogOut className="h-5 w-5 text-red-600 group-hover:text-red-700 transition-colors" />
@@ -404,6 +399,7 @@ export default function NavBar() {
                             <SignInButton mode="modal" fallbackRedirectUrl="/">
                               <Button 
                                 variant="outline" 
+                                size="sm"
                                 className="w-full"
                                 onClick={handleMobileNavClick}
                                 suppressHydrationWarning
@@ -413,6 +409,7 @@ export default function NavBar() {
                             </SignInButton>
                             <SignUpButton mode="modal" fallbackRedirectUrl="/">
                               <Button 
+                                size="sm"
                                 className="w-full"
                                 onClick={handleMobileNavClick}
                                 suppressHydrationWarning
@@ -422,34 +419,6 @@ export default function NavBar() {
                             </SignUpButton>
                           </div>
                         ) : null}
-                        
-                        <div className="pt-2 space-y-1">
-                          <Link 
-                            href="/contacto"
-                            onClick={handleMobileNavClick}
-                            className="flex items-center gap-3 rounded-lg p-3 hover:bg-indec-blue/5 transition-colors group"
-                          >
-                            <div className="flex-shrink-0">
-                              <Mail className="h-5 w-5 text-indec-blue group-hover:text-indec-blue-dark transition-colors" />
-                            </div>
-                            <div className="font-medium text-gray-900 group-hover:text-indec-blue transition-colors">
-                              Contacto
-                            </div>
-                          </Link>
-                          
-                          <Link 
-                            href="/documentacion"
-                            onClick={handleMobileNavClick}
-                            className="flex items-center gap-3 rounded-lg p-3 hover:bg-indec-blue/5 transition-colors group"
-                          >
-                            <div className="flex-shrink-0">
-                              <FileText className="h-5 w-5 text-indec-blue group-hover:text-indec-blue-dark transition-colors" />
-                            </div>
-                            <div className="font-medium text-gray-900 group-hover:text-indec-blue transition-colors">
-                              Documentación
-                            </div>
-                          </Link>
-                        </div>
                       </div>
                     </nav>
                   </div>

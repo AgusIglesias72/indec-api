@@ -24,12 +24,14 @@ export default function HeaderHero() {
           }}
         ></div>
         
-        {/* Lanzamiento oficial banner */}
+        {/* Evento de predicción banner */}
         <div className="flex justify-center mb-8">
-          <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 bg-indec-blue/10 text-indec-blue text-sm font-medium">
-            <Sparkles className="h-4 w-4" />
-            <span>¡Lanzamiento Oficial!</span>
-          </div>
+          <Link href="/eventos" className="group">
+            <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 bg-gradient-to-r from-green-100 to-emerald-100 border border-green-200 text-green-700 text-sm font-medium hover:from-green-200 hover:to-emerald-200 transition-all duration-200">
+              <Sparkles className="h-4 w-4 animate-pulse" />
+              <span>🏆 Evento Activo: Predice el IPC Agosto 2025 - ¡Gana USD 100!</span>
+            </div>
+          </Link>
         </div>
         
         <div className="container mx-auto px-4 relative z-10">
@@ -89,19 +91,6 @@ export default function HeaderHero() {
           </div>
         </div>
         
-        {/* Estrella decorativa */}
-        <div className="absolute top-[15%] right-[18%]">
-          <motion.div 
-            initial={{ rotate: 0, scale: 0 }}
-            animate={{ rotate: 15, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
-          >
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2L14.4 9.6H22L16.8 14.4L19.2 22L12 17.2L4.8 22L7.2 14.4L2 9.6H9.6L12 2Z" fill="blue" 
-              fillOpacity="0.3" stroke="blue" strokeWidth="1"/>
-            </svg>
-          </motion.div>
-        </div>
       </section>
     </>
   )

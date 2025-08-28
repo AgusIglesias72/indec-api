@@ -12,6 +12,7 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
 import { cn } from "@/lib/utils"
+import { DollarSign, Calculator, Calendar } from "lucide-react"
 
 const indicators = [
   {
@@ -46,18 +47,26 @@ const tools = [
     title: "Conversor USD/ARS",
     href: "/conversor-dolar-peso-argentino",
     description: "Convertir dólares a pesos argentinos",
+    icon: DollarSign,
   },
   {
     title: "Calculadora de Inflación",
     href: "/calculadora-inflacion",
     description: "Calcular el poder adquisitivo a través del tiempo",
+    icon: Calculator,
+  },
+  {
+    title: "Calendario INDEC",
+    href: "/calendario",
+    description: "Calendario de publicaciones oficiales del INDEC",
+    icon: Calendar,
   }
 ]
 
 const ListItem = React.forwardRef<
   React.ElementRef<"a">,
-  React.ComponentPropsWithoutRef<"a">
->(({ className, title, children, ...props }, ref) => {
+  React.ComponentPropsWithoutRef<"a"> & { icon?: React.ComponentType<any> }
+>(({ className, title, children, icon: Icon, ...props }, ref) => {
   return (
     <li>
       <NavigationMenuLink asChild>
@@ -69,7 +78,10 @@ const ListItem = React.forwardRef<
               )}
               {...props}
             >
-              <div className="text-sm font-medium leading-none">{title}</div>
+              <div className="flex items-center gap-2 text-sm font-medium leading-none">
+                {Icon && <Icon className="h-4 w-4 text-blue-600" />}
+                {title}
+              </div>
               <p className="line-clamp-2 text-sm leading-snug text-muted-foreground font-clear-sans font-light">
                 {children}
               </p>
@@ -106,6 +118,12 @@ export function MainNavigation() {
               Dólar
             </NavigationMenuLink>
         </NavigationMenuItem>
+        
+        <NavigationMenuItem>
+            <NavigationMenuLink className={navigationMenuTriggerStyle()} href="/eventos">
+              Eventos
+            </NavigationMenuLink>
+        </NavigationMenuItem>
 
         <NavigationMenuItem>
           <NavigationMenuTrigger className="">Herramientas</NavigationMenuTrigger>
@@ -116,6 +134,7 @@ export function MainNavigation() {
                   key={tool.title}
                   title={tool.title}
                   href={tool.href}
+                  icon={tool.icon}
                 >
                   {tool.description}
                 </ListItem>
@@ -124,12 +143,6 @@ export function MainNavigation() {
           </NavigationMenuContent>
         </NavigationMenuItem>
 
-        <NavigationMenuItem>
-            <NavigationMenuLink className={navigationMenuTriggerStyle()} href="/calendario">
-              Calendario INDEC
-            </NavigationMenuLink>
-        </NavigationMenuItem>
-        
         <NavigationMenuItem>
             <NavigationMenuLink className={navigationMenuTriggerStyle()} href="/documentacion">
               API Docs
