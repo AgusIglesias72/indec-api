@@ -204,6 +204,28 @@ export default function EventPage() {
     }
   }
 
+  // Helper function to standardize decimal input (replace comma with dot)
+  function standardizeDecimal(value: string): number {
+    const standardized = value.replace(',', '.');
+    const parsed = parseFloat(standardized);
+    
+    // Validate that the result is a valid number
+    if (isNaN(parsed)) {
+      throw new Error(`Invalid number format: ${value}`);
+    }
+    
+    return parsed;
+  }
+
+  // Helper function to generate a proper UUID v4
+  function generateUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     
@@ -218,14 +240,14 @@ export default function EventPage() {
       }
 
       const prediction = {
-        id: Math.random().toString(36).substr(2, 9),
+        id: generateUUID(),
         event_id: params.id as string,
         user_id: user.id,
         user_email: user.primaryEmailAddress?.emailAddress || 'unknown',
-        ipc_general: parseFloat(formData.ipc_general),
-        ipc_bienes: parseFloat(formData.ipc_bienes),
-        ipc_servicios: parseFloat(formData.ipc_servicios),
-        ipc_alimentos_bebidas: parseFloat(formData.ipc_alimentos_bebidas),
+        ipc_general: standardizeDecimal(formData.ipc_general),
+        ipc_bienes: standardizeDecimal(formData.ipc_bienes),
+        ipc_servicios: standardizeDecimal(formData.ipc_servicios),
+        ipc_alimentos_bebidas: standardizeDecimal(formData.ipc_alimentos_bebidas),
         created_at: new Date().toISOString()
       };
 
@@ -258,11 +280,15 @@ export default function EventPage() {
       
       await fetchEventData();
     } catch (error: any) {
+      console.error('Error:', error);
       if (error.code === '23505') {
         toast.error('Ya registraste tu predicción para este evento');
+      } else if (error.code === '22P02') {
+        toast.error('Error en el formato de los datos. Intenta nuevamente.');
+      } else if (error.message?.includes('invalid input syntax')) {
+        toast.error('Error en el formato de los datos. Verifica tus números.');
       } else {
-        toast.error('Error al registrar la predicción');
-        console.error('Error:', error);
+        toast.error('Error al registrar la predicción. Intenta nuevamente.');
       }
     } finally {
       setSubmitting(false);
