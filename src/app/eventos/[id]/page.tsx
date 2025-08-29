@@ -241,11 +241,21 @@ export default function EventPage() {
       setShowCelebration(true);
       setTimeout(() => setShowCelebration(false), 3000);
 
-      toast.success('🎉 ¡Predicción registrada! ¡Buena suerte!', {
-        duration: 4000,
+      toast.success('🎉 ¡Predicción registrada exitosamente!', {
+        description: '¡Tu predicción ha sido guardada! ¡Buena suerte!',
+        duration: 5000,
       });
       
       setUserPrediction(prediction);
+      
+      // Cambiar el formulario para mostrar valores ingresados en modo solo lectura
+      setFormData({
+        ipc_general: prediction.ipc_general.toString(),
+        ipc_bienes: prediction.ipc_bienes.toString(),
+        ipc_servicios: prediction.ipc_servicios.toString(),
+        ipc_alimentos_bebidas: prediction.ipc_alimentos_bebidas.toString()
+      });
+      
       await fetchEventData();
     } catch (error: any) {
       if (error.code === '23505') {
@@ -271,8 +281,6 @@ export default function EventPage() {
 
   function getFieldStatus(value: string) {
     if (!value) return '⚪';
-    const num = parseFloat(value);
-    if (num < 0 || num > 20) return '⚠️';
     return '✅';
   }
 
@@ -512,50 +520,79 @@ export default function EventPage() {
                 <CardHeader className="bg-green-500 text-white rounded-t-lg">
                   <CardTitle className="flex items-center gap-2 text-2xl">
                     <CheckCircle2 className="h-6 w-6" />
-                    Predicción Registrada
+                    Predicción Registrada Exitosamente
                   </CardTitle>
                   <CardDescription className="text-green-100">
                     Enviada el {format(new Date(userPrediction.created_at), 'dd/MM/yyyy HH:mm', { locale: es })}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-8">
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="p-6 bg-white rounded-xl shadow-lg border-l-4 border-blue-500 hover:shadow-xl transition-shadow">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="text-2xl">🏛️</span>
-                        <p className="text-sm text-gray-600 font-semibold">IPC General</p>
+                  <Alert className="mb-6 border-2 border-green-300 bg-green-50">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <AlertDescription className="text-lg text-green-800">
+                      Tu predicción ha sido guardada correctamente. Los valores no pueden ser modificados.
+                    </AlertDescription>
+                  </Alert>
+                  
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label className="text-lg font-semibold flex items-center gap-2 text-gray-700">
+                          🏛️ IPC General (%)
+                        </Label>
+                        <Input
+                          type="number"
+                          value={userPrediction.ipc_general}
+                          className="text-lg p-4 border-2 bg-gray-100 cursor-not-allowed font-bold text-blue-600"
+                          disabled
+                          readOnly
+                        />
                       </div>
-                      <p className="text-3xl font-bold text-blue-600">{userPrediction.ipc_general}%</p>
-                    </div>
-                    <div className="p-6 bg-white rounded-xl shadow-lg border-l-4 border-green-500 hover:shadow-xl transition-shadow">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="text-2xl">📦</span>
-                        <p className="text-sm text-gray-600 font-semibold">Bienes</p>
+                      <div className="space-y-2">
+                        <Label className="text-lg font-semibold flex items-center gap-2 text-gray-700">
+                          📦 Bienes (%)
+                        </Label>
+                        <Input
+                          type="number"
+                          value={userPrediction.ipc_bienes}
+                          className="text-lg p-4 border-2 bg-gray-100 cursor-not-allowed font-bold text-green-600"
+                          disabled
+                          readOnly
+                        />
                       </div>
-                      <p className="text-3xl font-bold text-green-600">{userPrediction.ipc_bienes}%</p>
-                    </div>
-                    <div className="p-6 bg-white rounded-xl shadow-lg border-l-4 border-purple-500 hover:shadow-xl transition-shadow">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="text-2xl">🔧</span>
-                        <p className="text-sm text-gray-600 font-semibold">Servicios</p>
+                      <div className="space-y-2">
+                        <Label className="text-lg font-semibold flex items-center gap-2 text-gray-700">
+                          🔧 Servicios (%)
+                        </Label>
+                        <Input
+                          type="number"
+                          value={userPrediction.ipc_servicios}
+                          className="text-lg p-4 border-2 bg-gray-100 cursor-not-allowed font-bold text-purple-600"
+                          disabled
+                          readOnly
+                        />
                       </div>
-                      <p className="text-3xl font-bold text-purple-600">{userPrediction.ipc_servicios}%</p>
-                    </div>
-                    <div className="p-6 bg-white rounded-xl shadow-lg border-l-4 border-orange-500 hover:shadow-xl transition-shadow">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="text-2xl">🍽️</span>
-                        <p className="text-sm text-gray-600 font-semibold">Alimentos y Bebidas</p>
+                      <div className="space-y-2">
+                        <Label className="text-lg font-semibold flex items-center gap-2 text-gray-700">
+                          🍽️ Alimentos y Bebidas (%)
+                        </Label>
+                        <Input
+                          type="number"
+                          value={userPrediction.ipc_alimentos_bebidas}
+                          className="text-lg p-4 border-2 bg-gray-100 cursor-not-allowed font-bold text-orange-600"
+                          disabled
+                          readOnly
+                        />
                       </div>
-                      <p className="text-3xl font-bold text-orange-600">{userPrediction.ipc_alimentos_bebidas}%</p>
                     </div>
                   </div>
                   
-                  <div className="mt-8 p-6 bg-blue-600 rounded-xl text-center">
+                  <div className="mt-8 p-6 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl text-center shadow-lg">
                     <div className="flex items-center justify-center gap-2 mb-2">
-                      <CheckCircle2 className="h-6 w-6 text-white" />
-                      <p className="text-white font-bold text-lg">Predicción completada</p>
+                      <Trophy className="h-6 w-6 text-yellow-400" />
+                      <p className="text-white font-bold text-lg">¡Ya estás participando!</p>
                     </div>
-                    <p className="text-white opacity-90">Esperando resultados oficiales para calcular puntuación</p>
+                    <p className="text-white opacity-90">Los resultados se publicarán el 10 de septiembre</p>
                   </div>
                 </CardContent>
               </Card>
@@ -597,7 +634,7 @@ export default function EventPage() {
                             id="ipc_general"
                             type="number"
                             step="0.1"
-                            min="0"
+                            min="-99.9"
                             max="99.9"
                             placeholder="Ej: 3.5"
                             value={formData.ipc_general}
@@ -615,7 +652,7 @@ export default function EventPage() {
                             id="ipc_bienes"
                             type="number"
                             step="0.1"
-                            min="0"
+                            min="-99.9"
                             max="99.9"
                             placeholder="Ej: 4.2"
                             value={formData.ipc_bienes}
@@ -633,7 +670,7 @@ export default function EventPage() {
                             id="ipc_servicios"
                             type="number"
                             step="0.1"
-                            min="0"
+                            min="-99.9"
                             max="99.9"
                             placeholder="Ej: 2.8"
                             value={formData.ipc_servicios}
@@ -651,7 +688,7 @@ export default function EventPage() {
                             id="ipc_alimentos_bebidas"
                             type="number"
                             step="0.1"
-                            min="0"
+                            min="-99.9"
                             max="99.9"
                             placeholder="Ej: 3.9"
                             value={formData.ipc_alimentos_bebidas}
