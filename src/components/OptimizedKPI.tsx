@@ -96,7 +96,7 @@ const OptimizedKPI: React.FC<OptimizedKPIProps> = ({ data }) => {
         
         {/* Evento banner */}
         <div className="flex justify-center mb-6 sm:mb-8 relative z-20">
-          <Link href="/eventos/7a52366f-9260-4d9d-b554-0c1b13868b27" className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 sm:px-4 bg-indec-blue/10 text-indec-blue text-xs sm:text-sm font-medium hover:bg-indec-blue/20 transition-all duration-200 cursor-pointer">
+          <Link href="/eventos/ipc-agosto-2025" className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 sm:px-4 bg-indec-blue/10 text-indec-blue text-xs sm:text-sm font-medium hover:bg-indec-blue/20 transition-all duration-200 cursor-pointer">
             <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
             <span>🏆 Evento Activo: Predice el IPC Agosto 2025 - ¡Gana USD 100!</span>
           </Link>

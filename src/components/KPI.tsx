@@ -124,7 +124,7 @@ const HeroWithMetrics = () => {
         
         {/* Evento banner */}
         <div className="flex justify-center mb-8 relative z-20">
-          <Link href="/eventos/7a52366f-9260-4d9d-b554-0c1b13868b27" className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 bg-indec-blue/10 text-indec-blue text-sm font-medium hover:bg-indec-blue/20 transition-all duration-200 cursor-pointer">
+          <Link href="/eventos/ipc-agosto-2025" className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 bg-indec-blue/10 text-indec-blue text-sm font-medium hover:bg-indec-blue/20 transition-all duration-200 cursor-pointer">
             <Sparkles className="h-4 w-4" />
             <span>🏆 Evento Activo: Predice el IPC Agosto 2025 - ¡Gana USD 100!</span>
           </Link>

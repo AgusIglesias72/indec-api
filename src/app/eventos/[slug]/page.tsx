@@ -19,9 +19,11 @@ import { es } from 'date-fns/locale';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
 import Leaderboard from '@/components/events/Leaderboard';
+import PredictionsTable from '@/components/events/PredictionsTable';
 
 interface Event {
   id: string;
+  slug: string;
   name: string;
   description: string;
   event_date: string;
@@ -85,12 +87,12 @@ export default function EventPage() {
   const { user, isLoaded } = useUser();
 
   useEffect(() => {
-    if (params.id && isLoaded) {
+    if (params.slug && isLoaded) {
       fetchEventData();
       const interval = setInterval(fetchStats, 5000); // Update stats every 5 seconds
       return () => clearInterval(interval);
     }
-  }, [params.id, isLoaded, user]);
+  }, [params.slug, isLoaded, user]);
 
   useEffect(() => {
     if (event?.submission_deadline) {
@@ -136,7 +138,7 @@ export default function EventPage() {
       const { data: eventData, error: eventError } = await supabase
         .from('events')
         .select('*')
-        .eq('id', params.id)
+        .eq('slug', params.slug)
         .single();
 
       if (eventError) throw eventError;
@@ -147,7 +149,7 @@ export default function EventPage() {
         const { data: existingPrediction } = await supabase
           .from('event_predictions')
           .select('*')
-          .eq('event_id', params.id)
+          .eq('event_id', eventData.id)
           .eq('user_id', user.id)
           .single();
         
@@ -160,7 +162,7 @@ export default function EventPage() {
       const { data: resultData } = await supabase
         .from('event_results')
         .select('ipc_general, ipc_bienes, ipc_servicios, ipc_alimentos_bebidas')
-        .eq('event_id', params.id)
+        .eq('event_id', eventData.id)
         .single();
       
       setEventResult(resultData);
@@ -180,7 +182,7 @@ export default function EventPage() {
       const { data: predictions } = await supabase
         .from('event_predictions')
         .select('ipc_general, ipc_bienes, ipc_servicios, ipc_alimentos_bebidas')
-        .eq('event_id', params.id);
+        .eq('event_id', event?.id);
 
       if (predictions && predictions.length > 0) {
         setStats({
@@ -241,7 +243,7 @@ export default function EventPage() {
 
       const prediction = {
         id: generateUUID(),
-        event_id: params.id as string,
+        event_id: event?.id as string,
         user_id: user.id,
         user_email: user.primaryEmailAddress?.emailAddress || 'unknown',
         ipc_general: standardizeDecimal(formData.ipc_general),
@@ -356,7 +358,7 @@ export default function EventPage() {
               "eventAttendanceMode": "https://schema.org/OnlineEventAttendanceMode",
               "location": {
                 "@type": "VirtualLocation",
-                "url": `https://argenstats.com/eventos/${event.id}`
+                "url": `https://argenstats.com/eventos/${event.slug}`
               },
               "organizer": {
                 "@type": "Organization",
@@ -372,8 +374,8 @@ export default function EventPage() {
                 "validThrough": event.submission_deadline
               },
               "isAccessibleForFree": true,
-              "url": `https://argenstats.com/eventos/${event.id}`,
-              "image": `https://argenstats.com/og-evento-${event.id}.jpg`,
+              "url": `https://argenstats.com/eventos/${event.slug}`,
+              "image": `https://argenstats.com/og-evento-${event.slug}.jpg`,
               "performer": {
                 "@type": "Organization",
                 "name": "INDEC",
@@ -531,11 +533,11 @@ export default function EventPage() {
             <TabsTrigger value="predict" className="text-base py-3 px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md transition-all duration-200">
               Mi Predicción
             </TabsTrigger>
+            <TabsTrigger value="predictions" className="text-base py-3 px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md transition-all duration-200">
+              Todas las Predicciones
+            </TabsTrigger>
             <TabsTrigger value="stats" className="text-base py-3 px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md transition-all duration-200">
               Estadísticas
-            </TabsTrigger>
-            <TabsTrigger value="terms" className="text-base py-3 px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md transition-all duration-200">
-              Términos
             </TabsTrigger>
             {eventResult && <TabsTrigger value="results" className="text-base py-3 px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md transition-all duration-200">Resultados</TabsTrigger>}
           </TabsList>
@@ -841,6 +843,14 @@ export default function EventPage() {
             </Card>
           </TabsContent>
           
+          <TabsContent value="predictions">
+            <PredictionsTable 
+              eventId={event?.id} 
+              showUserPrediction={!!userPrediction}
+              userPredictionId={userPrediction?.id}
+            />
+          </TabsContent>
+          
           <TabsContent value="terms">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Términos y Condiciones */}
@@ -994,7 +1004,7 @@ export default function EventPage() {
           
           {eventResult && (
             <TabsContent value="results">
-              <Leaderboard eventId={params.id as string} eventResults={eventResult} />
+              <Leaderboard eventId={event?.id as string} eventResults={eventResult} />
             </TabsContent>
           )}
         </Tabs>

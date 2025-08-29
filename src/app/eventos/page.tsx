@@ -14,6 +14,7 @@ import { motion } from 'framer-motion';
 
 interface Event {
   id: string;
+  slug: string;
   name: string;
   description: string;
   event_date: string;
@@ -22,6 +23,7 @@ interface Event {
   prize_currency: string;
   status: 'upcoming' | 'active' | 'closed' | 'finished';
   participant_count?: number;
+  avg_prediction?: string | null;
 }
 
 export default function EventsPage() {
@@ -42,22 +44,30 @@ export default function EventsPage() {
 
       if (eventsError) throw eventsError;
 
-      // Fetch participant count for each event
-      const eventsWithCounts = await Promise.all(
+      // Fetch participant count and stats for each event
+      const eventsWithStats = await Promise.all(
         (eventsData || []).map(async (event) => {
-          const { count } = await supabase
+          const { data: predictions, count } = await supabase
             .from('event_predictions')
-            .select('id', { count: 'exact', head: true })
+            .select('ipc_general')
             .eq('event_id', event.id);
+          
+          // Calculate average IPC prediction
+          let avgPrediction = null;
+          if (predictions && predictions.length > 0) {
+            const sum = predictions.reduce((acc, p) => acc + Number(p.ipc_general), 0);
+            avgPrediction = (sum / predictions.length).toFixed(2);
+          }
           
           return {
             ...event,
-            participant_count: (count || 0) + 27 // Agregar 27 participantes ficticios
+            participant_count: (count || 0) + 27, // Agregar 27 participantes ficticios
+            avg_prediction: avgPrediction
           };
         })
       );
 
-      setEvents(eventsWithCounts);
+      setEvents(eventsWithStats);
     } catch (error) {
       console.error('Error fetching events:', error);
     } finally {
@@ -169,11 +179,11 @@ export default function EventsPage() {
                 "description": event.description,
                 "startDate": event.event_date,
                 "endDate": event.submission_deadline,
-                "url": `https://argenstats.com/eventos/${event.id}`,
+                "url": `https://argenstats.com/eventos/${event.slug}`,
                 "eventStatus": event.status === 'active' ? 'https://schema.org/EventScheduled' : 'https://schema.org/EventScheduled',
                 "location": {
                   "@type": "VirtualLocation",
-                  "url": `https://argenstats.com/eventos/${event.id}`
+                  "url": `https://argenstats.com/eventos/${event.slug}`
                 },
                 "organizer": {
                   "@type": "Organization",
@@ -313,6 +323,9 @@ export default function EventsPage() {
                             <div>
                               <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Participantes</p>
                               <p className="text-xl font-bold text-green-600">{event.participant_count}</p>
+                              {event.avg_prediction && (
+                                <p className="text-xs text-gray-500 mt-1">Prom. IPC: <span className="font-semibold text-purple-600">{event.avg_prediction}%</span></p>
+                              )}
                             </div>
                             <motion.div
                               animate={{ scale: [1, 1.2, 1] }}
@@ -350,7 +363,7 @@ export default function EventsPage() {
                               ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg'
                               : 'bg-gray-500 hover:bg-gray-600 text-white'
                           }`}
-                          onClick={() => router.push(`/eventos/${event.id}`)}
+                          onClick={() => router.push(`/eventos/${event.slug}`)}
                           disabled={event.status === 'finished'}
                         >
                           {event.status === 'active' ? '🎯 Participar Ahora' : 
@@ -367,10 +380,10 @@ export default function EventsPage() {
                               navigator.share({
                                 title: `${event.name} - ArgenStats`,
                                 text: `¡Participa en el evento de predicción "${event.name}" y gana ${event.prize_currency} ${event.prize_amount}!`,
-                                url: `${window.location.origin}/eventos/${event.id}`
+                                url: `${window.location.origin}/eventos/${event.slug}`
                               });
                             } else {
-                              navigator.clipboard.writeText(`${window.location.origin}/eventos/${event.id}`);
+                              navigator.clipboard.writeText(`${window.location.origin}/eventos/${event.slug}`);
                               // Aquí podrías mostrar un toast de confirmación
                             }
                           }}
