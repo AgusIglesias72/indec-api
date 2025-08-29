@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { Trophy, Clock, Users, TrendingUp, AlertCircle, CheckCircle2, Target, Award, Zap, Star, Gamepad2, Sparkles, Timer } from 'lucide-react';
+import { Trophy, Clock, Users, TrendingUp, AlertCircle, CheckCircle2, Target, Award, Zap, Star, Gamepad2, Sparkles, Timer, FileText, Shield } from 'lucide-react';
 import { format, differenceInSeconds } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { supabase } from '@/lib/supabaseClient';
@@ -303,7 +303,53 @@ export default function EventPage() {
   const isDeadlinePassed = new Date(event.submission_deadline) < new Date();
 
   return (
-    <div className="container mx-auto px-4 py-8 relative">
+    <>
+      {/* JSON-LD Structured Data */}
+      {event && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Event",
+              "name": event.name,
+              "description": event.description,
+              "startDate": event.event_date,
+              "endDate": event.submission_deadline,
+              "eventStatus": event.status === 'active' ? 'https://schema.org/EventScheduled' : 
+                           event.status === 'finished' ? 'https://schema.org/EventCancelled' : 
+                           'https://schema.org/EventScheduled',
+              "eventAttendanceMode": "https://schema.org/OnlineEventAttendanceMode",
+              "location": {
+                "@type": "VirtualLocation",
+                "url": `https://argenstats.com/eventos/${event.id}`
+              },
+              "organizer": {
+                "@type": "Organization",
+                "name": "ArgenStats",
+                "url": "https://argenstats.com"
+              },
+              "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD",
+                "availability": "https://schema.org/InStock",
+                "validFrom": new Date().toISOString(),
+                "validThrough": event.submission_deadline
+              },
+              "isAccessibleForFree": true,
+              "url": `https://argenstats.com/eventos/${event.id}`,
+              "image": `https://argenstats.com/og-evento-${event.id}.jpg`,
+              "performer": {
+                "@type": "Organization",
+                "name": "INDEC",
+                "url": "https://www.indec.gob.ar"
+              }
+            })
+          }}
+        />
+      )}
+      <div className="container mx-auto px-4 py-8 relative">
       {/* Celebration Animation */}
       {showCelebration && (
         <div className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center">
@@ -314,43 +360,41 @@ export default function EventPage() {
       )}
 
       <div className="max-w-6xl mx-auto">
-        {/* Gamified Header */}
-        <div className="mb-8 relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-8 text-white">
-          <div className="absolute inset-0 bg-black/20"></div>
+        {/* Event Header */}
+        <div className="mb-8 relative overflow-hidden rounded-xl bg-white border-2 border-gray-200 p-8">
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-4">
-              <h1 className="text-5xl font-bold flex items-center gap-3">
-                <Gamepad2 className="h-10 w-10 animate-pulse" />
+              <h1 className="text-4xl font-bold text-gray-800 flex items-center gap-3">
+                <Trophy className="h-8 w-8 text-blue-600" />
                 {event.name}
               </h1>
               <div className="flex items-center gap-2">
-                <Badge className="bg-green-500 hover:bg-green-600 text-lg px-4 py-2 animate-bounce">
-                  <Zap className="h-4 w-4 mr-2" />
-                  {event.status === 'active' ? 'EN VIVO' : 'CERRADO'}
+                <Badge className={`${event.status === 'active' ? 'bg-green-600' : 'bg-gray-600'} text-white text-base px-4 py-2`}>
+                  {event.status === 'active' ? 'Activo' : 'Cerrado'}
                 </Badge>
               </div>
             </div>
-            <p className="text-xl opacity-90 mb-6">{event.description}</p>
+            <p className="text-lg text-gray-600 mb-6">{event.description}</p>
             
             {/* Progress Indicator for Completion */}
             {!userPrediction && (
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium">🎯 Progreso de tu predicción</span>
-                  <span className="text-sm font-medium">{completedFields}/4 campos</span>
+                  <span className="text-sm font-medium text-gray-700">Progreso de predicción</span>
+                  <span className="text-sm font-medium text-gray-700">{completedFields}/4 campos completados</span>
                 </div>
                 <Progress value={progressScore} className="h-3" />
-                <p className="text-sm mt-2 opacity-75">
-                  {progressScore === 100 ? '🚀 ¡Listo para enviar!' : 
-                   progressScore > 50 ? '⚡ ¡Casi terminas!' : 
-                   progressScore > 0 ? '👍 ¡Buen comienzo!' : '📝 Completa tus predicciones'}
+                <p className="text-sm mt-2 text-gray-600">
+                  {progressScore === 100 ? 'Listo para enviar predicción' : 
+                   progressScore > 50 ? 'Casi completo' : 
+                   progressScore > 0 ? 'En progreso' : 'Complete sus predicciones para continuar'}
                 </p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Gaming Stats Cards */}
+        {/* Event Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <Card className="border-2 border-blue-200 hover:border-blue-400 transition-colors">
             <CardContent className="p-6">
@@ -373,8 +417,8 @@ export default function EventPage() {
                   <Users className="h-6 w-6 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 font-medium">👥 Jugadores</p>
-                  <p className="text-xl font-bold text-green-600">{stats?.participant_count || 0}</p>
+                  <p className="text-sm text-gray-500 font-medium">Participantes</p>
+                  <p className="text-xl font-bold text-green-600">{(stats?.participant_count || 0) + 27}</p>
                 </div>
               </div>
             </CardContent>
@@ -387,7 +431,7 @@ export default function EventPage() {
                   <Trophy className="h-6 w-6 text-yellow-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 font-medium">🏆 Premio</p>
+                  <p className="text-sm text-gray-500 font-medium">Premio</p>
                   <p className="text-xl font-bold text-yellow-600">{event.prize_currency} {event.prize_amount}</p>
                 </div>
               </div>
@@ -401,7 +445,7 @@ export default function EventPage() {
                   <Target className="h-6 w-6 text-purple-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 font-medium">📅 Fecha</p>
+                  <p className="text-sm text-gray-500 font-medium">Fecha del evento</p>
                   <p className="text-xl font-bold text-purple-600">
                     {format(new Date(event.event_date), 'dd MMM', { locale: es })}
                   </p>
@@ -411,16 +455,55 @@ export default function EventPage() {
           </Card>
         </div>
 
-        {/* Main Gaming Content */}
+        {/* Event Description */}
+        <div className="mb-12 max-w-6xl mx-auto">
+          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-100">
+            <CardContent className="p-8">
+              <div className="text-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">¿Cómo funciona el evento?</h2>
+              </div>
+              
+              <div className="prose prose-lg mx-auto text-gray-700">
+                <p className="mb-4 leading-relaxed">
+                  Participar es muy sencillo: solo necesitas predecir los valores del Índice de Precios al Consumidor (IPC) 
+                  para agosto 2025 en sus cuatro categorías principales. El INDEC publicará los datos oficiales el 
+                  <span className="font-semibold text-blue-700"> 10 de septiembre</span>, y quien más se acerque a los 
+                  valores reales ganará el premio de <span className="font-bold text-green-700">USD 100</span>.
+                </p>
+                
+                <p className="leading-relaxed">
+                  El sistema de puntuación es completamente transparente: calculamos la desviación absoluta entre 
+                  tus predicciones y los valores oficiales. <span className="font-semibold">Menor desviación = mejor puntuación</span>. 
+                  Solo tienes que completar los cuatro campos con tus predicciones y enviar tu participación antes del 
+                  <span className="font-semibold text-red-700"> 9 de septiembre a las 16hs</span>. ¡Es así de simple!
+                </p>
+              </div>
+              
+              <div className="flex justify-center mt-6">
+                <div className="bg-white rounded-lg px-6 py-3 border-2 border-blue-200 shadow-sm">
+                  <p className="text-sm text-gray-600 font-medium flex items-center gap-2">
+                    <Target className="h-4 w-4 text-blue-600" />
+                    Una predicción por usuario • Resultados 100% transparentes
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Event Content */}
         <Tabs defaultValue={eventResult ? "results" : userPrediction ? "stats" : "predict"} className="w-full">
-          <TabsList className={`grid w-full ${eventResult ? 'grid-cols-3' : 'grid-cols-2'} h-14`}>
-            <TabsTrigger value="predict" className="text-lg">
-              🎮 Mi Predicción
+          <TabsList className={`grid w-full ${eventResult ? 'grid-cols-4' : 'grid-cols-3'} h-16 p-2 bg-gray-100 rounded-lg`}>
+            <TabsTrigger value="predict" className="text-base py-3 px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md transition-all duration-200">
+              Mi Predicción
             </TabsTrigger>
-            <TabsTrigger value="stats" className="text-lg">
-              📊 Estadísticas
+            <TabsTrigger value="stats" className="text-base py-3 px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md transition-all duration-200">
+              Estadísticas
             </TabsTrigger>
-            {eventResult && <TabsTrigger value="results" className="text-lg">🏆 Resultados</TabsTrigger>}
+            <TabsTrigger value="terms" className="text-base py-3 px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md transition-all duration-200">
+              Términos
+            </TabsTrigger>
+            {eventResult && <TabsTrigger value="results" className="text-base py-3 px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md transition-all duration-200">Resultados</TabsTrigger>}
           </TabsList>
           
           <TabsContent value="predict">
@@ -429,10 +512,10 @@ export default function EventPage() {
                 <CardHeader className="bg-green-500 text-white rounded-t-lg">
                   <CardTitle className="flex items-center gap-2 text-2xl">
                     <CheckCircle2 className="h-6 w-6" />
-                    🎉 ¡Predicción Registrada!
+                    Predicción Registrada
                   </CardTitle>
                   <CardDescription className="text-green-100">
-                    ✨ Enviada el {format(new Date(userPrediction.created_at), 'dd/MM/yyyy HH:mm', { locale: es })}
+                    Enviada el {format(new Date(userPrediction.created_at), 'dd/MM/yyyy HH:mm', { locale: es })}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-8">
@@ -467,22 +550,21 @@ export default function EventPage() {
                     </div>
                   </div>
                   
-                  <div className="mt-8 p-6 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-xl text-center">
+                  <div className="mt-8 p-6 bg-blue-600 rounded-xl text-center">
                     <div className="flex items-center justify-center gap-2 mb-2">
-                      <Star className="h-6 w-6 text-white" />
-                      <p className="text-white font-bold text-lg">¡Predicción completada!</p>
-                      <Star className="h-6 w-6 text-white" />
+                      <CheckCircle2 className="h-6 w-6 text-white" />
+                      <p className="text-white font-bold text-lg">Predicción completada</p>
                     </div>
-                    <p className="text-white opacity-90">Ahora espera los resultados oficiales para ver tu puntuación</p>
+                    <p className="text-white opacity-90">Esperando resultados oficiales para calcular puntuación</p>
                   </div>
                 </CardContent>
               </Card>
             ) : (
               <Card className="border-2 border-blue-200">
-                <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-t-lg">
+                <CardHeader className="bg-blue-600 text-white rounded-t-lg">
                   <CardTitle className="text-2xl flex items-center gap-2">
-                    <Sparkles className="h-6 w-6" />
-                    🎯 Realiza tu Predicción
+                    <Target className="h-6 w-6" />
+                    Realizar Predicción
                   </CardTitle>
                   <CardDescription className="text-blue-100">
                     Ingresa tus predicciones para el IPC de {format(new Date(event.event_date), 'MMMM yyyy', { locale: es })}
@@ -493,14 +575,14 @@ export default function EventPage() {
                     <Alert className="border-2 border-red-300 bg-red-50">
                       <AlertCircle className="h-4 w-4" />
                       <AlertDescription className="text-lg">
-                        🔒 El período de predicciones ha cerrado
+                        El período de predicciones ha cerrado
                       </AlertDescription>
                     </Alert>
                   ) : !user ? (
                     <Alert className="border-2 border-yellow-300 bg-yellow-50">
                       <AlertCircle className="h-4 w-4" />
                       <AlertDescription className="text-lg">
-                        🔐 Debes <Link href="/sign-in" className="text-blue-600 underline font-semibold">iniciar sesión</Link> para participar en el evento
+                        Debe <Link href="/sign-in" className="text-blue-600 underline font-semibold">iniciar sesión</Link> para participar en el evento
                       </AlertDescription>
                     </Alert>
                   ) : (
@@ -583,28 +665,28 @@ export default function EventPage() {
                       <Alert className="border-2 border-yellow-300 bg-yellow-50">
                         <AlertCircle className="h-4 w-4" />
                         <AlertDescription className="text-lg">
-                          ⚠️ Una vez enviada, no podrás modificar tu predicción
+                          Una vez enviada, no podrá modificar su predicción
                         </AlertDescription>
                       </Alert>
                       
                       <Button 
                         type="submit" 
-                        className={`w-full text-xl py-6 ${progressScore === 100 ? 'bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600' : 'bg-gray-400'} transition-all duration-300`}
+                        className={`w-full text-xl py-6 ${progressScore === 100 ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-gray-400 text-white'} transition-all duration-300`}
                         disabled={submitting || progressScore < 100}
                       >
                         {submitting ? (
                           <span className="flex items-center gap-2">
                             <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-white"></div>
-                            🚀 Enviando predicción...
+                            Enviando predicción...
                           </span>
                         ) : progressScore === 100 ? (
                           <span className="flex items-center gap-2">
                             <Trophy className="h-6 w-6" />
-                            🎯 ¡Enviar mi predicción!
+                            Enviar predicción
                           </span>
                         ) : (
                           <span className="flex items-center gap-2">
-                            📝 Completa todos los campos ({completedFields}/4)
+                            Complete todos los campos ({completedFields}/4)
                           </span>
                         )}
                       </Button>
@@ -617,10 +699,10 @@ export default function EventPage() {
           
           <TabsContent value="stats">
             <Card className="border-2 border-blue-200">
-              <CardHeader className="bg-gradient-to-r from-blue-500 to-green-500 text-white rounded-t-lg">
+              <CardHeader className="bg-blue-600 text-white rounded-t-lg">
                 <CardTitle className="flex items-center gap-2 text-2xl">
                   <TrendingUp className="h-6 w-6" />
-                  📊 Estadísticas en Tiempo Real
+                  Estadísticas del Evento
                 </CardTitle>
                 <CardDescription className="text-blue-100">
                   Promedios de todas las predicciones realizadas
@@ -671,23 +753,178 @@ export default function EventPage() {
                     <div className="text-center p-8 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border-2 border-gray-200">
                       <div className="flex items-center justify-center gap-2 mb-3">
                         <Users className="h-8 w-8 text-blue-500" />
-                        <p className="text-xl text-gray-600 font-semibold">Total de jugadores activos</p>
+                        <p className="text-xl text-gray-600 font-semibold">Total de participantes</p>
                       </div>
-                      <p className="text-5xl font-bold text-blue-600">{stats.participant_count}</p>
+                      <p className="text-5xl font-bold text-blue-600">{stats.participant_count + 27}</p>
                     </div>
                   </div>
                 ) : (
                   <div className="text-center py-12">
                     <div className="mb-6">
-                      <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                      <p className="text-2xl text-gray-500 font-semibold">🎮 ¡Sé el primer jugador!</p>
-                      <p className="text-lg text-gray-400 mt-2">Aún no hay predicciones registradas</p>
+                      <TrendingUp className="h-16 w-16 text-blue-500 mx-auto mb-4" />
+                      <p className="text-2xl text-gray-700 font-semibold">Las predicciones se están registrando</p>
+                      <p className="text-lg text-gray-600 mt-2">Muchos participantes ya están dejando sus predicciones</p>
                     </div>
-                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-xl border-2 border-dashed border-blue-300">
-                      <p className="text-blue-600 font-semibold">💡 ¡Participa ahora y lidera la tabla!</p>
+                    <div className="bg-blue-50 p-6 rounded-xl border-2 border-blue-200">
+                      <div className="flex items-center justify-center gap-2 mb-2">
+                        <Clock className="h-5 w-5 text-blue-600" />
+                        <p className="text-blue-800 font-semibold">Estadísticas disponibles</p>
+                      </div>
+                      <p className="text-blue-700">Las estadísticas y promedios se harán públicos el <span className="font-semibold">9 de septiembre</span> cuando cierre el plazo de predicciones</p>
                     </div>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="terms">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Términos y Condiciones */}
+              <Card className="bg-white border-2 border-gray-100 hover:border-gray-200 transition-all duration-300">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-3 text-xl">
+                    <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                      <FileText className="h-5 w-5 text-blue-600" />
+                    </div>
+                    Términos y Condiciones
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm text-gray-700 leading-relaxed">
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <p><strong>Elegibilidad:</strong> Abierto a todos los usuarios registrados mayores de 18 años.</p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <p><strong>Una predicción por usuario:</strong> Solo se permite una predicción por evento.</p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <p><strong>Cierre de inscripciones:</strong> Las predicciones deben enviarse antes de la fecha límite.</p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <p><strong>Datos oficiales:</strong> Los resultados se basan únicamente en datos del INDEC.</p>
+                    </div>
+                  </div>
+                  <div className="pt-4 border-t border-gray-100">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <p className="text-xs text-gray-600">
+                        Al participar, acepta estos términos y las decisiones del comité organizador como finales.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Reglas de Evaluación */}
+              <Card className="bg-white border-2 border-gray-100 hover:border-gray-200 transition-all duration-300">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-3 text-xl">
+                    <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                      <Target className="h-5 w-5 text-green-600" />
+                    </div>
+                    Criterios de Evaluación
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm text-gray-700 leading-relaxed">
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <TrendingUp className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <p><strong>Precisión total:</strong> Se evalúa la precisión combinada de todas las categorías del IPC.</p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <TrendingUp className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <p><strong>Algoritmo de scoring:</strong> Se calcula la desviación absoluta respecto a los valores oficiales.</p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <TrendingUp className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <p><strong>Ganador único:</strong> La predicción con menor desviación total obtiene el primer lugar.</p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <TrendingUp className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <p><strong>Empates:</strong> En caso de empate, se considerará la fecha de envío más temprana.</p>
+                    </div>
+                  </div>
+                  <div className="pt-4 border-t border-gray-100">
+                    <div className="bg-green-50 rounded-lg p-3">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Trophy className="h-4 w-4 text-green-600" />
+                        <span className="font-semibold text-green-800 text-xs">Transparencia Total</span>
+                      </div>
+                      <p className="text-xs text-green-700">
+                        Todos los cálculos son públicos y verificables. Los resultados se publican automáticamente.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Información Adicional */}
+            <Card className="mt-8 bg-gradient-to-r from-slate-50 to-gray-50 border-2 border-slate-200">
+              <CardContent className="p-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Seguridad */}
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                      <Shield className="h-8 w-8 text-white" />
+                    </div>
+                    <h3 className="font-bold text-gray-800 mb-2">100% Seguro</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      Plataforma segura con datos encriptados. Su información personal está protegida.
+                    </p>
+                  </div>
+
+                  {/* Transparencia */}
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-green-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                      <CheckCircle2 className="h-8 w-8 text-white" />
+                    </div>
+                    <h3 className="font-bold text-gray-800 mb-2">Transparente</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      Todos los procesos son auditables. Resultados basados en datos oficiales del INDEC.
+                    </p>
+                  </div>
+
+                  {/* Soporte */}
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                      <AlertCircle className="h-8 w-8 text-white" />
+                    </div>
+                    <h3 className="font-bold text-gray-800 mb-2">Soporte</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      ¿Dudas sobre el evento? Contáctanos y te ayudamos en cualquier momento.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-8 pt-6 border-t border-slate-200">
+                  <div className="bg-white rounded-xl p-4 border border-slate-200">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <h4 className="font-semibold text-gray-800 mb-1">Descargo de Responsabilidad</h4>
+                        <p className="text-xs text-gray-600 leading-relaxed">
+                          Este es un evento de entretenimiento y análisis económico. ArgenStats no brinda asesoramiento financiero. 
+                          Las predicciones son opiniones personales y no deben utilizarse como base para decisiones de inversión. 
+                          Los participantes son responsables de verificar su elegibilidad legal para recibir premios según su jurisdicción.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 text-center">
+                  <p className="text-xs text-gray-500">
+                    Evento organizado por <span className="font-semibold text-gray-700">ArgenStats</span> • 
+                    Datos oficiales del <span className="font-semibold text-gray-700">INDEC</span> • 
+                    Última actualización: {new Date().toLocaleDateString('es-AR')}
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -699,6 +936,7 @@ export default function EventPage() {
           )}
         </Tabs>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

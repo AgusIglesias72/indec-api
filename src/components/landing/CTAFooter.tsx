@@ -49,11 +49,21 @@ export default function Footer() {
               <Link href="/dolar" className="text-sm text-gray-400 hover:text-white transition-colors duration-300 hover:translate-x-1 transform flex items-center gap-2">
                 Conversor de Divisas
               </Link>
-              <Link href="/eventos" className="text-sm text-gray-400 hover:text-white transition-colors duration-300 hover:translate-x-1 transform flex items-center gap-2">
-                Eventos IPC <span className="text-xs bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded">Nuevo</span>
-              </Link>
               <Link href="/calendario" className="text-sm text-gray-400 hover:text-white transition-colors duration-300 hover:translate-x-1 transform flex items-center gap-2">
                 Calendario INDEC
+              </Link>
+            </nav>
+          </div>
+          
+          {/* Eventos */}
+          <div>
+            <h3 className="mb-6 text-lg font-semibold text-white flex items-center gap-2">
+              <Trophy className="h-4 w-4 text-green-500" />
+              Eventos
+            </h3>
+            <nav className="flex flex-col space-y-3">
+              <Link href="/eventos" className="text-sm text-gray-400 hover:text-white transition-colors duration-300 hover:translate-x-1 transform">
+                Eventos de Predicción <span className="text-xs bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded">Activo</span>
               </Link>
             </nav>
           </div>
@@ -79,28 +89,6 @@ export default function Footer() {
               </Link>
               <Link href="/indicadores/pobreza" className="text-sm text-gray-400 hover:text-white transition-colors duration-300 hover:translate-x-1 transform">
                 Pobreza e Indigencia
-              </Link>
-            </nav>
-          </div>
-          
-          {/* API & Desarrolladores */}
-          <div>
-            <h3 className="mb-6 text-lg font-semibold text-white flex items-center gap-2">
-              <Code className="h-4 w-4 text-cyan-500" />
-              Desarrolladores
-            </h3>
-            <nav className="flex flex-col space-y-3">
-              <Link href="/documentacion" className="text-sm text-gray-400 hover:text-white transition-colors duration-300 hover:translate-x-1 transform">
-                Documentación API
-              </Link>
-              <Link href="/documentacion#endpoints" className="text-sm text-gray-400 hover:text-white transition-colors duration-300 hover:translate-x-1 transform">
-                Endpoints
-              </Link>
-              <Link href="/documentacion#ejemplos" className="text-sm text-gray-400 hover:text-white transition-colors duration-300 hover:translate-x-1 transform">
-                Ejemplos de Código
-              </Link>
-              <Link href="/profile" className="text-sm text-gray-400 hover:text-white transition-colors duration-300 hover:translate-x-1 transform">
-                API Keys
               </Link>
             </nav>
           </div>

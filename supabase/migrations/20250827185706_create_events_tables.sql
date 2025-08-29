@@ -108,7 +108,7 @@ INSERT INTO events (
 ) VALUES (
   'IPC Agosto 2025',
   'Predice los valores del IPC de agosto 2025 y gana US$ 100',
-  '2025-09-12T15:00:00Z', -- When INDEC typically releases data
+  '2025-09-10T15:00:00Z', -- When INDEC typically releases data (10th of September)
   '2025-09-09T19:00:00Z', -- September 9 at 19 GMT
   100.00,
   'USD',

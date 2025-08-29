@@ -51,7 +51,7 @@ async function handler(request: NextRequest) {
     const order = searchParams.get('order') || 'desc';
     const autoPaginate = searchParams.get('auto_paginate') !== 'false';
     const useRawData = searchParams.get('raw_data') === 'true';
-    console.info('useRawData parameter:', useRawData); // Debug log
+    // console.info('useRawData parameter:', useRawData); // Debug log deshabilitado
     
     // Validar parámetros
     const validTypes = [

@@ -1,6 +1,6 @@
 // src/app/page.tsx (Optimized Home Page)
 import { Metadata } from 'next';
-import { lazy, Suspense } from 'react';
+import React from 'react';
 import { homeMetadata } from '@/lib/metadata';
 import OptimizedKPI from '@/components/OptimizedKPI';
 import { getKPIDataFromDB, fallbackKPIData } from '@/lib/kpi-db-queries';
@@ -8,37 +8,15 @@ import { CriticalStructuredData } from '@/components/StructuredData';
 import { OrganizationSchema, WebsiteSchema } from '@/components/StructuredData';
 import PreloadResources, { homePagePreloads } from '@/components/PreloadResources';
 
-// Lazy load heavy components to improve initial page load
-// Dollar Converter gets priority preloading since it's high-conversion
-const DollarConverterSection = lazy(() => 
-  import('@/components/landing/DollarConverterSection').then(module => {
-    // Preload dollar API data
-    if (typeof window !== 'undefined') {
-      fetch('/api/dollar?type=latest').catch(() => {});
-    }
-    return module;
-  })
-);
+// Import components
+import DollarConverterSection from '@/components/landing/DollarConverterSection';
+import InflationCalculatorSection from '@/components/landing/InflationCalculatorSection';
 
-const InflationCalculatorSection = lazy(() => 
-  import('@/components/landing/InflationCalculatorSection').then(module => {
-    // Preload CER API data
-    if (typeof window !== 'undefined') {
-      fetch('/api/cer?type=latest').catch(() => {});
-    }
-    return module;
-  })
-);
-
-const RiskCountryPromoSection = lazy(() => import('@/components/landing/RiskCountryPromoSection'));
-const IPCPromoSection = lazy(() => import('@/components/landing/IPCPromoSection'));
-const PovertyPromoSection = lazy(() => import('@/components/landing/PovertyPromoSection'));
-const APISection = lazy(() => import("@/components/landing/ApiSection").then(module => ({
-  default: module.default
-})));
-// const Indicators = lazy(() => import("@/components/landing/Indicators"));
-// const EmploymentSection = lazy(() => import('@/components/landing/LaborMarket'));
-const NetworkGraph = lazy(() => import('@/components/Newsletter'));
+import RiskCountryPromoSection from '@/components/landing/RiskCountryPromoSection';
+import IPCPromoSection from '@/components/landing/IPCPromoSection';
+import PovertyPromoSection from '@/components/landing/PovertyPromoSection';
+import APISection from '@/components/landing/ApiSection';
+import NetworkGraph from '@/components/Newsletter';
 
 // Preload commented components for potential future use
 // const HeaderHero = lazy(() => import("@/components/landing/HeaderHero"));
@@ -126,29 +104,19 @@ export default async function HomePage() {
         <OptimizedKPI data={kpiData} />
       
       {/* Dollar Converter Section - High engagement feature */}
-      <Suspense fallback={<SectionSkeleton height="800px" title="Conversor de Divisas" />}>
-        <DollarConverterSection />
-      </Suspense>
+      <DollarConverterSection />
       
       {/* Inflation Calculator Section - New feature showcase */}
-      <Suspense fallback={<SectionSkeleton height="800px" title="Calculadora de Inflación" />}>
-        <InflationCalculatorSection />
-      </Suspense>
+      <InflationCalculatorSection />
       
       {/* Risk Country Promotion Section - API advantage showcase */}
-      <Suspense fallback={<SectionSkeleton height="600px" title="Riesgo País" />}>
-        <RiskCountryPromoSection />
-      </Suspense>
+      <RiskCountryPromoSection />
       
       {/* IPC Promotion Section - Inflation analysis showcase */}
-      <Suspense fallback={<SectionSkeleton height="600px" title="IPC - Índice de Precios" />}>
-        <IPCPromoSection />
-      </Suspense>
+      <IPCPromoSection />
       
       {/* Poverty Promotion Section - Social indicators showcase */}
-      <Suspense fallback={<SectionSkeleton height="600px" title="Pobreza e Indigencia" />}>
-        <PovertyPromoSection />
-      </Suspense>
+      <PovertyPromoSection />
       
       {/* Heavy components are lazy loaded with professional skeletons */}
       {/* Employment section removed from landing */}
@@ -156,18 +124,14 @@ export default async function HomePage() {
         <EmploymentSection />
       </Suspense> */}
       
-      <Suspense fallback={<SectionSkeleton height="400px" title="API Documentation" />}>
-        <APISection />
-      </Suspense>
+      <APISection />
       
       {/* Indicators section removed from landing */}
       {/* <Suspense fallback={<SectionSkeleton height="600px" title="Indicadores Económicos" />}>
         <Indicators />
       </Suspense> */}
       
-      <Suspense fallback={<SectionSkeleton height="300px" />}>
-        <NetworkGraph />
-      </Suspense>
+      <NetworkGraph />
       </div>
     </>
   )

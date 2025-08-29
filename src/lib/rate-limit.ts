@@ -32,8 +32,8 @@ export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult>
     const referer = req.headers.get('referer')
     const userAgent = req.headers.get('user-agent') || ''
     
-    // Debug logging para headers
-    console.log('Rate limit headers:', { origin, host, referer, userAgent: userAgent.substring(0, 50) + '...' })
+    // Debug logging para headers (deshabilitado)
+    // console.log('Rate limit headers:', { origin, host, referer, userAgent: userAgent.substring(0, 50) + '...' })
     
     // Lista de dominios permitidos sin API key
     const allowedDomains = [
@@ -79,7 +79,7 @@ export async function checkRateLimit(req: NextRequest): Promise<RateLimitResult>
     // NUEVA LÓGICA: SIN RATE LIMITING
     // Si es desde localhost, permitir sin límites (desarrollo)
     if (host && host.includes('localhost')) {
-      console.info('Localhost request detected, allowing without limits', { host, origin, referer })
+      // console.info('Localhost request detected, allowing without limits', { host, origin, referer })
       return {
         success: true,
         limit: 999999,

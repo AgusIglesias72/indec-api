@@ -33,7 +33,8 @@ import {
   ExternalLink,
   LayoutDashboard,
   Calculator,
-  Wrench
+  Wrench,
+  Trophy
 } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
@@ -399,6 +400,81 @@ export default function ProfilePage() {
                   </CardContent>
                 </Card>
 
+                {/* Eventos Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Trophy className="h-5 w-5 text-yellow-600" />
+                      Eventos de Predicción
+                    </CardTitle>
+                    <CardDescription>Participa en nuestros eventos y gana premios</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Evento Activo */}
+                    <div className="border rounded-lg p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+                      <Link href="/eventos" className="flex items-center gap-3 group">
+                        <div className="h-12 w-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
+                          <Trophy className="h-6 w-6 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-semibold text-green-900 group-hover:text-green-700 transition-colors">
+                              IPC Agosto 2025
+                            </h4>
+                            <Badge className="bg-green-600 text-white text-xs px-2 py-1">ACTIVO</Badge>
+                          </div>
+                          <p className="text-sm text-green-700 mb-2">
+                            Predice los valores del IPC de agosto 2025 y gana US$ 100
+                          </p>
+                          <div className="flex items-center gap-4 text-xs text-green-600">
+                            <span>🎯 27 participantes</span>
+                            <span>⏰ Cierra: 09 sep</span>
+                            <span>💰 USD 100</span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-center gap-1">
+                          <ExternalLink className="h-4 w-4 text-green-500 group-hover:text-green-700 transition-colors" />
+                          <span className="text-xs text-green-600 font-medium">Participar</span>
+                        </div>
+                      </Link>
+                    </div>
+
+                    {/* Próximos Eventos */}
+                    <div className="border rounded-lg p-4 bg-gray-50/50">
+                      <div className="flex items-center gap-3">
+                        <div className="h-12 w-12 bg-gray-100 rounded-xl flex items-center justify-center relative">
+                          <Trophy className="h-6 w-6 text-gray-400" />
+                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">+</span>
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-700">
+                            Más Eventos Próximamente
+                          </h4>
+                          <p className="text-sm text-gray-500 mb-2">
+                            Estamos preparando más eventos de predicción económica
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className="text-xs">Newsletter</Badge>
+                            <span className="text-xs text-gray-500">para estar al día</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 text-center">
+                      <Button variant="outline" asChild className="w-full border-2 border-yellow-200 hover:bg-yellow-50 hover:border-yellow-300">
+                        <Link href="/eventos" className="flex items-center gap-2">
+                          <Trophy className="h-4 w-4 text-yellow-600" />
+                          Ver Todos los Eventos
+                          <ExternalLink className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
                 {/* Herramientas Section */}
                 <Card>
                   <CardHeader>
@@ -682,6 +758,13 @@ export default function ProfilePage() {
                   <CardTitle>Enlaces Útiles</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
+                  <Button variant="outline" className="w-full justify-start" asChild>
+                    <a href="/eventos" target="_blank">
+                      <Trophy className="h-4 w-4 mr-2 text-yellow-600" />
+                      Eventos de Predicción
+                      <ExternalLink className="h-4 w-4 ml-auto" />
+                    </a>
+                  </Button>
                   <Button variant="outline" className="w-full justify-start" asChild>
                     <a href="/documentacion" target="_blank">
                       <Code className="h-4 w-4 mr-2" />

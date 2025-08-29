@@ -61,7 +61,8 @@
       "Bash(mv:*)",
       "mcp__supabase__execute_sql",
       "Bash(npx next:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"
