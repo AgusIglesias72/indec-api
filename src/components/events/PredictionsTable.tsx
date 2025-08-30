@@ -57,14 +57,23 @@ export default function PredictionsTable({ eventId, showUserPrediction = false, 
       if (data && data.length > 0) {
         setPredictions(data);
         
-        // Calculate statistics
-        const total = data.length;
+        // Calculate medians instead of averages
+        const sortedGeneral = [...data].map(p => Number(p.ipc_general)).sort((a, b) => a - b);
+        const sortedBienes = [...data].map(p => Number(p.ipc_bienes)).sort((a, b) => a - b);
+        const sortedServicios = [...data].map(p => Number(p.ipc_servicios)).sort((a, b) => a - b);
+        const sortedAlimentos = [...data].map(p => Number(p.ipc_alimentos_bebidas)).sort((a, b) => a - b);
+        
+        const getMedian = (arr: number[]) => {
+          const mid = Math.floor(arr.length / 2);
+          return arr.length % 2 !== 0 ? arr[mid] : (arr[mid - 1] + arr[mid]) / 2;
+        };
+        
         const stats = {
-          avg_general: data.reduce((sum, p) => sum + Number(p.ipc_general), 0) / total,
-          avg_bienes: data.reduce((sum, p) => sum + Number(p.ipc_bienes), 0) / total,
-          avg_servicios: data.reduce((sum, p) => sum + Number(p.ipc_servicios), 0) / total,
-          avg_alimentos: data.reduce((sum, p) => sum + Number(p.ipc_alimentos_bebidas), 0) / total,
-          total: total + 27 // Add 27 fictional participants
+          avg_general: getMedian(sortedGeneral),
+          avg_bienes: getMedian(sortedBienes),
+          avg_servicios: getMedian(sortedServicios),
+          avg_alimentos: getMedian(sortedAlimentos),
+          total: data.length + 50 // Add 50 fictional participants
         };
         setStats(stats);
       }
@@ -130,7 +139,7 @@ export default function PredictionsTable({ eventId, showUserPrediction = false, 
                 <p className="text-xs font-medium text-gray-600">IPC General</p>
               </div>
               <p className="text-2xl font-bold text-blue-600">{stats.avg_general.toFixed(2)}%</p>
-              <p className="text-xs text-gray-500 mt-1">Promedio</p>
+              <p className="text-xs text-gray-500 mt-1">Mediana</p>
             </motion.div>
 
             <motion.div 
@@ -144,7 +153,7 @@ export default function PredictionsTable({ eventId, showUserPrediction = false, 
                 <p className="text-xs font-medium text-gray-600">Bienes</p>
               </div>
               <p className="text-2xl font-bold text-green-600">{stats.avg_bienes.toFixed(2)}%</p>
-              <p className="text-xs text-gray-500 mt-1">Promedio</p>
+              <p className="text-xs text-gray-500 mt-1">Mediana</p>
             </motion.div>
 
             <motion.div 
@@ -158,7 +167,7 @@ export default function PredictionsTable({ eventId, showUserPrediction = false, 
                 <p className="text-xs font-medium text-gray-600">Servicios</p>
               </div>
               <p className="text-2xl font-bold text-purple-600">{stats.avg_servicios.toFixed(2)}%</p>
-              <p className="text-xs text-gray-500 mt-1">Promedio</p>
+              <p className="text-xs text-gray-500 mt-1">Mediana</p>
             </motion.div>
 
             <motion.div 
@@ -172,13 +181,13 @@ export default function PredictionsTable({ eventId, showUserPrediction = false, 
                 <p className="text-xs font-medium text-gray-600">Alimentos</p>
               </div>
               <p className="text-2xl font-bold text-orange-600">{stats.avg_alimentos.toFixed(2)}%</p>
-              <p className="text-xs text-gray-500 mt-1">Promedio</p>
+              <p className="text-xs text-gray-500 mt-1">Mediana</p>
             </motion.div>
           </div>
         </div>
 
         {/* Toggle Details Button */}
-        <div className="px-6 py-3 bg-gray-50 border-b">
+        <div className="px-6 py-3 bg-gray-50 border-b flex items-center justify-between">
           <button
             onClick={() => setShowDetails(!showDetails)}
             className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
@@ -191,10 +200,15 @@ export default function PredictionsTable({ eventId, showUserPrediction = false, 
             ) : (
               <>
                 <Eye className="h-4 w-4" />
-                Ver las últimas 10 predicciones
+                Ver predicciones
               </>
             )}
           </button>
+          {showDetails && (
+            <span className="text-sm text-gray-500 italic">
+              Mostrando 10 predicciones aleatorias
+            </span>
+          )}
         </div>
 
         {/* Predictions Table */}
@@ -208,7 +222,6 @@ export default function PredictionsTable({ eventId, showUserPrediction = false, 
                   <TableHead className="text-center font-semibold">Bienes</TableHead>
                   <TableHead className="text-center font-semibold">Servicios</TableHead>
                   <TableHead className="text-center font-semibold">Alimentos</TableHead>
-                  <TableHead className="text-center font-semibold">Fecha</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -225,13 +238,14 @@ export default function PredictionsTable({ eventId, showUserPrediction = false, 
                     >
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
                           {isUserPrediction ? (
                             <span className="font-bold text-blue-600">
                               👤 Tu predicción
                             </span>
                           ) : (
-                            <div className="h-4 w-24 bg-gray-300 rounded-full"></div>
+                            <span className="text-gray-500">
+                              Anónimo
+                            </span>
                           )}
                         </div>
                       </TableCell>
@@ -246,9 +260,6 @@ export default function PredictionsTable({ eventId, showUserPrediction = false, 
                       </TableCell>
                       <TableCell className="text-center font-semibold text-orange-600">
                         {prediction.ipc_alimentos_bebidas}%
-                      </TableCell>
-                      <TableCell className="text-center text-xs text-gray-500">
-                        {new Date(prediction.created_at).toLocaleDateString('es-AR')}
                       </TableCell>
                     </TableRow>
                   );

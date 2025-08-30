@@ -186,7 +186,7 @@ export default function EventPage() {
 
       if (predictions && predictions.length > 0) {
         setStats({
-          participant_count: predictions.length + 27, // Add 27 fictional participants
+          participant_count: predictions.length + 50, // Add 50 fictional participants
           avg_ipc_general: predictions.reduce((sum, p) => sum + Number(p.ipc_general), 0) / predictions.length,
           avg_ipc_bienes: predictions.reduce((sum, p) => sum + Number(p.ipc_bienes), 0) / predictions.length,
           avg_ipc_servicios: predictions.reduce((sum, p) => sum + Number(p.ipc_servicios), 0) / predictions.length,
@@ -194,7 +194,7 @@ export default function EventPage() {
         });
       } else {
         setStats({
-          participant_count: 27, // Base fictional participants
+          participant_count: 50, // Base fictional participants
           avg_ipc_general: 0,
           avg_ipc_bienes: 0,
           avg_ipc_servicios: 0,
@@ -430,66 +430,6 @@ export default function EventPage() {
           </div>
         </div>
 
-        {/* Event Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <Card className="border-2 border-blue-200 hover:border-blue-400 transition-colors">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-full">
-                  <Timer className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500 font-medium">Tiempo restante</p>
-                  <p className="text-xl font-bold text-blue-600">{timeLeft || '⏳ Calculando...'}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="border-2 border-green-200 hover:border-green-400 transition-colors">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-full">
-                  <Users className="h-6 w-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500 font-medium">Participantes</p>
-                  <p className="text-xl font-bold text-green-600">{stats?.participant_count || 27}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="border-2 border-yellow-200 hover:border-yellow-400 transition-colors">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-yellow-100 rounded-full">
-                  <Trophy className="h-6 w-6 text-yellow-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500 font-medium">Premio</p>
-                  <p className="text-xl font-bold text-yellow-600">{event.prize_currency} {event.prize_amount}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="border-2 border-purple-200 hover:border-purple-400 transition-colors">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-full">
-                  <Target className="h-6 w-6 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500 font-medium">Fecha del evento</p>
-                  <p className="text-xl font-bold text-purple-600">
-                    {format(new Date(event.event_date), 'dd MMM', { locale: es })}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Event Description */}
         <div className="mb-12 max-w-6xl mx-auto">
@@ -528,16 +468,13 @@ export default function EventPage() {
         </div>
 
         {/* Event Content */}
-        <Tabs defaultValue={eventResult ? "results" : userPrediction ? "stats" : "predict"} className="w-full">
-          <TabsList className={`grid w-full ${eventResult ? 'grid-cols-4' : 'grid-cols-3'} h-16 p-2 bg-gray-100 rounded-lg`}>
+        <Tabs defaultValue={eventResult ? "results" : userPrediction ? "predictions" : "predict"} className="w-full">
+          <TabsList className={`grid w-full ${eventResult ? 'grid-cols-3' : 'grid-cols-2'} h-16 p-2 bg-gray-100 rounded-lg`}>
             <TabsTrigger value="predict" className="text-base py-3 px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md transition-all duration-200">
               Mi Predicción
             </TabsTrigger>
             <TabsTrigger value="predictions" className="text-base py-3 px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md transition-all duration-200">
               Todas las Predicciones
-            </TabsTrigger>
-            <TabsTrigger value="stats" className="text-base py-3 px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md transition-all duration-200">
-              Estadísticas
             </TabsTrigger>
             {eventResult && <TabsTrigger value="results" className="text-base py-3 px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md transition-all duration-200">Resultados</TabsTrigger>}
           </TabsList>
@@ -762,244 +699,12 @@ export default function EventPage() {
             )}
           </TabsContent>
           
-          <TabsContent value="stats">
-            <Card className="border-2 border-blue-200">
-              <CardHeader className="bg-blue-600 text-white rounded-t-lg">
-                <CardTitle className="flex items-center gap-2 text-2xl">
-                  <TrendingUp className="h-6 w-6" />
-                  Estadísticas del Evento
-                </CardTitle>
-                <CardDescription className="text-blue-100">
-                  Promedios de todas las predicciones realizadas
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-8">
-                {stats && stats.participant_count > 0 ? (
-                  <div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                      <div className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border-l-4 border-blue-500">
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className="text-3xl">🏛️</span>
-                          <p className="text-sm text-gray-600 font-semibold">IPC General (promedio)</p>
-                        </div>
-                        <p className="text-3xl font-bold text-blue-600">
-                          {stats.avg_ipc_general.toFixed(2)}%
-                        </p>
-                      </div>
-                      <div className="p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border-l-4 border-green-500">
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className="text-3xl">📦</span>
-                          <p className="text-sm text-gray-600 font-semibold">Bienes (promedio)</p>
-                        </div>
-                        <p className="text-3xl font-bold text-green-600">
-                          {stats.avg_ipc_bienes.toFixed(2)}%
-                        </p>
-                      </div>
-                      <div className="p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border-l-4 border-purple-500">
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className="text-3xl">🔧</span>
-                          <p className="text-sm text-gray-600 font-semibold">Servicios (promedio)</p>
-                        </div>
-                        <p className="text-3xl font-bold text-purple-600">
-                          {stats.avg_ipc_servicios.toFixed(2)}%
-                        </p>
-                      </div>
-                      <div className="p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border-l-4 border-orange-500">
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className="text-3xl">🍽️</span>
-                          <p className="text-sm text-gray-600 font-semibold">Alimentos y Bebidas (promedio)</p>
-                        </div>
-                        <p className="text-3xl font-bold text-orange-600">
-                          {stats.avg_ipc_alimentos_bebidas.toFixed(2)}%
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="text-center p-8 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border-2 border-gray-200">
-                      <div className="flex items-center justify-center gap-2 mb-3">
-                        <Users className="h-8 w-8 text-blue-500" />
-                        <p className="text-xl text-gray-600 font-semibold">Total de participantes</p>
-                      </div>
-                      <p className="text-5xl font-bold text-blue-600">{stats.participant_count}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <div className="mb-6">
-                      <TrendingUp className="h-16 w-16 text-blue-500 mx-auto mb-4" />
-                      <p className="text-2xl text-gray-700 font-semibold">Las predicciones se están registrando</p>
-                      <p className="text-lg text-gray-600 mt-2">Muchos participantes ya están dejando sus predicciones</p>
-                    </div>
-                    <div className="bg-blue-50 p-6 rounded-xl border-2 border-blue-200">
-                      <div className="flex items-center justify-center gap-2 mb-2">
-                        <Clock className="h-5 w-5 text-blue-600" />
-                        <p className="text-blue-800 font-semibold">Estadísticas disponibles</p>
-                      </div>
-                      <p className="text-blue-700">Las estadísticas y promedios se harán públicos el <span className="font-semibold">9 de septiembre</span> cuando cierre el plazo de predicciones</p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
           <TabsContent value="predictions">
             <PredictionsTable 
               eventId={event?.id} 
               showUserPrediction={!!userPrediction}
               userPredictionId={userPrediction?.id}
             />
-          </TabsContent>
-          
-          <TabsContent value="terms">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Términos y Condiciones */}
-              <Card className="bg-white border-2 border-gray-100 hover:border-gray-200 transition-all duration-300">
-                <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center gap-3 text-xl">
-                    <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                      <FileText className="h-5 w-5 text-blue-600" />
-                    </div>
-                    Términos y Condiciones
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4 text-sm text-gray-700 leading-relaxed">
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3">
-                      <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                      <p><strong>Elegibilidad:</strong> Abierto a todos los usuarios registrados mayores de 18 años.</p>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                      <p><strong>Una predicción por usuario:</strong> Solo se permite una predicción por evento.</p>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                      <p><strong>Cierre de inscripciones:</strong> Las predicciones deben enviarse antes de la fecha límite.</p>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                      <p><strong>Datos oficiales:</strong> Los resultados se basan únicamente en datos del INDEC.</p>
-                    </div>
-                  </div>
-                  <div className="pt-4 border-t border-gray-100">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                      <p className="text-xs text-gray-600">
-                        Al participar, acepta estos términos y las decisiones del comité organizador como finales.
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Reglas de Evaluación */}
-              <Card className="bg-white border-2 border-gray-100 hover:border-gray-200 transition-all duration-300">
-                <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center gap-3 text-xl">
-                    <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
-                      <Target className="h-5 w-5 text-green-600" />
-                    </div>
-                    Criterios de Evaluación
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4 text-sm text-gray-700 leading-relaxed">
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3">
-                      <TrendingUp className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                      <p><strong>Precisión total:</strong> Se evalúa la precisión combinada de todas las categorías del IPC.</p>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <TrendingUp className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                      <p><strong>Algoritmo de scoring:</strong> Se calcula la desviación absoluta respecto a los valores oficiales.</p>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <TrendingUp className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                      <p><strong>Ganador único:</strong> La predicción con menor desviación total obtiene el primer lugar.</p>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <TrendingUp className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                      <p><strong>Empates:</strong> En caso de empate, se considerará la fecha de envío más temprana.</p>
-                    </div>
-                  </div>
-                  <div className="pt-4 border-t border-gray-100">
-                    <div className="bg-green-50 rounded-lg p-3">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Trophy className="h-4 w-4 text-green-600" />
-                        <span className="font-semibold text-green-800 text-xs">Transparencia Total</span>
-                      </div>
-                      <p className="text-xs text-green-700">
-                        Todos los cálculos son públicos y verificables. Los resultados se publican automáticamente.
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Información Adicional */}
-            <Card className="mt-8 bg-gradient-to-r from-slate-50 to-gray-50 border-2 border-slate-200">
-              <CardContent className="p-8">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Seguridad */}
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                      <Shield className="h-8 w-8 text-white" />
-                    </div>
-                    <h3 className="font-bold text-gray-800 mb-2">100% Seguro</h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">
-                      Plataforma segura con datos encriptados. Su información personal está protegida.
-                    </p>
-                  </div>
-
-                  {/* Transparencia */}
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-green-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                      <CheckCircle2 className="h-8 w-8 text-white" />
-                    </div>
-                    <h3 className="font-bold text-gray-800 mb-2">Transparente</h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">
-                      Todos los procesos son auditables. Resultados basados en datos oficiales del INDEC.
-                    </p>
-                  </div>
-
-                  {/* Soporte */}
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                      <AlertCircle className="h-8 w-8 text-white" />
-                    </div>
-                    <h3 className="font-bold text-gray-800 mb-2">Soporte</h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">
-                      ¿Dudas sobre el evento? Contáctanos y te ayudamos en cualquier momento.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-8 pt-6 border-t border-slate-200">
-                  <div className="bg-white rounded-xl p-4 border border-slate-200">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <h4 className="font-semibold text-gray-800 mb-1">Descargo de Responsabilidad</h4>
-                        <p className="text-xs text-gray-600 leading-relaxed">
-                          Este es un evento de entretenimiento y análisis económico. ArgenStats no brinda asesoramiento financiero. 
-                          Las predicciones son opiniones personales y no deben utilizarse como base para decisiones de inversión. 
-                          Los participantes son responsables de verificar su elegibilidad legal para recibir premios según su jurisdicción.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6 text-center">
-                  <p className="text-xs text-gray-500">
-                    Evento organizado por <span className="font-semibold text-gray-700">ArgenStats</span> • 
-                    Datos oficiales del <span className="font-semibold text-gray-700">INDEC</span> • 
-                    Última actualización: {new Date().toLocaleDateString('es-AR')}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
           
           {eventResult && (
