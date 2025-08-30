@@ -61,7 +61,7 @@ export default function EventsPage() {
           
           return {
             ...event,
-            participant_count: (count || 0) + 27, // Agregar 27 participantes ficticios
+            participant_count: (count || 0) + 50, // Agregar 50 participantes ficticios
             avg_prediction: avgPrediction
           };
         })

@@ -430,6 +430,66 @@ export default function EventPage() {
           </div>
         </div>
 
+        {/* Event Statistics Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8">
+          <Card className="border-2 border-blue-200 hover:border-blue-400 transition-colors">
+            <CardContent className="p-4 md:p-6">
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="p-1.5 md:p-2 bg-blue-100 rounded-full">
+                  <Timer className="h-5 w-5 md:h-6 md:w-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-xs md:text-sm text-gray-500 font-medium">Tiempo restante</p>
+                  <p className="text-base md:text-xl font-bold text-blue-600">{timeLeft || '⏳ Calculando...'}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="border-2 border-green-200 hover:border-green-400 transition-colors">
+            <CardContent className="p-4 md:p-6">
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="p-1.5 md:p-2 bg-green-100 rounded-full">
+                  <Users className="h-5 w-5 md:h-6 md:w-6 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-xs md:text-sm text-gray-500 font-medium">Participantes</p>
+                  <p className="text-base md:text-xl font-bold text-green-600">{stats?.participant_count || 50}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="border-2 border-yellow-200 hover:border-yellow-400 transition-colors">
+            <CardContent className="p-4 md:p-6">
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="p-1.5 md:p-2 bg-yellow-100 rounded-full">
+                  <Trophy className="h-5 w-5 md:h-6 md:w-6 text-yellow-600" />
+                </div>
+                <div>
+                  <p className="text-xs md:text-sm text-gray-500 font-medium">Premio</p>
+                  <p className="text-base md:text-xl font-bold text-yellow-600">{event.prize_currency} {event.prize_amount}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="border-2 border-purple-200 hover:border-purple-400 transition-colors">
+            <CardContent className="p-4 md:p-6">
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="p-1.5 md:p-2 bg-purple-100 rounded-full">
+                  <Target className="h-5 w-5 md:h-6 md:w-6 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-xs md:text-sm text-gray-500 font-medium">Fecha del evento</p>
+                  <p className="text-base md:text-xl font-bold text-purple-600">
+                    {format(new Date(event.event_date), 'dd MMM', { locale: es })}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Event Description */}
         <div className="mb-12 max-w-6xl mx-auto">

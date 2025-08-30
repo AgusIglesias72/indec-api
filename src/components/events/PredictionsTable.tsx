@@ -25,6 +25,7 @@ interface PredictionsTableProps {
 
 export default function PredictionsTable({ eventId, showUserPrediction = false, userPredictionId }: PredictionsTableProps) {
   const [predictions, setPredictions] = useState<Prediction[]>([]);
+  const [allPredictions, setAllPredictions] = useState<Prediction[]>([]);
   const [loading, setLoading] = useState(true);
   const [showDetails, setShowDetails] = useState(true);
   const [stats, setStats] = useState({
@@ -45,23 +46,28 @@ export default function PredictionsTable({ eventId, showUserPrediction = false, 
 
   async function fetchPredictions() {
     try {
-      const { data, error } = await supabase
+      // Fetch all predictions for statistics
+      const { data: allData, error: allError } = await supabase
         .from('event_predictions')
         .select('id, ipc_general, ipc_bienes, ipc_servicios, ipc_alimentos_bebidas, created_at')
         .eq('event_id', eventId)
-        .order('created_at', { ascending: false })
-        .limit(10); // Show only last 10 predictions
+        .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (allError) throw allError;
 
-      if (data && data.length > 0) {
-        setPredictions(data);
+      if (allData && allData.length > 0) {
+        setAllPredictions(allData);
         
-        // Calculate medians instead of averages
-        const sortedGeneral = [...data].map(p => Number(p.ipc_general)).sort((a, b) => a - b);
-        const sortedBienes = [...data].map(p => Number(p.ipc_bienes)).sort((a, b) => a - b);
-        const sortedServicios = [...data].map(p => Number(p.ipc_servicios)).sort((a, b) => a - b);
-        const sortedAlimentos = [...data].map(p => Number(p.ipc_alimentos_bebidas)).sort((a, b) => a - b);
+        // Get 10 random predictions for display
+        const shuffled = [...allData].sort(() => 0.5 - Math.random());
+        const randomTen = shuffled.slice(0, 10);
+        setPredictions(randomTen);
+        
+        // Calculate medians over ALL predictions
+        const sortedGeneral = [...allData].map(p => Number(p.ipc_general)).sort((a, b) => a - b);
+        const sortedBienes = [...allData].map(p => Number(p.ipc_bienes)).sort((a, b) => a - b);
+        const sortedServicios = [...allData].map(p => Number(p.ipc_servicios)).sort((a, b) => a - b);
+        const sortedAlimentos = [...allData].map(p => Number(p.ipc_alimentos_bebidas)).sort((a, b) => a - b);
         
         const getMedian = (arr: number[]) => {
           const mid = Math.floor(arr.length / 2);
@@ -73,9 +79,17 @@ export default function PredictionsTable({ eventId, showUserPrediction = false, 
           avg_bienes: getMedian(sortedBienes),
           avg_servicios: getMedian(sortedServicios),
           avg_alimentos: getMedian(sortedAlimentos),
-          total: data.length + 50 // Add 50 fictional participants
+          total: allData.length + 50 // Add 50 fictional participants to real total
         };
         setStats(stats);
+      } else {
+        setStats({
+          avg_general: 0,
+          avg_bienes: 0,
+          avg_servicios: 0,
+          avg_alimentos: 0,
+          total: 50 // Just the fictional participants
+        });
       }
     } catch (error) {
       console.error('Error fetching predictions:', error);
@@ -107,80 +121,80 @@ export default function PredictionsTable({ eventId, showUserPrediction = false, 
   return (
     <Card className="border-2 border-blue-200 overflow-hidden">
       <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <CardTitle className="flex items-center gap-2 text-2xl">
-              <BarChart3 className="h-6 w-6" />
+            <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
+              <BarChart3 className="h-5 w-5 md:h-6 md:w-6" />
               Predicciones en Vivo
             </CardTitle>
-            <CardDescription className="text-blue-100 mt-2">
+            <CardDescription className="text-blue-100 mt-1 md:mt-2 text-sm md:text-base">
               Todas las predicciones en tiempo real (anónimas)
             </CardDescription>
           </div>
-          <div className="text-right">
-            <p className="text-3xl font-bold">{stats.total}</p>
-            <p className="text-sm text-blue-100">Participantes</p>
+          <div className="text-left sm:text-right">
+            <p className="text-2xl md:text-3xl font-bold">{stats.total}</p>
+            <p className="text-xs md:text-sm text-blue-100">Participantes</p>
           </div>
         </div>
       </CardHeader>
       
       <CardContent className="p-0">
         {/* Statistics Summary */}
-        <div className="p-6 bg-gradient-to-r from-gray-50 to-blue-50 border-b">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="p-4 md:p-6 bg-gradient-to-r from-gray-50 to-blue-50 border-b">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
             <motion.div 
-              className="bg-white rounded-lg p-4 shadow-sm border border-blue-100"
+              className="bg-white rounded-lg p-3 md:p-4 shadow-sm border border-blue-100"
               whileHover={{ scale: 1.02 }}
             >
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <span className="text-sm">🏛️</span>
+              <div className="flex items-center gap-1 md:gap-2 mb-2">
+                <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                  <span className="text-xs md:text-sm">🏛️</span>
                 </div>
                 <p className="text-xs font-medium text-gray-600">IPC General</p>
               </div>
-              <p className="text-2xl font-bold text-blue-600">{stats.avg_general.toFixed(2)}%</p>
+              <p className="text-lg md:text-2xl font-bold text-blue-600">{stats.avg_general.toFixed(2)}%</p>
               <p className="text-xs text-gray-500 mt-1">Mediana</p>
             </motion.div>
 
             <motion.div 
-              className="bg-white rounded-lg p-4 shadow-sm border border-green-100"
+              className="bg-white rounded-lg p-3 md:p-4 shadow-sm border border-green-100"
               whileHover={{ scale: 1.02 }}
             >
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <span className="text-sm">📦</span>
+              <div className="flex items-center gap-1 md:gap-2 mb-2">
+                <div className="w-6 h-6 md:w-8 md:h-8 bg-green-100 rounded-full flex items-center justify-center">
+                  <span className="text-xs md:text-sm">📦</span>
                 </div>
                 <p className="text-xs font-medium text-gray-600">Bienes</p>
               </div>
-              <p className="text-2xl font-bold text-green-600">{stats.avg_bienes.toFixed(2)}%</p>
+              <p className="text-lg md:text-2xl font-bold text-green-600">{stats.avg_bienes.toFixed(2)}%</p>
               <p className="text-xs text-gray-500 mt-1">Mediana</p>
             </motion.div>
 
             <motion.div 
-              className="bg-white rounded-lg p-4 shadow-sm border border-purple-100"
+              className="bg-white rounded-lg p-3 md:p-4 shadow-sm border border-purple-100"
               whileHover={{ scale: 1.02 }}
             >
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                  <span className="text-sm">🔧</span>
+              <div className="flex items-center gap-1 md:gap-2 mb-2">
+                <div className="w-6 h-6 md:w-8 md:h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                  <span className="text-xs md:text-sm">🔧</span>
                 </div>
                 <p className="text-xs font-medium text-gray-600">Servicios</p>
               </div>
-              <p className="text-2xl font-bold text-purple-600">{stats.avg_servicios.toFixed(2)}%</p>
+              <p className="text-lg md:text-2xl font-bold text-purple-600">{stats.avg_servicios.toFixed(2)}%</p>
               <p className="text-xs text-gray-500 mt-1">Mediana</p>
             </motion.div>
 
             <motion.div 
-              className="bg-white rounded-lg p-4 shadow-sm border border-orange-100"
+              className="bg-white rounded-lg p-3 md:p-4 shadow-sm border border-orange-100"
               whileHover={{ scale: 1.02 }}
             >
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                  <span className="text-sm">🍽️</span>
+              <div className="flex items-center gap-1 md:gap-2 mb-2">
+                <div className="w-6 h-6 md:w-8 md:h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                  <span className="text-xs md:text-sm">🍽️</span>
                 </div>
                 <p className="text-xs font-medium text-gray-600">Alimentos</p>
               </div>
-              <p className="text-2xl font-bold text-orange-600">{stats.avg_alimentos.toFixed(2)}%</p>
+              <p className="text-lg md:text-2xl font-bold text-orange-600">{stats.avg_alimentos.toFixed(2)}%</p>
               <p className="text-xs text-gray-500 mt-1">Mediana</p>
             </motion.div>
           </div>
@@ -217,11 +231,11 @@ export default function PredictionsTable({ eventId, showUserPrediction = false, 
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50">
-                  <TableHead className="font-semibold">Participante</TableHead>
-                  <TableHead className="text-center font-semibold">IPC General</TableHead>
-                  <TableHead className="text-center font-semibold">Bienes</TableHead>
-                  <TableHead className="text-center font-semibold">Servicios</TableHead>
-                  <TableHead className="text-center font-semibold">Alimentos</TableHead>
+                  <TableHead className="font-semibold text-xs md:text-sm">Participante</TableHead>
+                  <TableHead className="text-center font-semibold text-xs md:text-sm">IPC General</TableHead>
+                  <TableHead className="text-center font-semibold text-xs md:text-sm hidden sm:table-cell">Bienes</TableHead>
+                  <TableHead className="text-center font-semibold text-xs md:text-sm hidden sm:table-cell">Servicios</TableHead>
+                  <TableHead className="text-center font-semibold text-xs md:text-sm">Alimentos</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -236,7 +250,7 @@ export default function PredictionsTable({ eventId, showUserPrediction = false, 
                         hover:bg-blue-50 transition-colors
                       `}
                     >
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium text-xs md:text-sm">
                         <div className="flex items-center gap-2">
                           {isUserPrediction ? (
                             <span className="font-bold text-blue-600">
@@ -249,16 +263,16 @@ export default function PredictionsTable({ eventId, showUserPrediction = false, 
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="text-center font-semibold text-blue-600">
+                      <TableCell className="text-center font-semibold text-blue-600 text-xs md:text-sm">
                         {prediction.ipc_general}%
                       </TableCell>
-                      <TableCell className="text-center font-semibold text-green-600">
+                      <TableCell className="text-center font-semibold text-green-600 text-xs md:text-sm hidden sm:table-cell">
                         {prediction.ipc_bienes}%
                       </TableCell>
-                      <TableCell className="text-center font-semibold text-purple-600">
+                      <TableCell className="text-center font-semibold text-purple-600 text-xs md:text-sm hidden sm:table-cell">
                         {prediction.ipc_servicios}%
                       </TableCell>
-                      <TableCell className="text-center font-semibold text-orange-600">
+                      <TableCell className="text-center font-semibold text-orange-600 text-xs md:text-sm">
                         {prediction.ipc_alimentos_bebidas}%
                       </TableCell>
                     </TableRow>
