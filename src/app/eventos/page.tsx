@@ -24,6 +24,9 @@ interface Event {
   status: 'upcoming' | 'active' | 'closed' | 'finished';
   participant_count?: number;
   avg_prediction?: string | null;
+  median_bienes?: string | null;
+  median_servicios?: string | null;
+  median_alimentos?: string | null;
 }
 
 export default function EventsPage() {
@@ -47,22 +50,37 @@ export default function EventsPage() {
       // Fetch participant count and stats for each event
       const eventsWithStats = await Promise.all(
         (eventsData || []).map(async (event) => {
-          const { data: predictions, count } = await supabase
+          const { data: predictions } = await supabase
             .from('event_predictions')
-            .select('ipc_general')
+            .select('ipc_general, ipc_bienes, ipc_servicios, ipc_alimentos_bebidas')
             .eq('event_id', event.id);
           
-          // Calculate average IPC prediction
-          let avgPrediction = null;
+          // Calculate medians for all indices
+          let medianGeneral = null;
+          let medianBienes = null;
+          let medianServicios = null;
+          let medianAlimentos = null;
+          
           if (predictions && predictions.length > 0) {
-            const sum = predictions.reduce((acc, p) => acc + Number(p.ipc_general), 0);
-            avgPrediction = (sum / predictions.length).toFixed(2);
+            const getMedian = (arr: number[]) => {
+              const sorted = [...arr].sort((a, b) => a - b);
+              const mid = Math.floor(sorted.length / 2);
+              return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+            };
+            
+            medianGeneral = getMedian(predictions.map(p => Number(p.ipc_general))).toFixed(2);
+            medianBienes = getMedian(predictions.map(p => Number(p.ipc_bienes))).toFixed(2);
+            medianServicios = getMedian(predictions.map(p => Number(p.ipc_servicios))).toFixed(2);
+            medianAlimentos = getMedian(predictions.map(p => Number(p.ipc_alimentos_bebidas))).toFixed(2);
           }
           
           return {
             ...event,
-            participant_count: (count || 0) + 50, // Agregar 50 participantes ficticios
-            avg_prediction: avgPrediction
+            participant_count: (predictions?.length || 0) + 50, // Agregar 50 participantes ficticios
+            avg_prediction: medianGeneral,
+            median_bienes: medianBienes,
+            median_servicios: medianServicios,
+            median_alimentos: medianAlimentos
           };
         })
       );
@@ -324,7 +342,20 @@ export default function EventsPage() {
                               <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Participantes</p>
                               <p className="text-xl font-bold text-green-600">{event.participant_count}</p>
                               {event.avg_prediction && (
-                                <p className="text-xs text-gray-500 mt-1">Prom. IPC: <span className="font-semibold text-purple-600">{event.avg_prediction}%</span></p>
+                                <div className="mt-2 space-y-1">
+                                  <p className="text-xs text-gray-500">
+                                    <span className="font-medium">General:</span> <span className="font-semibold text-blue-600">{event.avg_prediction}%</span>
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    <span className="font-medium">Bienes:</span> <span className="font-semibold text-green-600">{event.median_bienes}%</span>
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    <span className="font-medium">Servicios:</span> <span className="font-semibold text-purple-600">{event.median_servicios}%</span>
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    <span className="font-medium">Alimentos:</span> <span className="font-semibold text-orange-600">{event.median_alimentos}%</span>
+                                  </p>
+                                </div>
                               )}
                             </div>
                             <motion.div

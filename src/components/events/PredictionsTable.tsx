@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, Users, Eye, EyeOff, BarChart3, Hash } from 'lucide-react';
+import { TrendingUp, Users, Eye, EyeOff, BarChart3, Hash, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 
@@ -28,6 +28,8 @@ export default function PredictionsTable({ eventId, showUserPrediction = false, 
   const [allPredictions, setAllPredictions] = useState<Prediction[]>([]);
   const [loading, setLoading] = useState(true);
   const [showDetails, setShowDetails] = useState(true);
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [stats, setStats] = useState({
     avg_general: 0,
     avg_bienes: 0,
@@ -104,6 +106,47 @@ export default function PredictionsTable({ eventId, showUserPrediction = false, 
     }
     // Show only first 4 chars for anonymity
     return `#${id.substring(0, 4).toUpperCase()}...`;
+  }
+
+  function handleSort(column: string) {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  }
+
+  function getSortedPredictions() {
+    if (!sortColumn) return predictions;
+    
+    return [...predictions].sort((a, b) => {
+      let aValue: number;
+      let bValue: number;
+      
+      switch(sortColumn) {
+        case 'ipc_general':
+          aValue = Number(a.ipc_general);
+          bValue = Number(b.ipc_general);
+          break;
+        case 'ipc_bienes':
+          aValue = Number(a.ipc_bienes);
+          bValue = Number(b.ipc_bienes);
+          break;
+        case 'ipc_servicios':
+          aValue = Number(a.ipc_servicios);
+          bValue = Number(b.ipc_servicios);
+          break;
+        case 'ipc_alimentos_bebidas':
+          aValue = Number(a.ipc_alimentos_bebidas);
+          bValue = Number(b.ipc_alimentos_bebidas);
+          break;
+        default:
+          return 0;
+      }
+      
+      return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+    });
   }
 
   if (loading) {
@@ -232,14 +275,54 @@ export default function PredictionsTable({ eventId, showUserPrediction = false, 
               <TableHeader>
                 <TableRow className="bg-gray-50">
                   <TableHead className="font-semibold text-xs md:text-sm">Participante</TableHead>
-                  <TableHead className="text-center font-semibold text-xs md:text-sm">IPC General</TableHead>
-                  <TableHead className="text-center font-semibold text-xs md:text-sm hidden sm:table-cell">Bienes</TableHead>
-                  <TableHead className="text-center font-semibold text-xs md:text-sm hidden sm:table-cell">Servicios</TableHead>
-                  <TableHead className="text-center font-semibold text-xs md:text-sm">Alimentos</TableHead>
+                  <TableHead 
+                    className="text-center font-semibold text-xs md:text-sm cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('ipc_general')}
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      IPC General
+                      {sortColumn === 'ipc_general' ? (
+                        sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                      ) : <ArrowUpDown className="h-3 w-3 opacity-50" />}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="text-center font-semibold text-xs md:text-sm hidden sm:table-cell cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('ipc_bienes')}
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      Bienes
+                      {sortColumn === 'ipc_bienes' ? (
+                        sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                      ) : <ArrowUpDown className="h-3 w-3 opacity-50" />}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="text-center font-semibold text-xs md:text-sm hidden sm:table-cell cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('ipc_servicios')}
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      Servicios
+                      {sortColumn === 'ipc_servicios' ? (
+                        sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                      ) : <ArrowUpDown className="h-3 w-3 opacity-50" />}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="text-center font-semibold text-xs md:text-sm cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('ipc_alimentos_bebidas')}
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      Alimentos
+                      {sortColumn === 'ipc_alimentos_bebidas' ? (
+                        sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                      ) : <ArrowUpDown className="h-3 w-3 opacity-50" />}
+                    </div>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {predictions.map((prediction, index) => {
+                {getSortedPredictions().map((prediction, index) => {
                   const isUserPrediction = prediction.id === userPredictionId;
                   return (
                     <TableRow 
