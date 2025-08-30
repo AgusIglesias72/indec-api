@@ -26,7 +26,7 @@ interface PredictionsTableProps {
 export default function PredictionsTable({ eventId, showUserPrediction = false, userPredictionId }: PredictionsTableProps) {
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showDetails, setShowDetails] = useState(false);
+  const [showDetails, setShowDetails] = useState(true);
   const [stats, setStats] = useState({
     avg_general: 0,
     avg_bienes: 0,
@@ -49,7 +49,8 @@ export default function PredictionsTable({ eventId, showUserPrediction = false, 
         .from('event_predictions')
         .select('id, ipc_general, ipc_bienes, ipc_servicios, ipc_alimentos_bebidas, created_at')
         .eq('event_id', eventId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(10); // Show only last 10 predictions
 
       if (error) throw error;
 
@@ -190,7 +191,7 @@ export default function PredictionsTable({ eventId, showUserPrediction = false, 
             ) : (
               <>
                 <Eye className="h-4 w-4" />
-                Ver todas las predicciones ({predictions.length})
+                Ver las últimas 10 predicciones
               </>
             )}
           </button>
@@ -225,9 +226,13 @@ export default function PredictionsTable({ eventId, showUserPrediction = false, 
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
-                          <span className={isUserPrediction ? 'font-bold text-blue-600' : ''}>
-                            {maskPredictionId(prediction.id, isUserPrediction)}
-                          </span>
+                          {isUserPrediction ? (
+                            <span className="font-bold text-blue-600">
+                              👤 Tu predicción
+                            </span>
+                          ) : (
+                            <div className="h-4 w-24 bg-gray-300 rounded-full"></div>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell className="text-center font-semibold text-blue-600">

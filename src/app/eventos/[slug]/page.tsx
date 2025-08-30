@@ -186,7 +186,7 @@ export default function EventPage() {
 
       if (predictions && predictions.length > 0) {
         setStats({
-          participant_count: predictions.length,
+          participant_count: predictions.length + 27, // Add 27 fictional participants
           avg_ipc_general: predictions.reduce((sum, p) => sum + Number(p.ipc_general), 0) / predictions.length,
           avg_ipc_bienes: predictions.reduce((sum, p) => sum + Number(p.ipc_bienes), 0) / predictions.length,
           avg_ipc_servicios: predictions.reduce((sum, p) => sum + Number(p.ipc_servicios), 0) / predictions.length,
@@ -194,7 +194,7 @@ export default function EventPage() {
         });
       } else {
         setStats({
-          participant_count: 0,
+          participant_count: 27, // Base fictional participants
           avg_ipc_general: 0,
           avg_ipc_bienes: 0,
           avg_ipc_servicios: 0,
@@ -454,7 +454,7 @@ export default function EventPage() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500 font-medium">Participantes</p>
-                  <p className="text-xl font-bold text-green-600">{(stats?.participant_count || 0) + 27}</p>
+                  <p className="text-xl font-bold text-green-600">{stats?.participant_count || 27}</p>
                 </div>
               </div>
             </CardContent>
@@ -820,7 +820,7 @@ export default function EventPage() {
                         <Users className="h-8 w-8 text-blue-500" />
                         <p className="text-xl text-gray-600 font-semibold">Total de participantes</p>
                       </div>
-                      <p className="text-5xl font-bold text-blue-600">{stats.participant_count + 27}</p>
+                      <p className="text-5xl font-bold text-blue-600">{stats.participant_count}</p>
                     </div>
                   </div>
                 ) : (
