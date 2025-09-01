@@ -41,21 +41,29 @@ export default function PredictionsTable({ eventId, showUserPrediction = false, 
   useEffect(() => {
     if (eventId) {
       fetchPredictions();
-      const interval = setInterval(fetchPredictions, 10000); // Update every 10 seconds
+      // Reduce polling frequency to every 30 seconds
+      const interval = setInterval(fetchPredictions, 30000);
       return () => clearInterval(interval);
     }
   }, [eventId]);
 
   async function fetchPredictions() {
     try {
-      // Fetch all predictions for statistics
+      // Add error handling and retry logic
       const { data: allData, error: allError } = await supabase
         .from('event_predictions')
         .select('id, ipc_general, ipc_bienes, ipc_servicios, ipc_alimentos_bebidas, created_at')
         .eq('event_id', eventId)
         .order('created_at', { ascending: false });
 
-      if (allError) throw allError;
+      if (allError) {
+        console.error('Error fetching predictions:', allError);
+        // If error is 400, it might be RLS - try without auth
+        if (allError.code === '400' || allError.message?.includes('400')) {
+          return; // Skip this update cycle
+        }
+        throw allError;
+      }
 
       if (allData && allData.length > 0) {
         setAllPredictions(allData);

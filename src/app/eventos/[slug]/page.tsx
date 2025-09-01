@@ -89,7 +89,8 @@ export default function EventPage() {
   useEffect(() => {
     if (params.slug && isLoaded) {
       fetchEventData();
-      const interval = setInterval(fetchStats, 5000); // Update stats every 5 seconds
+      // Reduce polling frequency to every 30 seconds to avoid rate limiting
+      const interval = setInterval(fetchStats, 30000);
       return () => clearInterval(interval);
     }
   }, [params.slug, isLoaded, user]);
@@ -178,11 +179,18 @@ export default function EventPage() {
   }
 
   async function fetchStats() {
+    if (!event?.id) return; // Don't fetch if no event ID
+    
     try {
-      const { data: predictions } = await supabase
+      const { data: predictions, error } = await supabase
         .from('event_predictions')
         .select('ipc_general, ipc_bienes, ipc_servicios, ipc_alimentos_bebidas')
-        .eq('event_id', event?.id);
+        .eq('event_id', event.id);
+      
+      if (error) {
+        console.error('Error fetching stats:', error);
+        return; // Keep previous stats on error
+      }
 
       if (predictions && predictions.length > 0) {
         setStats({
