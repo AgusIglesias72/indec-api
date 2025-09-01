@@ -17,6 +17,8 @@ const AppWrapper: React.FC<AppWrapperProps> = ({ children }) => {
       localization={esES}
       signInFallbackRedirectUrl="/"
       signUpFallbackRedirectUrl="/"
+      signInForceRedirectUrl="/"
+      signUpForceRedirectUrl="/"
       appearance={{
         baseTheme: undefined,
         variables: {
