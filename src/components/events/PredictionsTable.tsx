@@ -41,9 +41,7 @@ export default function PredictionsTable({ eventId, showUserPrediction = false, 
   useEffect(() => {
     if (eventId) {
       fetchPredictions();
-      // Reduce polling frequency to every 30 seconds
-      const interval = setInterval(fetchPredictions, 30000);
-      return () => clearInterval(interval);
+      // No polling - just load once when component mounts
     }
   }, [eventId]);
 
@@ -176,10 +174,10 @@ export default function PredictionsTable({ eventId, showUserPrediction = false, 
           <div>
             <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
               <BarChart3 className="h-5 w-5 md:h-6 md:w-6" />
-              Predicciones en Vivo
+              Todas las Predicciones
             </CardTitle>
             <CardDescription className="text-blue-100 mt-1 md:mt-2 text-sm md:text-base">
-              Todas las predicciones en tiempo real (anónimas)
+              Predicciones anónimas de los participantes
             </CardDescription>
           </div>
           <div className="text-left sm:text-right">
@@ -374,19 +372,6 @@ export default function PredictionsTable({ eventId, showUserPrediction = false, 
           </div>
         )}
 
-        {/* Live Indicator */}
-        <div className="px-6 py-3 bg-gradient-to-r from-green-50 to-emerald-50 border-t">
-          <div className="flex items-center justify-center gap-2">
-            <motion.div
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="w-2 h-2 bg-green-500 rounded-full"
-            />
-            <p className="text-sm font-medium text-green-700">
-              Actualizándose en tiempo real
-            </p>
-          </div>
-        </div>
       </CardContent>
     </Card>
   );
