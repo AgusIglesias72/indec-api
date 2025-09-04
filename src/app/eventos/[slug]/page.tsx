@@ -188,7 +188,7 @@ export default function EventPage() {
         console.error('Error fetching stats:', error);
         return; // Keep previous stats on error
       }
-
+      console.log(predictions)
       if (predictions && predictions.length > 0) {
         setStats({
           participant_count: predictions.length + 50, // Add 50 fictional participants
