@@ -89,9 +89,6 @@ export default function EventPage() {
   useEffect(() => {
     if (params.slug && isLoaded) {
       fetchEventData();
-      // Reduce polling frequency to every 30 seconds to avoid rate limiting
-      const interval = setInterval(fetchStats, 30000);
-      return () => clearInterval(interval);
     }
   }, [params.slug, isLoaded, user]);
 
@@ -168,8 +165,8 @@ export default function EventPage() {
       
       setEventResult(resultData);
 
-      // Fetch stats
-      await fetchStats();
+      // Fetch stats using the event data we just fetched
+      await fetchStatsForEvent(eventData.id);
     } catch (error) {
       console.error('Error fetching event:', error);
       toast.error('Error al cargar el evento');
@@ -178,14 +175,14 @@ export default function EventPage() {
     }
   }
 
-  async function fetchStats() {
-    if (!event?.id) return; // Don't fetch if no event ID
+  async function fetchStatsForEvent(eventId: string) {
+    if (!eventId) return;
     
     try {
       const { data: predictions, error } = await supabase
         .from('event_predictions')
         .select('ipc_general, ipc_bienes, ipc_servicios, ipc_alimentos_bebidas')
-        .eq('event_id', event.id);
+        .eq('event_id', eventId);
       
       if (error) {
         console.error('Error fetching stats:', error);
@@ -652,7 +649,7 @@ export default function EventPage() {
                     <Alert className="border-2 border-yellow-300 bg-yellow-50">
                       <AlertCircle className="h-4 w-4" />
                       <AlertDescription className="text-lg">
-                        Debe <Link href="/sign-in" className="text-blue-600 underline font-semibold">iniciar sesión</Link> para participar en el evento
+                        Debe <Link href={`/sign-in?redirect_url=${encodeURIComponent(window.location.pathname)}`} className="text-blue-600 underline font-semibold">iniciar sesión</Link> para participar en el evento
                       </AlertDescription>
                     </Alert>
                   ) : (

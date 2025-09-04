@@ -1,8 +1,11 @@
 "use client"
 
 import { SignIn } from '@clerk/nextjs'
+import { useSearchParams } from 'next/navigation'
 
 export default function Page() {
+  const searchParams = useSearchParams()
+  const redirectUrl = searchParams.get('redirect_url')
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -21,6 +24,7 @@ export default function Page() {
         </div>
         <SignIn 
           signUpUrl="/sign-up"
+          forceRedirectUrl={redirectUrl || undefined}
           appearance={{
             elements: {
               formButtonPrimary: 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200',
